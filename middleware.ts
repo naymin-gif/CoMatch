@@ -32,7 +32,6 @@ export async function middleware(request: NextRequest) {
   const currentPath = request.nextUrl.pathname;
 
   const isPublicRoute = 
-    currentPath === '/' || 
     currentPath.startsWith('/login') || 
     currentPath.startsWith('/register') || 
     currentPath.startsWith('/auth/callback');
