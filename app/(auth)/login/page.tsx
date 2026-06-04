@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/clients';
+//import { createClient } from '@/utils/clients';
+import { createClient } from '../../../utils/clients';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
