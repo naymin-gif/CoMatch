@@ -7,7 +7,7 @@ import {
   getMyApplications,
   getRequestsReceived,
   updateApplicationStatus,
-} from "../../utils/DashboardActions";
+} from "@/utils/DashboardActions";
 import MyApplications from "@/components/dashboard/MyApplications";
 import RequestsReceived from "@/components/dashboard/RequestsReceived";
 
