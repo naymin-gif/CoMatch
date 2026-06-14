@@ -16,7 +16,8 @@ import {
   ExternalLink,
   ChevronRight,
   Info,
-  ArrowLeft
+  ArrowLeft,
+  Camera
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -69,6 +70,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [isEditing, setIsEditing] = useState(false);
   const [editDesc, setEditDesc] = useState('');
   const [editLink, setEditLink] = useState('');
+  const [editIconFile, setEditIconFile] = useState<File | null>(null);
+  const [editIconPreview, setEditIconPreview] = useState<string | null>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -101,6 +104,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         setSpace(spaceData);
         setEditDesc(spaceData.description);
         setEditLink(spaceData.external_link || '');
+        setEditIconPreview(spaceData.icon_url || null);
 
         // 3. Fetch owner profile
         const { data: ownerData } = await supabase
@@ -198,11 +202,29 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
     setIsSaving(true);
     try {
+      let iconUrl = space.icon_url;
+
+      // Upload new icon file if selected
+      if (editIconFile) {
+        const fileExt = editIconFile.name.split('.').pop();
+        const fileName = `spaces/space-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, editIconFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        iconUrl = data.publicUrl;
+      }
+
       const { data, error } = await supabase
         .from('spaces')
         .update({
           description: editDesc.trim(),
           external_link: editLink.trim() || null,
+          icon_url: iconUrl,
           last_edited_at: new Date().toISOString()
         })
         .eq('id', spaceId)
@@ -212,6 +234,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       if (error) throw error;
       
       setSpace(data);
+      setEditIconFile(null); // Reset selected file state after saving
+      setEditIconPreview(data.icon_url || null);
       setIsEditing(false);
     } catch (err: any) {
       alert('Failed to update space: ' + err.message);
@@ -550,6 +574,35 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
 
                   <form onSubmit={handleUpdateSpace} className="space-y-5">
+                    {/* Space Icon Edit */}
+                    <div className="flex flex-col items-center sm:items-start mb-6">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Space Icon</label>
+                      <div className="relative group">
+                        <div className="w-20 h-20 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-2xl border border-gray-200 flex items-center justify-center text-gray-400 overflow-hidden shadow-inner">
+                          {editIconPreview ? (
+                            <img src={editIconPreview} alt="Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl font-extrabold">{space.name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <label className="absolute -bottom-1 -right-1 bg-blue-900 hover:bg-blue-800 text-white p-1.5 rounded-full cursor-pointer shadow hover:scale-105 transition">
+                          <Camera size={14} />
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                const file = e.target.files[0];
+                                setEditIconFile(file);
+                                setEditIconPreview(URL.createObjectURL(file));
+                              }
+                            }}
+                            className="hidden" 
+                          />
+                        </label>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">Space Name</label>
                       <input 
