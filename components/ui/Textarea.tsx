@@ -15,7 +15,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, className = '', ...props }, ref) => {
     
     // Base styles mimicking the Input component, plus vertical resizing
-    const textareaBaseStyle = "px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-shadow disabled:opacity-50 disabled:bg-gray-50 disabled:cursor-not-allowed w-full resize-y min-h-[100px]";
+    const textareaBaseStyle = "px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-shadow disabled:opacity-50 disabled:bg-gray-50 disabled:cursor-not-allowed w-full resize-y min-h-[100px] text-gray-900";
     
     // Dynamic styles depending on whether there is an error
     const textareaStateStyle = error 

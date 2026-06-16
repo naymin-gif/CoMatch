@@ -9,17 +9,24 @@ import {
   Users, 
   MessageSquare, 
   Plus, 
-  Edit, 
-  Save, 
   Clock, 
   FileText, 
   ExternalLink,
   ChevronRight,
   Info,
   ArrowLeft,
-  Camera
+  Camera,
+  Save
 } from 'lucide-react';
 import Link from 'next/link';
+
+// Import shared UI components
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
+import Avatar from '@/components/ui/Avatar';
+import Badge from '@/components/ui/Badge';
 
 interface Space {
   id: string;
@@ -301,13 +308,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
               
               <div className="flex items-center gap-5">
-                <div className="w-20 h-20 bg-gradient-to-tr from-slate-100 to-slate-200 border-2 border-white shadow-md rounded-2xl overflow-hidden shrink-0 flex items-center justify-center text-gray-700 text-3xl font-extrabold">
-                  {space.icon_url ? (
-                    <img src={space.icon_url} alt={space.name} className="w-full h-full object-cover" />
-                  ) : (
-                    space.name.charAt(0)
-                  )}
-                </div>
+                {/* Space Icon (replaces custom div with Avatar UI component) */}
+                <Avatar
+                  src={space.icon_url || undefined}
+                  alt={space.name}
+                  size="xl"
+                  className="border-2 border-white shadow-md !rounded-2xl"
+                />
                 <div>
                   <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">{space.name}</h1>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-1.5">
@@ -316,7 +323,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       Created {prettyJoinDate}
                     </span>
                     <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
-                    <span className="font-semibold text-blue-600">Owner: {ownerProfile?.name || 'Administrator'}</span>
+                    <span className="font-semibold text-comatch-primary">Owner: {ownerProfile?.name || 'Administrator'}</span>
                   </div>
                 </div>
               </div>
@@ -326,7 +333,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   href={space.external_link} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-sm rounded-xl border border-blue-100 shadow-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-comatch-primary hover:bg-blue-100 font-bold text-sm rounded-xl border border-blue-100 shadow-sm transition"
                 >
                   <Globe size={16} />
                   Visit Official Website
@@ -346,7 +353,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   onClick={() => { setActiveTab('calls'); setIsEditing(false); }}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
                     activeTab === 'calls' 
-                      ? 'bg-blue-100/50 text-blue-700 shadow-sm' 
+                      ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
@@ -361,7 +368,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   onClick={() => { setActiveTab('members'); setIsEditing(false); }}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
                     activeTab === 'members' 
-                      ? 'bg-blue-100/50 text-blue-700 shadow-sm' 
+                      ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
@@ -376,7 +383,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   onClick={() => { setActiveTab('resources'); setIsEditing(false); }}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
                     activeTab === 'resources' 
-                      ? 'bg-blue-100/50 text-blue-700 shadow-sm' 
+                      ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
@@ -391,7 +398,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     onClick={() => { setActiveTab('settings'); }}
                     className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
                       activeTab === 'settings' 
-                        ? 'bg-blue-100/50 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -417,7 +424,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <Link
                       href={`/spaces/${spaceId}/posts/new`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow transition"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-comatch-primary hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition"
                     >
                       <Plus size={14} />
                       Post Teammate Call
@@ -433,7 +440,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       </p>
                       <Link
                         href={`/spaces/${spaceId}/posts/new`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow transition mt-4"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-comatch-primary hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition mt-4"
                       >
                         <Plus size={14} />
                         Post Call
@@ -442,16 +449,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   ) : (
                     <div className="grid grid-cols-1 gap-5">
                       {posts.map((post) => (
-                        <div key={post.id} className="p-6 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-100 transition duration-300 flex flex-col justify-between">
+                        /* Post Card (replaces custom card div with Card UI component) */
+                        <Card key={post.id} className="border border-gray-100 hover:shadow-md hover:border-comatch-light transition duration-300 flex flex-col justify-between p-6">
                           <div>
                             <div className="flex items-center gap-3 mb-4">
-                              <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 text-sm font-extrabold overflow-hidden">
-                                {post.owner.avatar_url ? (
-                                  <img src={post.owner.avatar_url} alt={post.owner.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  post.owner.name.charAt(0)
-                                )}
-                              </div>
+                              {/* Post Author Avatar (replaces custom profile picture div with Avatar UI component) */}
+                              <Avatar
+                                src={post.owner.avatar_url || undefined}
+                                alt={post.owner.name}
+                                size="sm"
+                              />
                               <div>
                                 <h4 className="text-xs font-semibold text-gray-900">{post.owner.name}</h4>
                                 <span className="text-[10px] text-gray-400 flex items-center gap-1">
@@ -465,17 +472,20 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                             <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">{post.description}</p>
                           </div>
 
-                          <div className="flex flex-wrap gap-2 border-t pt-4 border-gray-50 mt-2">
+                          <div className="flex flex-wrap gap-2 border-t pt-4 border-gray-5 mt-2 items-center">
                             {post.open_roles.map((role, idx) => (
-                              <span key={idx} className="px-2.5 py-1 bg-blue-50 text-blue-700 font-bold text-[10px] rounded-lg border border-blue-100/50">
+                              /* Open Roles Badges (replaces custom spans with Badge UI component) */
+                              <Badge key={idx} variant="light">
                                 {role}
-                              </span>
+                              </Badge>
                             ))}
-                            <span className="px-2.5 py-1 bg-purple-50 text-purple-700 font-bold text-[10px] rounded-lg border border-purple-100/50 ml-auto">
+                            
+                            {/* Commitment Badge (replaces custom span with Badge UI component) */}
+                            <Badge variant="outline" className="ml-auto">
                               Commitment: {post.commitment_level}
-                            </span>
+                            </Badge>
                           </div>
-                        </div>
+                        </Card>
                       ))}
                     </div>
                   )}
@@ -494,26 +504,28 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     {members.map((member) => (
                       <div key={member.id} className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm flex items-center justify-between hover:border-gray-200 transition">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-800 text-base font-extrabold overflow-hidden border">
-                            {member.avatar_url ? (
-                              <img src={member.avatar_url} alt={member.name} className="w-full h-full object-cover" />
-                            ) : (
-                              member.name.charAt(0)
-                            )}
-                          </div>
+                          {/* Member Avatar (replaces custom div with Avatar UI component) */}
+                          <Avatar
+                            src={member.avatar_url || undefined}
+                            alt={member.name}
+                            size="md"
+                            className="border"
+                          />
                           <div>
                             <h4 className="text-sm font-bold text-gray-900">{member.name}</h4>
                             <p className="text-[10px] text-gray-400">{member.roles || 'Developer'}</p>
                           </div>
                         </div>
                         {currentUser?.id !== member.id && (
-                          <button
+                          /* Chat Button (replaces custom button with Button UI component in outline variant) */
+                          <Button
+                            variant="outline"
                             onClick={() => router.push(`/chat?user=${member.id}`)}
-                            className="p-2 bg-slate-50 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg border border-gray-200 hover:border-blue-100 shadow-sm transition"
+                            className="!px-3 !py-2 hover:bg-blue-50 text-gray-600 hover:text-comatch-primary border-gray-200 hover:border-comatch-light shadow-sm"
                             title="Chat with user"
                           >
                             <MessageSquare size={16} />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     ))}
@@ -530,9 +542,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
 
                   <div className="space-y-4">
-                    <div className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                    {/* About Card (replaces custom container div with Card UI component) */}
+                    <Card className="border border-gray-100 p-5 shadow-sm">
                       <h3 className="text-base font-bold text-gray-800 mb-1.5 flex items-center gap-2">
-                        <Info size={18} className="text-blue-600" />
+                        <Info size={18} className="text-comatch-primary" />
                         About {space.name}
                       </h3>
                       <p className="text-sm text-gray-600 leading-relaxed mb-4">{space.description}</p>
@@ -540,7 +553,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       {space.external_link ? (
                         <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between border border-slate-100">
                           <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-white rounded-lg text-blue-600 shadow-sm border border-slate-200/50">
+                            <div className="p-2.5 bg-white rounded-lg text-comatch-primary shadow-sm border border-slate-200/50">
                               <Globe size={18} />
                             </div>
                             <div>
@@ -552,7 +565,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                             href={space.external_link} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="p-2 hover:bg-white rounded-lg border border-slate-200 text-gray-600 hover:text-blue-600 hover:border-blue-100 transition shadow-sm"
+                            className="p-2 hover:bg-white rounded-lg border border-slate-200 text-gray-600 hover:text-comatch-primary hover:border-blue-100 transition shadow-sm"
                           >
                             <ExternalLink size={14} />
                           </a>
@@ -560,7 +573,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       ) : (
                         <p className="text-xs text-gray-400">No external links attached to this space.</p>
                       )}
-                    </div>
+                    </Card>
                   </div>
                 </div>
               )}
@@ -574,18 +587,17 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
 
                   <form onSubmit={handleUpdateSpace} className="space-y-5">
-                    {/* Space Icon Edit */}
+                    {/* Space Icon Edit (replaces custom preview div with Avatar UI component) */}
                     <div className="flex flex-col items-center sm:items-start mb-6">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Space Icon</label>
                       <div className="relative group">
-                        <div className="w-20 h-20 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-2xl border border-gray-200 flex items-center justify-center text-gray-400 overflow-hidden shadow-inner">
-                          {editIconPreview ? (
-                            <img src={editIconPreview} alt="Preview" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-2xl font-extrabold">{space.name.charAt(0)}</span>
-                          )}
-                        </div>
-                        <label className="absolute -bottom-1 -right-1 bg-blue-900 hover:bg-blue-800 text-white p-1.5 rounded-full cursor-pointer shadow hover:scale-105 transition">
+                        <Avatar
+                          src={editIconPreview || undefined}
+                          alt={space.name}
+                          size="lg"
+                          className="!rounded-2xl border border-gray-200 shadow-inner"
+                        />
+                        <label className="absolute -bottom-1 -right-1 bg-comatch-primary hover:opacity-90 text-white p-1.5 rounded-full cursor-pointer shadow hover:scale-105 transition">
                           <Camera size={14} />
                           <input 
                             type="file" 
@@ -603,49 +615,43 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Space Name</label>
-                      <input 
+                    {/* Space Name (replaces custom input with Input UI component) */}
+                    <div className="space-y-1">
+                      <Input 
                         type="text" 
+                        label="Space Name"
                         value={space.name} 
-                        className="w-full px-4 py-2.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-xl cursor-not-allowed focus:outline-none" 
                         disabled 
+                        className="cursor-not-allowed"
                       />
-                      <span className="text-[10px] text-gray-400 mt-1 block">To maintain integrity, the space name cannot be changed after creation.</span>
+                      <span className="text-[10px] text-gray-400 block px-1">To maintain integrity, the space name cannot be changed after creation.</span>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                      <textarea
-                        value={editDesc}
-                        onChange={(e) => setEditDesc(e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none text-gray-900 placeholder-gray-400 resize-none transition"
-                        placeholder="Space description..."
-                        required
-                      />
-                    </div>
+                    {/* Description (replaces custom textarea with Textarea UI component) */}
+                    <Textarea
+                      label="Description"
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      rows={4}
+                      placeholder="Space description..."
+                      required
+                      className="resize-none"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">External Resource Link</label>
-                      <div className="relative flex items-center">
-                        <span className="absolute left-4 text-gray-400">
-                          <Globe size={16} />
-                        </span>
-                        <input
-                          type="url"
-                          value={editLink}
-                          onChange={(e) => setEditLink(e.target.value)}
-                          className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none text-gray-900 placeholder-gray-400 transition"
-                          placeholder="https://example.com"
-                        />
-                      </div>
-                    </div>
+                    {/* External Link (replaces custom input with Input UI component) */}
+                    <Input
+                      type="url"
+                      label="External Resource Link"
+                      value={editLink}
+                      onChange={(e) => setEditLink(e.target.value)}
+                      placeholder="https://example.com"
+                    />
 
-                    <button
+                    {/* Submit settings (replaces custom button with Button UI component) */}
+                    <Button
                       type="submit"
                       disabled={isSaving}
-                      className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white rounded-xl font-bold transition flex items-center justify-center gap-1.5 shadow"
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 shadow"
                     >
                       {isSaving ? (
                         <>
@@ -661,7 +667,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           <span>Save Changes</span>
                         </>
                       )}
-                    </button>
+                    </Button>
                   </form>
                 </div>
               )}

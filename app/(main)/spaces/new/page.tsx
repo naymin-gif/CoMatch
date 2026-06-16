@@ -3,8 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../../../utils/clients';
-import { ArrowLeft, Camera, Globe, FileText, LayoutGrid, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Camera, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+
+// Import shared UI components
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
+import Avatar from '@/components/ui/Avatar';
 
 export default function CreateSpacePage() {
   const router = useRouter();
@@ -120,14 +127,14 @@ export default function CreateSpacePage() {
         {/* Back navigation */}
         <Link 
           href="/" 
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 font-semibold mb-6 transition"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-comatch-primary font-semibold mb-6 transition"
         >
           <ArrowLeft size={16} />
           Back to Dashboard
         </Link>
 
-        {/* Content Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-8 sm:p-10">
+        {/* Content Card (replaces custom div wrapper with Card UI component) */}
+        <Card className="shadow-xl border border-gray-100 overflow-hidden sm:p-10">
           
           <div className="text-center mb-8 border-b pb-6 border-gray-100">
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Create New Space</h1>
@@ -144,22 +151,21 @@ export default function CreateSpacePage() {
               </div>
             )}
 
-            {/* Icon Uploader */}
+            {/* Icon Uploader (replaces custom div preview with Avatar UI component) */}
             <div className="flex flex-col items-center">
               <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
                 Space Icon (Optional)
               </label>
               
               <div className="relative group">
-                <div className="w-24 h-24 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 overflow-hidden group-hover:border-blue-400 transition shadow-inner">
-                  {iconPreview ? (
-                    <img src={iconPreview} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <LayoutGrid size={32} className="group-hover:scale-110 transition duration-300" />
-                  )}
-                </div>
+                <Avatar
+                  src={iconPreview || undefined}
+                  alt={name || "New Space"}
+                  size="xl"
+                  className="!rounded-2xl border-2 border-dashed border-gray-300 shadow-inner group-hover:border-comatch-primary transition duration-300"
+                />
                 
-                <label className="absolute -bottom-2 -right-2 bg-blue-900 hover:bg-blue-800 text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-110 transition">
+                <label className="absolute -bottom-2 -right-2 bg-comatch-primary hover:opacity-90 text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-110 transition">
                   <Camera size={16} />
                   <input 
                     type="file" 
@@ -172,68 +178,44 @@ export default function CreateSpacePage() {
               <p className="text-xs text-gray-400 mt-3">Upload a clean icon to represent your space.</p>
             </div>
 
-            {/* Space Name */}
-            <div>
-              <label htmlFor="spaceName" className="block text-sm font-semibold text-gray-700 mb-1">
-                Space Name <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  id="spaceName"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none text-gray-900 placeholder-gray-400 transition"
-                  placeholder="e.g. Orbital 2026, HackRoll 2026"
-                  required
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Names must be unique and represent the competition/module.</p>
-            </div>
+            {/* Space Name (replaces custom input with Input UI component) */}
+            <Input
+              id="spaceName"
+              type="text"
+              label="Space Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Orbital 2026, HackRoll 2026"
+              required
+            />
 
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
-                Description <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none text-gray-900 placeholder-gray-400 transition resize-none"
-                  placeholder="Explain what this space is for, who it targets, and key objectives..."
-                  required
-                />
-              </div>
-            </div>
+            {/* Description (replaces custom textarea with Textarea UI component) */}
+            <Textarea
+              id="description"
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder="Explain what this space is for, who it targets, and key objectives..."
+              required
+              className="resize-none"
+            />
 
-            {/* External Link */}
-            <div>
-              <label htmlFor="externalLink" className="block text-sm font-semibold text-gray-700 mb-1">
-                External Website / Resource Link
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 text-gray-400">
-                  <Globe size={18} />
-                </span>
-                <input
-                  id="externalLink"
-                  type="url"
-                  value={externalLink}
-                  onChange={(e) => setExternalLink(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none text-gray-900 placeholder-gray-400 transition"
-                  placeholder="https://devpost.com/your-hackathon"
-                />
-              </div>
-            </div>
+            {/* External Link (replaces custom input with Input UI component) */}
+            <Input
+              id="externalLink"
+              type="url"
+              label="External Website / Resource Link"
+              value={externalLink}
+              onChange={(e) => setExternalLink(e.target.value)}
+              placeholder="https://devpost.com/your-hackathon"
+            />
 
-            {/* Submit Button */}
-            <button
+            {/* Submit Button (replaces custom button with Button UI component) */}
+            <Button
               type="submit"
               disabled={isLoading || !userId}
-              className="w-full py-3 px-4 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 mt-4"
+              className="w-full py-3 flex items-center justify-center gap-2 mt-4 shadow-md"
             >
               {isLoading ? (
                 <>
@@ -246,10 +228,10 @@ export default function CreateSpacePage() {
               ) : (
                 <span>Create Now</span>
               )}
-            </button>
+            </Button>
 
           </form>
-        </div>
+        </Card>
 
       </div>
     </main>
