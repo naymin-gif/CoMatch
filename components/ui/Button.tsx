@@ -25,7 +25,7 @@ export default function Button({
     success: "bg-comatch-success text-white hover:opacity-80",
     danger: "bg-comatch-danger text-white hover:opacity-80",
     outline: "border-2 border-comatch-primary text-comatch-primary hover:bg-gray-50",
-    'tab-active': "bg-gray-900 text-white shadow-md text-sm",
+    'tab-active': "bg-comatch-primary text-white shadow-md text-sm",
     'tab-inactive': "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 text-sm",
   };
 
