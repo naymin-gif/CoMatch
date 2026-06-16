@@ -1,24 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js"; 
+import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from '@supabase/ssr';
 import {
   Dashboard,
   getMyApplications,
   getRequestsReceived,
   updateApplicationStatus,
 } from "@/utils/DashboardActions";
-import MyApplications from "@/components/dashboard/MyApplications";
-import RequestsReceived from "@/components/dashboard/RequestsReceived";
+
+// UI Components
+import StatusBadge, { ApplicationStatus } from "@/components/ui/StatusBadge";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Avatar from "@/components/ui/Avatar"; // <-- Added Avatar Import
 
 // Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+//const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 type TabState = "inbound" | "outbound";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [outbound, setOutbound] = useState<Dashboard[]>([]);
   const [inbound, setInbound] = useState<Dashboard[]>([]);
@@ -30,7 +41,13 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Not authenticated");
+        
+        // Redirect if not authenticated instead of crashing
+        if (!user) {
+          router.push('/login'); // <-- Change '/login' to your actual sign-in route
+          return; // Stop execution of the rest of the function
+        }
+        
         setUserId(user.id);
 
         const [outboundData, inboundData] = await Promise.all([
@@ -48,7 +65,7 @@ export default function DashboardPage() {
     }
 
     loadDashboard();
-  }, []);
+  }, [router]);
 
   const handleAction = async (appId: string, newStatus: 'Approved' | 'Rejected') => {
     if (!userId) return;
@@ -69,45 +86,125 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="w-full min-h-screen bg-[#fafafa] flex justify-center items-center">
+        <span className="text-blue-600 font-medium animate-pulse">Loading Dashboard...</span>
+      </div>
+    );
   }
 
+  // Helper function to render list items based on the active tab
+  const renderListItems = (data: Dashboard[], isOutbound: boolean) => {
+    if (data.length === 0) {
+      return (
+        <Card className="flex justify-center items-center py-12 px-4 !shadow-sm border border-gray-100">
+          <p className="text-gray-400 text-sm">
+            {isOutbound ? "You haven't submitted any applications." : "No requests received yet."}
+          </p>
+        </Card>
+      );
+    }
+
+    return data.map((app) => (
+      <Card 
+        key={app.id} 
+        className="flex flex-col sm:flex-row sm:items-center justify-between !p-4 border border-gray-100 hover:shadow-lg transition-all cursor-pointer"
+      >
+        <div className="flex items-center gap-4 mb-3 sm:mb-0">
+          {/* Avatar Component overriding previous svg placeholder */}
+          <Avatar alt={app.id} className="w-12 h-12" />
+          
+          <div>
+            <h3 className="font-bold text-gray-900 text-[15px]">Application: {app.id.substring(0, 8)}</h3>
+            <div className="flex items-center text-gray-500 text-[13px] mt-0.5 gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span>{isOutbound ? 'Tracking project request' : 'Review applicant details'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <StatusBadge status={app.status as ApplicationStatus} />
+          
+          {/* Action Buttons for Pending Inbound */}
+          {!isOutbound && app.status === 'Pending' && (
+            <div className="flex gap-2 mr-2">
+              <Button variant="success" onClick={(e) => { e.stopPropagation(); handleAction(app.id, 'Approved'); }}>
+                Approve
+              </Button>
+              <Button variant="danger" onClick={(e) => { e.stopPropagation(); handleAction(app.id, 'Rejected'); }}>
+                Reject
+              </Button>
+            </div>
+          )}
+
+          {/* Chevron Right Indicator */}
+          <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100 flex-shrink-0">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </Card>
+    ));
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div className="w-full min-h-screen bg-[#fafafa] pb-40 pt-12 font-sans relative">
+      <div className="max-w-3xl mx-auto px-6">
+        
+        {/* Page Header aligned with "My Spaces" UI */}
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard</h1>
+            <p className="text-gray-500 text-sm mt-1">Manage your team applications and incoming requests.</p>
+          </div>
+        </div>
 
-      {/* TABS NAVIGATION */}
-      <div className="flex space-x-6 mb-8 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab("inbound")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === "inbound"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-          }`}
-        >
-          Requests Received
-        </button>
-        <button
-          onClick={() => setActiveTab("outbound")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === "outbound"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-          }`}
-        >
-          My Applications
-        </button>
+        {/* Search Bar / Tab Toggle Replacement */}
+        <div className="relative mb-6">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input 
+            type="text" 
+            placeholder="Search applications..." 
+            className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all shadow-sm"
+          />
+        </div>
+
+        {/* Custom Pill Tabs */}
+        <div className="flex space-x-2 mb-6">
+          <Button
+            variant={activeTab === "inbound" ? "primary" : "outline"}
+            onClick={() => setActiveTab("inbound")}
+            className={`!px-5 !py-2 !text-sm ${
+              activeTab === "inbound" ? "shadow-md" : "!text-gray-500 !border-gray-200"
+            }`}
+          >
+            Requests Received
+          </Button>
+          
+          <Button
+            variant={activeTab === "outbound" ? "primary" : "outline"}
+            onClick={() => setActiveTab("outbound")}
+            className={`!px-5 !py-2 !text-sm ${
+              activeTab === "outbound" ? "shadow-md" : "!text-gray-500 !border-gray-200"
+            }`}
+          >
+            My Applications
+          </Button>
+        </div>
+
+        {/* LIST CONTENT */}
+        <div className="flex flex-col gap-3">
+          {activeTab === "inbound" ? renderListItems(inbound, false) : renderListItems(outbound, true)}
+        </div>
       </div>
-
-      {/* TAB CONTENT RENDERING */}
-      {activeTab === "inbound" && (
-        <RequestsReceived inbound={inbound} handleAction={handleAction} />
-      )}
-
-      {activeTab === "outbound" && (
-        <MyApplications outbound={outbound} />
-      )}
     </div>
   );
 }
