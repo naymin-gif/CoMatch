@@ -15,7 +15,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className = '', ...props }, ref) => {
     
     // Base styles for the input field
-    const inputBaseStyle = "px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-shadow disabled:opacity-50 disabled:bg-gray-50 disabled:cursor-not-allowed w-full";
+    const inputBaseStyle = "px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-shadow disabled:opacity-50 disabled:bg-gray-50 disabled:cursor-not-allowed w-full text-gray-900";
     
     // Dynamic styles depending on whether there is an error
     const inputStateStyle = error 
