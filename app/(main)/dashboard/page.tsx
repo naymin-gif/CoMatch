@@ -179,22 +179,16 @@ export default function DashboardPage() {
 
         {/* Custom Pill Tabs */}
         <div className="flex space-x-2 mb-6">
-          <Button
-            variant={activeTab === "inbound" ? "primary" : "outline"}
+           <Button
+            variant={activeTab === "inbound" ? "tab-active" : "tab-inactive"}
             onClick={() => setActiveTab("inbound")}
-            className={`!px-5 !py-2 !text-sm ${
-              activeTab === "inbound" ? "shadow-md" : "!text-gray-500 !border-gray-200"
-            }`}
           >
             Requests Received
           </Button>
           
           <Button
-            variant={activeTab === "outbound" ? "primary" : "outline"}
+            variant={activeTab === "outbound" ? "tab-active" : "tab-inactive"}
             onClick={() => setActiveTab("outbound")}
-            className={`!px-5 !py-2 !text-sm ${
-              activeTab === "outbound" ? "shadow-md" : "!text-gray-500 !border-gray-200"
-            }`}
           >
             My Applications
           </Button>
