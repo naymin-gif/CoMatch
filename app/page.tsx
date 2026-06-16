@@ -3,8 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../utils/clients';
-import { Search, Plus, LayoutGrid, Users, ChevronRight, MessageSquare, PlusCircle } from 'lucide-react';
+import { Plus, LayoutGrid, Users, ChevronRight, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+
+// Import shared UI components added by teammate
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Avatar from '@/components/ui/Avatar';
 
 interface Space {
   id: string;
@@ -135,65 +141,63 @@ export default function Home() {
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">My Spaces</h1>
             <p className="text-sm text-gray-500 mt-1">Select a workspace hub to find your dream team.</p>
           </div>
-          <Link
-            href="/spaces/new"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-900 hover:bg-blue-800 text-white font-bold text-sm rounded-xl shadow-md transition hover:scale-102"
+          
+          <Button
+            onClick={() => router.push('/spaces/new')}
+            className="flex items-center gap-2 justify-center shadow-md"
           >
             <Plus size={18} />
             New Space
-          </Link>
+          </Button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative mb-6">
-          <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-            <Search size={20} />
-          </span>
-          <input
+        {/* Search Bar (replaces custom input wrapper with Input UI component) */}
+        <div className="mb-6">
+          <Input
             type="text"
             placeholder="Search a space..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 placeholder-gray-400 transition"
           />
         </div>
 
         {/* Spaces Directory */}
         {filteredSpaces.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+          <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
             <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
             <h3 className="text-lg font-bold text-gray-800">No spaces found</h3>
-            <p className="text-sm text-gray-400 max-w-sm mx-auto mt-1">
+            <p className="text-sm text-gray-400 max-w-sm mx-auto mt-1 mb-6">
               {searchQuery 
                 ? "Try searching for a different keyword or create a new space." 
                 : "Get started by creating your very first space!"}
             </p>
-            <Link
-              href="/spaces/new"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow mt-6 transition"
+            
+            <Button
+              onClick={() => router.push('/spaces/new')}
+              className="inline-flex items-center gap-2"
             >
               <PlusCircle size={14} />
               Create Space
-            </Link>
-          </div>
+            </Button>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {filteredSpaces.map((space) => (
-              <div 
+              <Card 
                 key={space.id} 
                 onClick={() => router.push(`/spaces/${space.id}`)}
-                className="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200 transition duration-300 flex items-center justify-between cursor-pointer group"
+                className="hover:shadow-md hover:border-comatch-light transition duration-300 flex items-center justify-between cursor-pointer group p-5 border border-gray-100"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-14 h-14 bg-gradient-to-tr from-slate-50 to-slate-100 border rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-gray-700 text-xl font-extrabold group-hover:scale-105 transition duration-300">
-                    {space.icon_url ? (
-                      <img src={space.icon_url} alt={space.name} className="w-full h-full object-cover" />
-                    ) : (
-                      space.name.charAt(0)
-                    )}
-                  </div>
+                  {/* Space Icon (replaces custom div with Avatar UI component) */}
+                  <Avatar
+                    src={space.icon_url || undefined}
+                    alt={space.name}
+                    size="lg"
+                    className="group-hover:scale-105 transition duration-300"
+                  />
                   <div className="min-w-0">
-                    <h2 className="text-lg font-bold text-gray-900 group-hover:text-blue-900 transition truncate">{space.name}</h2>
+                    <h2 className="text-lg font-bold text-gray-900 group-hover:text-comatch-primary transition truncate">{space.name}</h2>
                     <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
                       <Users size={12} />
                       {space.memberCount} {space.memberCount === 1 ? 'member' : 'members'}
@@ -201,10 +205,10 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 rounded-xl border border-gray-100 group-hover:border-blue-100 transition shadow-inner">
+                <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
                   <ChevronRight size={18} className="group-hover:translate-x-0.5 transition duration-300" />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
