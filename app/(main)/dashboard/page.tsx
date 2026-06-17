@@ -158,7 +158,7 @@ export default function DashboardPage() {
         {/* Page Header aligned with "My Spaces" UI */}
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-3xl font-extrabold font-heading text-gray-900 tracking-tight">Dashboard</h1>
+            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">Dashboard</h1>
             <p className="text-gray-500 text-sm mt-1">Manage your team applications and incoming requests.</p>
           </div>
         </div>
