@@ -138,7 +138,7 @@ export default function Home() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">My Spaces</h1>
+            <h1 className="text-3xl font-extrabold font-heading text-gray-900 tracking-tight">My Spaces</h1>
             <p className="text-sm text-gray-500 mt-1">Select a workspace hub to find your dream team.</p>
           </div>
           

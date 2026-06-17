@@ -1,9 +1,29 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Crimson_Pro, Young_Serif, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import NavigationBar from '@/components/layouts/NavigationBar';
 
-const inter = Inter({ subsets: ['latin'] });
+// fonts
+const fontPrimary = Crimson_Pro({ 
+  subsets: ['latin'],
+  variable: '--font-crimson', 
+  display: 'swap',
+});
+
+const fontHeading = Young_Serif({
+  weight: ['400'], 
+  subsets: ['latin'],
+  variable: '--font-young-serif',
+  display: 'swap',
+});
+
+const fontQuote = Cormorant_Garamond({
+  weight: ['400', '600'], // You can add multiple weights if you want bold italics
+  style: ['italic'],      // Italics are now supported!
+  subsets: ['latin'],
+  variable: '--font-cormorant', // Keep the same variable name so CSS doesn't break
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'CoMatch',
@@ -16,12 +36,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-slate-50 min-h-screen pb-24`}>
-        {/* Main page content goes here */}
+    <html lang="en" className={`${fontPrimary.variable} ${fontHeading.variable} ${fontQuote.variable}`}>
+      <body className={`font-primary bg-comatch-background text-slate-900 min-h-screen pb-24 antialiased`}>
         <main>{children}</main>
-        
-        {/* Navigation bar stays sticky at the bottom across all pages */}
         <NavigationBar />
       </body>
     </html>
