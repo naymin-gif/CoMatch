@@ -59,6 +59,8 @@ export default function DashboardPage() {
         setInbound(inboundData);
       } catch (error) {
         console.error("Failed to load dashboard:", error);
+      } finally {
+        setLoading(false);
       }
     }
 
