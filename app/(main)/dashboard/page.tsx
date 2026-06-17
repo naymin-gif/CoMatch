@@ -17,6 +17,7 @@ import StatusBadge, { ApplicationStatus } from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar"; // <-- Added Avatar Import
+import SearchBar from "@/components/ui/SearchBar";
 
 // Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const [inbound, setInbound] = useState<Dashboard[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabState>("inbound");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -147,6 +149,24 @@ export default function DashboardPage() {
     ));
   };
 
+  const filteredInbound = inbound.filter(app => {
+    const query = searchQuery.toLowerCase();
+    const appId = app.id.toLowerCase();
+    const postTitle = app.posts?.title?.toLowerCase() || '';
+    const profileName = app.profiles?.name?.toLowerCase() || '';
+    const introMsg = app.intro_message?.toLowerCase() || '';
+    const roles = app.selected_roles?.join(' ').toLowerCase() || '';
+    return appId.includes(query) || postTitle.includes(query) || profileName.includes(query) || introMsg.includes(query) || roles.includes(query);
+  });
+
+  const filteredOutbound = outbound.filter(app => {
+    const query = searchQuery.toLowerCase();
+    const appId = app.id.toLowerCase();
+    const postTitle = app.posts?.title?.toLowerCase() || '';
+    const spaceName = app.posts?.spaces?.name?.toLowerCase() || '';
+    return appId.includes(query) || postTitle.includes(query) || spaceName.includes(query);
+  });
+
   return (
     <div className="w-full min-h-screen bg-[#fafafa] pb-40 pt-12 font-sans relative">
       <div className="max-w-3xl mx-auto px-6">
@@ -159,17 +179,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Search Bar / Tab Toggle Replacement */}
-        <div className="relative mb-6">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <input 
-            type="text" 
-            placeholder="Search applications..." 
-            className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all shadow-sm text-black"
+        {/* Search Bar (replaces custom search with SearchBar UI component) */}
+        <div className="mb-6 w-full md:max-w-sm md:ml-auto">
+          <SearchBar
+            placeholder="Search applications..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
@@ -192,7 +207,9 @@ export default function DashboardPage() {
 
         {/* LIST CONTENT */}
         <div className="flex flex-col gap-3">
-          {activeTab === "inbound" ? renderListItems(inbound, false) : renderListItems(outbound, true)}
+          {activeTab === "inbound" 
+            ? renderListItems(filteredInbound, false) 
+            : renderListItems(filteredOutbound, true)}
         </div>
       </div>
     </div>
