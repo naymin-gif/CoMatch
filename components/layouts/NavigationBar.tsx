@@ -11,7 +11,7 @@ export default function NavigationBar() {
     const navItems = [
         { name: 'Home', href: '/', icon: Home },
         { name: 'Chat', href: '/chat', icon: MessageSquare },
-        { name: 'Alerts', href: '/alerts', icon: Bell },
+        { name: 'Dashboard', href: '/dashboard', icon: Bell },
         { name: 'Profile', href: '/profile', icon: User },
     ];
 

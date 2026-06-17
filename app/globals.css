@@ -1,5 +1,15 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
+
+@theme {
+  --color-comatch-primary: #3b82f6;
+  --color-comatch-light: #93c5fd;
+  --color-comatch-success: #4ade80;
+  --color-comatch-danger: #f87171;
+  --color-comatch-background: #f8fafc;
+
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+}
 
 :root {
   --background: #ffffff;
