@@ -9,7 +9,7 @@ import Link from 'next/link';
 // Import shared UI components added by teammate
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import SearchBar from '@/components/ui/SearchBar';
 import Avatar from '@/components/ui/Avatar';
 
 interface Space {
@@ -151,10 +151,9 @@ export default function Home() {
           </Button>
         </div>
 
-        {/* Search Bar (replaces custom input wrapper with Input UI component) */}
-        <div className="mb-6">
-          <Input
-            type="text"
+        {/* Search Bar (replaces custom input wrapper with SearchBar UI component) */}
+        <div className="mb-6 w-full md:max-w-sm md:ml-auto">
+          <SearchBar
             placeholder="Search a space..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
