@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { createBrowserClient } from '@supabase/ssr';
+import Loading from "@/app/loading";
 import {
   Dashboard,
   getMyApplications,
@@ -40,7 +41,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadDashboard() {
-      setLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
@@ -88,11 +88,7 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="w-full min-h-screen bg-[#fafafa] flex justify-center items-center">
-        <span className="text-blue-600 font-medium animate-pulse">Loading Dashboard...</span>
-      </div>
-    );
+    return <Loading />;
   }
 
   // Helper function to render list items based on the active tab
@@ -178,7 +174,7 @@ export default function DashboardPage() {
         {/* Page Header aligned with "My Spaces" UI */}
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard</h1>
+            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">Dashboard</h1>
             <p className="text-gray-500 text-sm mt-1">Manage your team applications and incoming requests.</p>
           </div>
         </div>
