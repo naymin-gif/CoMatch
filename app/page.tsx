@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '../utils/clients';
 import Loading from './loading';
 import { Plus, LayoutGrid, Users, ChevronRight, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
-
-// Import shared UI components added by teammate
+import PageWrapper from '@/components/ui/PageWrapper';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import SearchBar from '@/components/ui/SearchBar';
@@ -123,87 +121,79 @@ export default function Home() {
     }
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-28 pt-8">
-      <div className="max-w-4xl mx-auto px-4">
-        
-        {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">My Spaces</h1>
-            <p className="text-sm text-gray-500 mt-1">Select a workspace hub to find your dream team.</p>
-          </div>
+    <PageWrapper
+      title="My Spaces"
+      subtitle="Select a workspace hub to find your dream team."
+      headerAction={
+        <Button
+          onClick={() => router.push('/spaces/new')}
+          className="flex items-center gap-2 justify-center shadow-md"
+        >
+          <Plus size={18} />
+          New Space
+        </Button>
+      }
+    >
+      {/* Search Bar */}
+      <div className="mb-6 w-full md:max-w-sm md:ml-auto">
+        <SearchBar
+          placeholder="Search a space..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {/* Spaces Directory */}
+      {filteredSpaces.length === 0 ? (
+        <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
+          <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
+          <h3 className="text-lg font-bold text-gray-800">No spaces found</h3>
+          <p className="text-sm text-gray-400 max-w-sm mx-auto mt-1 mb-6">
+            {searchQuery 
+              ? "Try searching for a different keyword or create a new space." 
+              : "Get started by creating your very first space!"}
+          </p>
           
           <Button
             onClick={() => router.push('/spaces/new')}
-            className="flex items-center gap-2 justify-center shadow-md"
+            className="inline-flex items-center gap-2"
           >
-            <Plus size={18} />
-            New Space
+            <PlusCircle size={14} />
+            Create Space
           </Button>
-        </div>
-
-        {/* Search Bar (replaces custom input wrapper with SearchBar UI component) */}
-        <div className="mb-6 w-full md:max-w-sm md:ml-auto">
-          <SearchBar
-            placeholder="Search a space..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Spaces Directory */}
-        {filteredSpaces.length === 0 ? (
-          <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
-            <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
-            <h3 className="text-lg font-bold text-gray-800">No spaces found</h3>
-            <p className="text-sm text-gray-400 max-w-sm mx-auto mt-1 mb-6">
-              {searchQuery 
-                ? "Try searching for a different keyword or create a new space." 
-                : "Get started by creating your very first space!"}
-            </p>
-            
-            <Button
-              onClick={() => router.push('/spaces/new')}
-              className="inline-flex items-center gap-2"
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredSpaces.map((space) => (
+            <Card 
+              key={space.id} 
+              onClick={() => router.push(`/spaces/${space.id}`)}
+              className="hover:shadow-md hover:border-comatch-light transition duration-300 flex items-center justify-between cursor-pointer group p-5 border border-gray-100"
             >
-              <PlusCircle size={14} />
-              Create Space
-            </Button>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredSpaces.map((space) => (
-              <Card 
-                key={space.id} 
-                onClick={() => router.push(`/spaces/${space.id}`)}
-                className="hover:shadow-md hover:border-comatch-light transition duration-300 flex items-center justify-between cursor-pointer group p-5 border border-gray-100"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  {/* Space Icon (replaces custom div with Avatar UI component) */}
-                  <Avatar
-                    src={space.icon_url || undefined}
-                    alt={space.name}
-                    size="lg"
-                    className="group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-bold text-gray-900 group-hover:text-comatch-primary transition truncate">{space.name}</h2>
-                    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
-                      <Users size={12} />
-                      {space.memberCount} {space.memberCount === 1 ? 'member' : 'members'}
-                    </p>
-                  </div>
+              <div className="flex items-center gap-4 min-w-0">
+                {/* Space Icon */}
+                <Avatar
+                  src={space.icon_url || undefined}
+                  alt={space.name}
+                  size="lg"
+                  className="group-hover:scale-105 transition duration-300"
+                />
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-gray-900 group-hover:text-comatch-primary transition truncate">{space.name}</h2>
+                  <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
+                    <Users size={12} />
+                    {space.memberCount} {space.memberCount === 1 ? 'member' : 'members'}
+                  </p>
                 </div>
+              </div>
 
-                <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
-                  <ChevronRight size={18} className="group-hover:translate-x-0.5 transition duration-300" />
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-      </div>
-    </main>
+              <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
+                <ChevronRight size={18} className="group-hover:translate-x-0.5 transition duration-300" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </PageWrapper>
   );
 }
