@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 import { createBrowserClient } from '@supabase/ssr';
 import Loading from "@/app/loading";
+import PageWrapper from "@/components/ui/PageWrapper";
+
 import {
   Dashboard,
   getMyApplications,
@@ -16,13 +17,9 @@ import {
 import StatusBadge, { ApplicationStatus } from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import Avatar from "@/components/ui/Avatar"; // <-- Added Avatar Import
+import Avatar from "@/components/ui/Avatar"; 
 import SearchBar from "@/components/ui/SearchBar";
 
-// Initialize Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-//const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -46,8 +43,8 @@ export default function DashboardPage() {
         
         // Redirect if not authenticated instead of crashing
         if (!user) {
-          router.push('/login'); // <-- Change '/login' to your actual sign-in route
-          return; // Stop execution of the rest of the function
+          router.push('/login'); 
+          return; 
         }
         
         setUserId(user.id);
@@ -91,7 +88,7 @@ export default function DashboardPage() {
     return <Loading />;
   }
 
-  // Helper function to render list items based on the active tab
+  // render list items based on the active tab
   const renderListItems = (data: Dashboard[], isOutbound: boolean) => {
     if (data.length === 0) {
       return (
@@ -109,7 +106,6 @@ export default function DashboardPage() {
         className="flex flex-col sm:flex-row sm:items-center justify-between !p-4 border border-gray-100 hover:shadow-lg transition-all cursor-pointer"
       >
         <div className="flex items-center gap-4 mb-3 sm:mb-0">
-          {/* Avatar Component overriding previous svg placeholder */}
           <Avatar alt={app.id} className="w-12 h-12" />
           
           <div>
@@ -168,50 +164,43 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="w-full min-h-screen pb-40 pt-12 font-sans relative">
-      <div className="max-w-3xl mx-auto px-6">
-        
-        {/* Page Header aligned with "My Spaces" UI */}
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">Dashboard</h1>
-            <p className="text-gray-500 text-mini mt-1">Manage your team applications and incoming requests.</p>
-          </div>
-        </div>
-
-        {/* Search Bar (replaces custom search with SearchBar UI component) */}
-        <div className="mb-6 w-full md:max-w-sm md:ml-auto">
-          <SearchBar
-            placeholder="Search applications..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Custom Pill Tabs */}
-        <div className="flex space-x-2 mb-6">
-           <Button
-            variant={activeTab === "inbound" ? "tab-active" : "tab-inactive"}
-            onClick={() => setActiveTab("inbound")}
-          >
-            Requests Received
-          </Button>
-          
-          <Button
-            variant={activeTab === "outbound" ? "tab-active" : "tab-inactive"}
-            onClick={() => setActiveTab("outbound")}
-          >
-            My Applications
-          </Button>
-        </div>
-
-        {/* LIST CONTENT */}
-        <div className="flex flex-col gap-3">
-          {activeTab === "inbound" 
-            ? renderListItems(filteredInbound, false) 
-            : renderListItems(filteredOutbound, true)}
-        </div>
+    <PageWrapper 
+      title="Dashboard" 
+      subtitle="Manage your team applications and incoming requests."
+    >
+      {/* Search Bar */}
+      <div className="mb-6 w-full md:max-w-sm md:ml-auto">
+        <SearchBar
+          placeholder="Search applications..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
-    </div>
+
+      {/* Custom Pill Tabs */}
+      <div className="flex space-x-2 mb-6">
+          <Button
+          variant={activeTab === "inbound" ? "tab-active" : "tab-inactive"}
+          onClick={() => setActiveTab("inbound")}
+        >
+          Requests Received
+        </Button>
+        
+        <Button
+          variant={activeTab === "outbound" ? "tab-active" : "tab-inactive"}
+          onClick={() => setActiveTab("outbound")}
+        >
+          My Applications
+        </Button>
+      </div>
+
+      {/* LIST CONTENT */}
+      <div className="flex flex-col gap-3">
+        {activeTab === "inbound" 
+          ? renderListItems(filteredInbound, false) 
+          : renderListItems(filteredOutbound, true)}
+      </div>
+    </PageWrapper>
+
   );
 }
