@@ -168,7 +168,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="w-full min-h-screen bg-[#fafafa] pb-40 pt-12 font-sans relative">
+    <div className="w-full min-h-screen pb-40 pt-12 font-sans relative">
       <div className="max-w-3xl mx-auto px-6">
         
         {/* Page Header aligned with "My Spaces" UI */}
