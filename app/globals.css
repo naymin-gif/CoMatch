@@ -13,7 +13,7 @@
   /* Fonts */
   --font-primary: var(--font-crimson), ui-serif, Georgia, serif;
   --font-heading: var(--font-young-serif), ui-serif, Georgia, serif;
-  --font-quote: var(--font-cormorant-garamond), ui-serif, Georgia, serif;
+  --font-quote: var(--font-cormorant), ui-serif, Georgia, serif;
 
   /* Font Sizes */
   --text-mini: 0.875rem;
