@@ -96,7 +96,7 @@ export default function DashboardPage() {
     if (data.length === 0) {
       return (
         <Card className="flex justify-center items-center py-12 px-4 !shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-mini">
             {isOutbound ? "You haven't submitted any applications." : "No requests received yet."}
           </p>
         </Card>
@@ -113,8 +113,8 @@ export default function DashboardPage() {
           <Avatar alt={app.id} className="w-12 h-12" />
           
           <div>
-            <h3 className="font-bold text-gray-900 text-[15px]">Application: {app.id.substring(0, 8)}</h3>
-            <div className="flex items-center text-gray-500 text-[13px] mt-0.5 gap-1.5">
+            <h3 className="font-bold text-gray-900 text-heading">Application: {app.id.substring(0, 8)}</h3>
+            <div className="flex items-center text-gray-500 text-primary mt-0.5 gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
@@ -175,7 +175,7 @@ export default function DashboardPage() {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage your team applications and incoming requests.</p>
+            <p className="text-gray-500 text-mini mt-1">Manage your team applications and incoming requests.</p>
           </div>
         </div>
 
