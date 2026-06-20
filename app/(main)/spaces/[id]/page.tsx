@@ -292,7 +292,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       {/* Banner / Cover */}
       <div className="h-60 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 w-full shadow-inner relative">
         <div className="absolute top-6 left-6">
-          <Link href="/" className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-sm font-semibold rounded-full border border-white/10 transition">
+          <Link href="/" className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-mini font-primary font-semibold rounded-full border border-white/10 transition">
             <ArrowLeft size={14} />
             Dashboard
           </Link>
@@ -316,14 +316,14 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   className="border-2 border-white shadow-md !rounded-2xl"
                 />
                 <div>
-                  <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">{space.name}</h1>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-1.5">
+                  <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">{space.name}</h1>
+                  <div className="flex flex-wrap items-center gap-3 text-mini font-primary text-gray-500 mt-1.5">
                     <span className="flex items-center gap-1">
                       <Clock size={12} />
                       Created {prettyJoinDate}
                     </span>
                     <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
-                    <span className="font-semibold text-comatch-primary">Owner: {ownerProfile?.name || 'Administrator'}</span>
+                    <span className="font-semibold text-comatch-primary font-primary">Owner: {ownerProfile?.name || 'Administrator'}</span>
                   </div>
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   href={space.external_link} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-comatch-primary hover:bg-blue-100 font-bold text-sm rounded-xl border border-blue-100 shadow-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-comatch-primary hover:bg-blue-100 font-bold text-mini font-primary rounded-xl border border-blue-100 shadow-sm transition"
                 >
                   <Globe size={16} />
                   Visit Official Website
@@ -351,7 +351,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               <nav className="flex flex-col gap-1">
                 <button
                   onClick={() => { setActiveTab('calls'); setIsEditing(false); }}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-mini font-primary transition ${
                     activeTab === 'calls' 
                       ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -361,12 +361,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     <MessageSquare size={18} />
                     Teammate Calls
                   </span>
-                  <span className="bg-white px-2 py-0.5 rounded-md text-xs border border-gray-200 font-semibold">{posts.length}</span>
+                  <span className="bg-white px-2 py-0.5 rounded-md text-mini font-primary border border-gray-200 font-semibold">{posts.length}</span>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab('members'); setIsEditing(false); }}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-mini font-primary transition ${
                     activeTab === 'members' 
                       ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -376,12 +376,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     <Users size={18} />
                     Members
                   </span>
-                  <span className="bg-white px-2 py-0.5 rounded-md text-xs border border-gray-200 font-semibold">{members.length}</span>
+                  <span className="bg-white px-2 py-0.5 rounded-md text-mini font-primary border border-gray-200 font-semibold">{members.length}</span>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab('resources'); setIsEditing(false); }}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-mini font-primary transition ${
                     activeTab === 'resources' 
                       ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -396,7 +396,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 {isOwner && (
                   <button
                     onClick={() => { setActiveTab('settings'); }}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition ${
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl font-bold text-mini font-primary transition ${
                       activeTab === 'settings' 
                         ? 'bg-blue-100/50 text-comatch-primary shadow-sm' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -419,12 +419,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b pb-4 border-gray-100">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">Teammate Calls</h2>
-                      <p className="text-xs text-gray-500">Discover or publish recruitment postings for this space.</p>
+                      <h2 className="text-heading font-heading font-extrabold text-gray-900">Teammate Calls</h2>
+                      <p className="text-mini font-primary text-gray-500">Discover or publish recruitment postings for this space.</p>
                     </div>
                     <Link
                       href={`/spaces/${spaceId}/posts/new`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-comatch-primary hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-comatch-primary hover:opacity-90 text-white font-bold text-mini font-primary rounded-xl shadow transition"
                     >
                       <Plus size={14} />
                       Post Teammate Call
@@ -434,13 +434,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   {posts.length === 0 ? (
                     <div className="text-center py-16 bg-slate-50/50 rounded-2xl border-2 border-dashed border-gray-200">
                       <MessageSquare className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                      <h3 className="text-base font-bold text-gray-700">No active calls yet</h3>
-                      <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1">
+                      <h3 className="text-primary font-heading font-bold text-gray-700">No active calls yet</h3>
+                      <p className="text-mini font-primary text-gray-400 max-w-sm mx-auto mt-1">
                         Be the first to post a recruitment call and form a team for this project/module!
                       </p>
                       <Link
                         href={`/spaces/${spaceId}/posts/new`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-comatch-primary hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition mt-4"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-comatch-primary hover:opacity-90 text-white font-bold text-mini font-primary rounded-xl shadow transition mt-4"
                       >
                         <Plus size={14} />
                         Post Call
@@ -460,16 +460,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                 size="sm"
                               />
                               <div>
-                                <h4 className="text-xs font-semibold text-gray-900">{post.owner.name}</h4>
-                                <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                <h4 className="text-mini font-primary font-semibold text-gray-900">{post.owner.name}</h4>
+                                <span className="text-mini font-primary text-gray-400 flex items-center gap-1">
                                   <Clock size={10} />
                                   {new Date(post.created_at).toLocaleDateString()}
                                 </span>
                               </div>
                             </div>
                             
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{post.title}</h3>
-                            <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">{post.description}</p>
+                            <h3 className="text-heading font-heading font-bold text-gray-900 mb-2">{post.title}</h3>
+                            <p className="text-primary font-primary text-gray-600 line-clamp-3 mb-4 leading-relaxed">{post.description}</p>
                           </div>
 
                           <div className="flex flex-wrap gap-2 border-t pt-4 border-gray-5 mt-2 items-center">
@@ -496,8 +496,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               {activeTab === 'members' && (
                 <div className="space-y-6">
                   <div className="border-b pb-4 border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900">Space Members</h2>
-                    <p className="text-xs text-gray-500">People collaborating within this space.</p>
+                    <h2 className="text-heading font-heading font-extrabold text-gray-900">Space Members</h2>
+                    <p className="text-mini font-primary text-gray-500">People collaborating within this space.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -512,8 +512,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                             className="border"
                           />
                           <div>
-                            <h4 className="text-sm font-bold text-gray-900">{member.name}</h4>
-                            <p className="text-[10px] text-gray-400">{member.roles || 'Developer'}</p>
+                            <h4 className="text-primary font-primary font-bold text-gray-900">{member.name}</h4>
+                            <p className="text-mini font-primary text-gray-400">{member.roles || 'Developer'}</p>
                           </div>
                         </div>
                         {currentUser?.id !== member.id && (
@@ -537,18 +537,18 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               {activeTab === 'resources' && (
                 <div className="space-y-6">
                   <div className="border-b pb-4 border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900">Resources</h2>
-                    <p className="text-xs text-gray-500">Official links and documentation.</p>
+                    <h2 className="text-heading font-heading font-extrabold text-gray-900">Resources</h2>
+                    <p className="text-mini font-primary text-gray-500">Official links and documentation.</p>
                   </div>
 
                   <div className="space-y-4">
                     {/* About Card (replaces custom container div with Card UI component) */}
                     <Card className="border border-gray-100 p-5 shadow-sm">
-                      <h3 className="text-base font-bold text-gray-800 mb-1.5 flex items-center gap-2">
+                      <h3 className="text-heading font-heading font-bold text-gray-800 mb-1.5 flex items-center gap-2">
                         <Info size={18} className="text-comatch-primary" />
                         About {space.name}
                       </h3>
-                      <p className="text-sm text-gray-600 leading-relaxed mb-4">{space.description}</p>
+                      <p className="text-primary font-primary text-gray-600 leading-relaxed mb-4">{space.description}</p>
                       
                       {space.external_link ? (
                         <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between border border-slate-100">
@@ -557,8 +557,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                               <Globe size={18} />
                             </div>
                             <div>
-                              <h4 className="text-xs font-bold text-gray-800">Official Web Resource</h4>
-                              <p className="text-[10px] text-gray-400 line-clamp-1 max-w-sm sm:max-w-md">{space.external_link}</p>
+                              <h4 className="text-mini font-primary font-bold text-gray-800">Official Web Resource</h4>
+                              <p className="text-mini font-primary text-gray-400 line-clamp-1 max-w-sm sm:max-w-md">{space.external_link}</p>
                             </div>
                           </div>
                           <a 
@@ -582,14 +582,14 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               {activeTab === 'settings' && isOwner && (
                 <div className="space-y-6">
                   <div className="border-b pb-4 border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900">Space Settings</h2>
-                    <p className="text-xs text-gray-500">Manage description and external resources.</p>
+                    <h2 className="text-heading font-heading font-extrabold text-gray-900">Space Settings</h2>
+                    <p className="text-mini font-primary text-gray-500">Manage description and external resources.</p>
                   </div>
 
                   <form onSubmit={handleUpdateSpace} className="space-y-5">
                     {/* Space Icon Edit (replaces custom preview div with Avatar UI component) */}
                     <div className="flex flex-col items-center sm:items-start mb-6">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Space Icon</label>
+                      <label className="block text-mini font-primary font-semibold text-gray-700 mb-2">Space Icon</label>
                       <div className="relative group">
                         <Avatar
                           src={editIconPreview || undefined}
@@ -624,7 +624,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         disabled 
                         className="cursor-not-allowed"
                       />
-                      <span className="text-[10px] text-gray-400 block px-1">To maintain integrity, the space name cannot be changed after creation.</span>
+                      <span className="text-mini font-primary text-gray-400 block px-1">To maintain integrity, the space name cannot be changed after creation.</span>
                     </div>
 
                     {/* Description (replaces custom textarea with Textarea UI component) */}
