@@ -5,7 +5,6 @@ import { createClient } from '../../../utils/clients';
 import toast from 'react-hot-toast';
 
 // UI Components
-import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
@@ -95,14 +94,14 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
         {/* Cover Photo Edit */}
-        <Card className="relative h-64 sm:h-80 w-full bg-gray-200 group flex items-center justify-center overflow-hidden border-0 rounded-2xl">
-           {formData.background_url && (
-             <img src={formData.background_url} alt="Cover" className="w-full h-full object-cover absolute inset-0" />
-           )}
-           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-             <label className="cursor-pointer bg-white/90 hover:bg-white text-gray-800 text-mini font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2">
+        <div className="relative h-64 sm:h-80 w-full bg-gray-200 group flex items-center justify-center overflow-hidden border-0 rounded-2xl">
+          {formData.background_url && (
+            <img src={formData.background_url} alt="Cover" className="w-full h-full object-cover absolute inset-0" />
+          )}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <label className="cursor-pointer bg-white/90 hover:bg-white text-gray-800 text-mini font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2">
                 {uploadingBackground ? 'Uploading...' : 'Edit Cover Photo'}
-                <Input 
+                <input 
                   type="file" 
                   accept="image/*" 
                   onChange={(e) => uploadImage(e, 'background')} 
@@ -111,7 +110,7 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
                 />
               </label>
             </div>
-        </Card>
+        </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,12 +121,12 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
             <Avatar 
               src={formData.avatar_url} 
               alt="Profile" 
-              className="w-full h-full object-cover"
+              className="w-full h-full"
             />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <label className="cursor-pointer text-white text-mini font-semibold py-1 px-3 rounded-full border border-white hover:bg-white/20 transition-colors">
                 {uploadingAvatar ? '...' : 'Upload'}
-                <Input 
+                <input 
                   type="file" 
                   accept="image/*" 
                   onChange={(e) => uploadImage(e, 'avatar')} 
@@ -144,10 +143,10 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
             </div>
             
             <div className="flex gap-3 mt-4 sm:mt-0">
-              <Button variant="danger" onClick={onCancel}>
+              <Button variant="danger" type="button" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button variant="success">
+              <Button variant="success" type="submit">
                 Save
               </Button>
             </div>
@@ -157,33 +156,51 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
         {/* Form Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <div>
-              <label className="block text-mini font-semibold text-gray-700 mb-2">Full Name</label>
-              <Input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full" />
-            </div>
-            <div>
-              <label className="block text-mini font-semibold text-gray-700 mb-2">Email</label>
-              <Input type="email" name="email" value={formData.email} onChange={handleChange} disabled className="w-full" />
-            </div>
-            <div>
-              <label className="block text-mini font-semibold text-gray-700 mb-2">Portfolio / Links</label>
-              <Input type="text" name="links" value={formData.links || ''} onChange={handleChange} className="w-full" />
-            </div>
+            <Input 
+              label="Full Name" 
+              type="text" 
+              name="name" 
+              value={formData.name} 
+              onChange={handleChange} 
+            />
+            <Input 
+              label="Email" 
+              type="email" 
+              name="email" 
+              value={formData.email} 
+              onChange={handleChange} 
+              disabled 
+            />
+            <Input 
+              label="Portfolio / Links" 
+              type="text" 
+              name="links" 
+              value={formData.links || ''} 
+              onChange={handleChange} 
+            />
           </div>
           
           <div className="space-y-6">
-            <div>
-              <label className="block text-mini font-semibold text-gray-700 mb-2">Bio</label>
-              <Textarea name="bio" value={formData.bio || ''} onChange={handleChange} rows={4} className="w-full" />
-            </div>
-            <div>
-              <label className="block text-mini font-semibold text-gray-700 mb-2">Skills (comma separated)</label>
-              <Input type="text" name="skills" value={formData.skills || ''} onChange={handleChange} className="w-full" />
-            </div>
-            <div>
-              <label className="block text-mini font-semibold text-gray-700 mb-2">Preferred Roles</label>
-              <Input type="text" name="roles" value={formData.roles || ''} onChange={handleChange} className="w-full" />
-            </div>
+            <Textarea 
+              label="Bio" 
+              name="bio" 
+              value={formData.bio || ''} 
+              onChange={handleChange} 
+            />
+            <Input 
+              label="Skills (comma separated)" 
+              type="text" 
+              name="skills" 
+              value={formData.skills || ''} 
+              onChange={handleChange} 
+            />
+            <Input 
+              label="Preferred Roles" 
+              type="text" 
+              name="roles" 
+              value={formData.roles || ''} 
+              onChange={handleChange} 
+            />
           </div>
         </div>
       </div>
