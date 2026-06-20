@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @theme {
   --color-comatch-primary: #3b82f6;
@@ -30,7 +33,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: --color-comatch-background;
   --foreground: #171717;
 }
 
