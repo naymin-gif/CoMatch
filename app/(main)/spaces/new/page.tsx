@@ -127,7 +127,7 @@ export default function CreateSpacePage() {
         {/* Back navigation */}
         <Link 
           href="/" 
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-comatch-primary font-semibold mb-6 transition"
+          className="inline-flex items-center gap-2 text-mini text-gray-600 hover:text-comatch-primary font-primary font-semibold mb-6 transition"
         >
           <ArrowLeft size={16} />
           Back to Dashboard
@@ -137,8 +137,8 @@ export default function CreateSpacePage() {
         <Card className="shadow-xl border border-gray-100 overflow-hidden sm:p-10">
           
           <div className="text-center mb-8 border-b pb-6 border-gray-100">
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Create New Space</h1>
-            <p className="text-sm text-gray-500 mt-2">Create a central hub for your hackathon, class module, or side project.</p>
+            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">Create New Space</h1>
+            <p className="text-primary font-primary text-gray-500 mt-2">Create a central hub for your hackathon, class module, or side project.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -153,7 +153,7 @@ export default function CreateSpacePage() {
 
             {/* Icon Uploader (replaces custom div preview with Avatar UI component) */}
             <div className="flex flex-col items-center">
-              <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
+              <label className="block text-mini font-semibold font-primary text-gray-700 mb-3 text-center">
                 Space Icon (Optional)
               </label>
               
@@ -175,7 +175,7 @@ export default function CreateSpacePage() {
                   />
                 </label>
               </div>
-              <p className="text-xs text-gray-400 mt-3">Upload a clean icon to represent your space.</p>
+              <p className="text-mini font-primary text-gray-400 mt-3">Upload a clean icon to represent your space.</p>
             </div>
 
             {/* Space Name (replaces custom input with Input UI component) */}

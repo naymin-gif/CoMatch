@@ -147,8 +147,8 @@ export default function Home() {
       {filteredSpaces.length === 0 ? (
         <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
           <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
-          <h3 className="text-lg font-bold text-gray-800">No spaces found</h3>
-          <p className="text-sm text-gray-400 max-w-sm mx-auto mt-1 mb-6">
+          <h3 className="text-heading font-heading font-extrabold text-gray-800">No spaces found</h3>
+          <p className="text-primary font-primary text-gray-400 max-w-sm mx-auto mt-1 mb-6">
             {searchQuery 
               ? "Try searching for a different keyword or create a new space." 
               : "Get started by creating your very first space!"}
@@ -179,8 +179,8 @@ export default function Home() {
                   className="group-hover:scale-105 transition duration-300"
                 />
                 <div className="min-w-0">
-                  <h2 className="text-lg font-bold text-gray-900 group-hover:text-comatch-primary transition truncate">{space.name}</h2>
-                  <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
+                  <h2 className="text-heading font-heading font-extrabold text-gray-900 group-hover:text-comatch-primary transition truncate">{space.name}</h2>
+                  <p className="text-mini font-primary text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
                     <Users size={12} />
                     {space.memberCount} {space.memberCount === 1 ? 'member' : 'members'}
                   </p>
