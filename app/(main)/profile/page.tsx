@@ -103,14 +103,11 @@ export default function ProfilePage() {
 
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 pb-6 border-b border-gray-200">
-              
-              <div className="relative -mt-14 w-40 h-40 bg-comatch-light rounded-full flex items-center justify-center text-comatch-primary text-heading-lg font-bold border-4 shadow-sm overflow-hidden shrink-0 z-10">
-                <Avatar 
-                  src={formData.avatar_url} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <Avatar 
+                src={formData.avatar_url} 
+                alt={formData.name || "Profile"} 
+                className="relative -mt-14 w-40 h-40 border-4 shadow-sm z-10 text-heading-lg"
+              />
               
               <div className="flex-1 flex flex-col sm:flex-row justify-between items-center sm:items-end w-full pt-2 sm:pt-0">
                 <div className="text-center sm:text-left">
@@ -137,7 +134,7 @@ export default function ProfilePage() {
               
               {/* Left Column: Contact & Info */}
               <div className="md:col-span-1">
-                 <Card className="p-6 flex flex-col gap-5">
+                 <Card className="flex flex-col gap-5">
                     <div>
                       <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">Email</span>
                       <span className="text-primary text-gray-800 font-medium">{formData.email}</span>
@@ -170,7 +167,7 @@ export default function ProfilePage() {
                   {formData.skills ? (
                     <div className="flex flex-wrap gap-2">
                       {formData.skills.split(',').map((skill, index) => (
-                        <Badge key={index} className="bg-comatch-light/30 text-comatch-primary border-comatch-light">
+                        <Badge key={index} variant="outline">
                           {skill.trim()}
                         </Badge>
                       ))}
@@ -185,7 +182,7 @@ export default function ProfilePage() {
                   {formData.roles ? (
                     <div className="flex flex-wrap gap-2">
                       {formData.roles.split(',').map((role, index) => (
-                        <Badge key={index} className="bg-purple-50 text-purple-700 border-purple-100">
+                        <Badge key={index} variant="outline">
                           {role.trim()}
                         </Badge>
                       ))}
