@@ -30,7 +30,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: --color-comatch-background;
   --foreground: #171717;
 }
 
