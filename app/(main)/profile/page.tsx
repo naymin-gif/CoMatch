@@ -90,7 +90,7 @@ export default function ProfilePage() {
             
             {/* Cover Photo */}
             <div 
-              className="relative h-64 sm:h-80 w-full bg-gray-100 flex items-center justify-center overflow-hidden"
+              className="relative h-64 sm:h-80 w-full bg-gray-100 flex items-center shadow-xl justify-center overflow-hidden"
               style={{ borderRadius: 'var(--radius-card)' }}
             >
                {formData.background_url ? (
