@@ -86,7 +86,6 @@ export default function ProfilePage() {
         />
       ) : (
         <div className="animate-in fade-in pb-12">
-          
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
             
             {/* Cover Photo */}
