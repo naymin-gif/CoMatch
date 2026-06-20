@@ -139,13 +139,13 @@ export default function ProfilePage() {
               <div className="md:col-span-1">
                  <Card className="p-6 flex flex-col gap-5">
                     <div>
-                      <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email</span>
-                      <span className="text-sm text-gray-800 font-medium">{formData.email}</span>
+                      <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">Email</span>
+                      <span className="text-primary text-gray-800 font-medium">{formData.email}</span>
                     </div>
                     
                     <div>
-                      <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Joined</span>
-                      <span className="text-sm text-gray-800 font-medium flex items-center gap-2">
+                      <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">Joined</span>
+                      <span className="text-primary text-gray-800 font-medium flex items-center gap-2">
                         <FaCalendar className="text-gray-400" /> 
                         {formData.joinDate}
                       </span>
@@ -153,9 +153,9 @@ export default function ProfilePage() {
                     
                     {formData.links && (
                       <div>
-                        <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Links</span>
-                        <a href={formData.links?.startsWith('http') ? formData.links : `https://${formData.links}`} target="_blank" rel="noopener noreferrer" className="text-mini text-comatch-primary hover:underline font-medium break-all flex items-center gap-2">
-                          <FaGithub className="text-gray-700 text-lg" />
+                        <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">Links</span>
+                        <a href={formData.links?.startsWith('http') ? formData.links : `https://${formData.links}`} target="_blank" rel="noopener noreferrer" className="text-primary text-comatch-primary hover:underline font-medium break-all flex items-center gap-2">
+                          <FaGithub className="text-gray-700 text-primary" />
                           {formData.links.replace(/^https?:\/\//, '')}
                         </a>
                       </div>
@@ -176,7 +176,7 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm italic">No skills listed.</p>
+                    <p className="text-gray-500 text-primary italic">No skills listed.</p>
                   )}
                 </section>
                 
@@ -191,7 +191,7 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm italic">No roles listed.</p>
+                    <p className="text-gray-500 text-primary italic">No roles listed.</p>
                   )}
                 </section>
               </div>

@@ -100,8 +100,8 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
              <img src={formData.background_url} alt="Cover" className="w-full h-full object-cover absolute inset-0" />
            )}
            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-             <label className="cursor-pointer bg-white/90 hover:bg-white text-gray-800 text-sm font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2">
-                {uploadingBackground ? 'Uploading...' : '📷 Edit Cover Photo'}
+             <label className="cursor-pointer bg-white/90 hover:bg-white text-gray-800 text-mini font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2">
+                {uploadingBackground ? 'Uploading...' : 'Edit Cover Photo'}
                 <Input 
                   type="file" 
                   accept="image/*" 
@@ -118,14 +118,14 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
         
         {/* Header section */}
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 pb-6 border-b border-gray-200 mb-8">
-          <div className="relative -mt-14 w-40 h-40 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 text-4xl font-bold border-4 border-white shadow-sm overflow-hidden group shrink-0 z-10">
+          <div className="relative -mt-14 w-40 h-40 rounded-full flex items-center justify-center text-blue-800 text-4xl font-bold border-4 border-white shadow-sm overflow-hidden group shrink-0 z-10">
             <Avatar 
               src={formData.avatar_url} 
               alt="Profile" 
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <label className="cursor-pointer text-white text-xs font-semibold py-1 px-3 rounded-full border border-white hover:bg-white/20 transition-colors">
+              <label className="cursor-pointer text-white text-mini font-semibold py-1 px-3 rounded-full border border-white hover:bg-white/20 transition-colors">
                 {uploadingAvatar ? '...' : 'Upload'}
                 <Input 
                   type="file" 
@@ -158,30 +158,30 @@ export default function EditProfileForm({ initialData, onCancel, onSaveSuccess }
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+              <label className="block text-mini font-semibold text-gray-700 mb-2">Full Name</label>
               <Input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+              <label className="block text-mini font-semibold text-gray-700 mb-2">Email</label>
               <Input type="email" name="email" value={formData.email} onChange={handleChange} disabled className="w-full" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Portfolio / Links</label>
+              <label className="block text-mini font-semibold text-gray-700 mb-2">Portfolio / Links</label>
               <Input type="text" name="links" value={formData.links || ''} onChange={handleChange} className="w-full" />
             </div>
           </div>
           
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Bio</label>
+              <label className="block text-mini font-semibold text-gray-700 mb-2">Bio</label>
               <Textarea name="bio" value={formData.bio || ''} onChange={handleChange} rows={4} className="w-full" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Skills (comma separated)</label>
+              <label className="block text-mini font-semibold text-gray-700 mb-2">Skills (comma separated)</label>
               <Input type="text" name="skills" value={formData.skills || ''} onChange={handleChange} className="w-full" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Preferred Roles</label>
+              <label className="block text-mini font-semibold text-gray-700 mb-2">Preferred Roles</label>
               <Input type="text" name="roles" value={formData.roles || ''} onChange={handleChange} className="w-full" />
             </div>
           </div>
