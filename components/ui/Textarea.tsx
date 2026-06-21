@@ -26,7 +26,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className={`flex flex-col gap-1.5 ${className}`}>
         {/* Render the label if provided */}
         {label && (
-          <label className="text-sm font-medium text-gray-700">
+          <label htmlFor={props.id || props.name} className="text-mini font-medium text-gray-700">
             {label}
           </label>
         )}
@@ -34,6 +34,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {/* The actual textarea field */}
         <textarea
           ref={ref}
+          id={props.id || props.name}
           className={`${textareaBaseStyle} ${textareaStateStyle}`}
           {...props}
         />
