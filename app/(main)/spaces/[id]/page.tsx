@@ -19,6 +19,7 @@ import {
   Save
 } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 // Import shared UI components
 import Card from '@/components/ui/Card';
@@ -71,6 +72,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [ownerProfile, setOwnerProfile] = useState<Profile | null>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isJoined, setIsJoined] = useState(false);
   
   // Tabs & Editing State
   const [activeTab, setActiveTab] = useState<'calls' | 'members' | 'resources' | 'settings'>('calls');
@@ -152,45 +154,43 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
           setPosts(postsWithProfiles);
         }
 
-        // 5. Fetch members (defined as Owner + any Approved Applicants)
+        // 5. Fetch members from space_members
+        const { data: membersData, error: membersError } = await supabase
+          .from('space_members')
+          .select('profile_id')
+          .eq('space_id', spaceId);
+
+        if (membersError) throw membersError;
+
         const memberList: Profile[] = [];
-        if (ownerData) {
-          memberList.push(ownerData);
-        }
+        let userIsMember = false;
 
-        // Fetch approved applications for posts in this space
-        const { data: approvedApps } = await supabase
-          .from('applications')
-          .select('applicant_id, status')
-          .eq('status', 'Approved');
+        if (membersData && membersData.length > 0) {
+          const profileIds = membersData.map(m => m.profile_id);
+          if (user) {
+            userIsMember = profileIds.includes(user.id);
+          }
 
-        // Filter applications that belong to posts in this space
-        if (approvedApps && postsData && postsData.length > 0) {
-          const postIds = postsData.map(p => p.id);
-          const { data: appsInSpace } = await supabase
-            .from('applications')
-            .select('applicant_id')
-            .in('post_id', postIds)
-            .eq('status', 'Approved');
+          const { data: profileList } = await supabase
+            .from('profiles')
+            .select('id, name, email, avatar_url, roles')
+            .in('id', profileIds);
 
-          if (appsInSpace) {
-            const uniqueApplicantIds = Array.from(new Set(appsInSpace.map(a => a.applicant_id)));
-            // Filter out the owner if they applied to their own post (edge case)
-            const peerIds = uniqueApplicantIds.filter(id => id !== spaceData.owner_id);
-
-            if (peerIds.length > 0) {
-              const { data: peerProfiles } = await supabase
-                .from('profiles')
-                .select('id, name, email, avatar_url, roles')
-                .in('id', peerIds);
-
-              if (peerProfiles) {
-                memberList.push(...peerProfiles);
-              }
-            }
+          if (profileList) {
+            memberList.push(...profileList);
+          }
+        } else {
+          // Fallback if membership table is empty for this space
+          if (ownerData) {
+            memberList.push(ownerData);
+          }
+          if (user && spaceData.owner_id === user.id) {
+            userIsMember = true;
           }
         }
+
         setMembers(memberList);
+        setIsJoined(userIsMember || spaceData.owner_id === (user?.id || ''));
 
       } catch (err: any) {
         console.error(err);
@@ -202,6 +202,61 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
     loadSpaceData();
   }, [spaceId, supabase]);
+
+  const handleJoinSpace = async () => {
+    if (!currentUser || !space) return;
+
+    try {
+      const { error } = await supabase
+        .from('space_members')
+        .insert({
+          space_id: spaceId,
+          profile_id: currentUser.id
+        });
+
+      if (error) throw error;
+
+      toast.success(`Joined ${space.name} successfully!`);
+      setIsJoined(true);
+
+      // Add currentUser profile to the local member list
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar_url, roles')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      if (userProfile) {
+        setMembers(prev => [...prev, userProfile]);
+      }
+    } catch (err: any) {
+      console.error('Error joining space:', err);
+      toast.error('Failed to join space: ' + err.message);
+    }
+  };
+
+  const handleLeaveSpace = async () => {
+    if (!currentUser || !space) return;
+
+    try {
+      const { error } = await supabase
+        .from('space_members')
+        .delete()
+        .eq('space_id', spaceId)
+        .eq('profile_id', currentUser.id);
+
+      if (error) throw error;
+
+      toast.success(`Left ${space.name}.`);
+      setIsJoined(false);
+
+      // Remove currentUser from the local member list
+      setMembers(prev => prev.filter(m => m.id !== currentUser.id));
+    } catch (err: any) {
+      console.error('Error leaving space:', err);
+      toast.error('Failed to leave space: ' + err.message);
+    }
+  };
 
   const handleUpdateSpace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,18 +383,46 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
 
-              {space.external_link && (
-                <a 
-                  href={space.external_link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-comatch-primary hover:bg-blue-100 font-bold text-mini font-primary rounded-xl border border-blue-100 shadow-sm transition"
-                >
-                  <Globe size={16} />
-                  Visit Official Website
-                  <ExternalLink size={12} />
-                </a>
-              )}
+              <div className="flex flex-wrap items-center gap-3">
+                {currentUser && (
+                  <div>
+                    {isOwner ? (
+                      <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-100 text-slate-500 font-bold text-mini font-primary rounded-xl border border-slate-200 select-none shadow-sm">
+                        Owner
+                      </span>
+                    ) : isJoined ? (
+                      <Button
+                        variant="outline"
+                        className="px-5! py-2.5! text-mini font-bold border-red-200! text-red-500! hover:bg-red-50! hover:border-red-300!"
+                        onClick={handleLeaveSpace}
+                      >
+                        Leave Space
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        className="px-5! py-2.5! text-mini font-bold"
+                        onClick={handleJoinSpace}
+                      >
+                        Join Space
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {space.external_link && (
+                  <a 
+                    href={space.external_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-comatch-primary hover:bg-blue-100 font-bold text-mini font-primary rounded-xl border border-blue-100 shadow-sm transition"
+                  >
+                    <Globe size={16} />
+                    Visit Official Website
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
 
