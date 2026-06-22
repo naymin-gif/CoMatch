@@ -24,12 +24,13 @@ export interface Dashboard {
 
 // Fetches applications the user sent to other teams
 export async function getMyApplications(
-  supabase: SupabaseClient, 
+  supabase: SupabaseClient,
   userId: string
 ): Promise<Dashboard[]> {
   const { data, error } = await supabase
     .from('applications')
-    .select(`
+    .select(
+      `
       id,
       status,
       created_at,
@@ -40,26 +41,28 @@ export async function getMyApplications(
           name
         )
       )
-    `)
+    `
+    )
     .eq('applicant_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching my applications:", error);
-    throw new Error("Could not load applications.");
+    console.error('Error fetching my applications:', error);
+    throw new Error('Could not load applications.');
   }
 
-  return (data as unknown) as Dashboard[];
+  return data as unknown as Dashboard[];
 }
 
 // Fetches applications the user received from other users
 export async function getRequestsReceived(
-  supabase: SupabaseClient, 
+  supabase: SupabaseClient,
   userId: string
 ): Promise<Dashboard[]> {
   const { data, error } = await supabase
     .from('applications')
-    .select(`
+    .select(
+      `
       id,
       intro_message,
       selected_roles,
@@ -74,25 +77,25 @@ export async function getRequestsReceived(
         title,
         owner_id
       )
-    `)
+    `
+    )
     .eq('posts.owner_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching received requests:", error);
-    throw new Error("Could not load inbound requests.");
+    console.error('Error fetching received requests:', error);
+    throw new Error('Could not load inbound requests.');
   }
 
-  return (data as unknown) as Dashboard[];
+  return data as unknown as Dashboard[];
 }
 
 export async function updateApplicationStatus(
-  supabase: SupabaseClient, 
-  applicationId: string, 
-  newStatus: ApplicationStatus, 
+  supabase: SupabaseClient,
+  applicationId: string,
+  newStatus: ApplicationStatus,
   currentUserId: string
 ): Promise<Dashboard> {
-  
   // Authorization Check
   const { data: appData, error: verifyError } = await supabase
     .from('applications')
@@ -101,10 +104,14 @@ export async function updateApplicationStatus(
     .single();
 
   const postData = appData?.posts as any;
-  const ownerId = Array.isArray(postData) ? postData[0]?.owner_id : postData?.owner_id;
+  const ownerId = Array.isArray(postData)
+    ? postData[0]?.owner_id
+    : postData?.owner_id;
 
   if (verifyError || ownerId !== currentUserId) {
-    throw new Error("Unauthorized: You do not have permission to update this application.");
+    throw new Error(
+      'Unauthorized: You do not have permission to update this application.'
+    );
   }
 
   const { data, error } = await supabase
@@ -115,9 +122,9 @@ export async function updateApplicationStatus(
     .single();
 
   if (error) {
-    console.error("Error updating application status:", error);
-    throw new Error("Failed to update status.");
+    console.error('Error updating application status:', error);
+    throw new Error('Failed to update status.');
   }
 
-  return (data as unknown) as Dashboard;
+  return data as unknown as Dashboard;
 }

@@ -28,7 +28,10 @@ export default function CreateSpacePage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
       if (error || !user) {
         router.push('/login');
       } else {
@@ -67,7 +70,9 @@ export default function CreateSpacePage() {
       }
 
       if (existingSpace) {
-        setErrorMsg(`A space named "${cleanedName}" already exists. Please choose a unique name.`);
+        setErrorMsg(
+          `A space named "${cleanedName}" already exists. Please choose a unique name.`
+        );
         setIsLoading(false);
         return;
       }
@@ -86,7 +91,9 @@ export default function CreateSpacePage() {
           throw uploadError;
         }
 
-        const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        const { data } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
         iconUrl = data.publicUrl;
       }
 
@@ -114,7 +121,9 @@ export default function CreateSpacePage() {
       }
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || 'An unexpected error occurred while creating the space.');
+      setErrorMsg(
+        err.message || 'An unexpected error occurred while creating the space.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -123,10 +132,9 @@ export default function CreateSpacePage() {
   return (
     <main className="min-h-screen bg-slate-50 pb-28 pt-8">
       <div className="max-w-xl mx-auto px-4">
-        
         {/* Back navigation */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center gap-2 text-mini text-gray-600 hover:text-comatch-primary font-primary font-semibold mb-6 transition"
         >
           <ArrowLeft size={16} />
@@ -135,14 +143,17 @@ export default function CreateSpacePage() {
 
         {/* Content Card (replaces custom div wrapper with Card UI component) */}
         <Card className="shadow-xl border border-gray-100 overflow-hidden sm:p-10">
-          
           <div className="text-center mb-8 border-b pb-6 border-gray-100">
-            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">Create New Space</h1>
-            <p className="text-primary font-primary text-gray-500 mt-2">Create a central hub for your hackathon, class module, or side project.</p>
+            <h1 className="text-heading-lg font-extrabold font-heading text-gray-900 tracking-tight">
+              Create New Space
+            </h1>
+            <p className="text-primary font-primary text-gray-500 mt-2">
+              Create a central hub for your hackathon, class module, or side
+              project.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {/* Error alerts */}
             {errorMsg && (
               <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl flex items-start gap-3 text-sm animate-in fade-in zoom-in-95">
@@ -156,26 +167,28 @@ export default function CreateSpacePage() {
               <label className="block text-mini font-semibold font-primary text-gray-700 mb-3 text-center">
                 Space Icon (Optional)
               </label>
-              
+
               <div className="relative group">
                 <Avatar
                   src={iconPreview || undefined}
-                  alt={name || "New Space"}
+                  alt={name || 'New Space'}
                   size="xl"
                   className="!rounded-2xl border-2 border-dashed border-gray-300 shadow-inner group-hover:border-comatch-primary transition duration-300"
                 />
-                
+
                 <label className="absolute -bottom-2 -right-2 bg-comatch-primary hover:opacity-90 text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-110 transition">
                   <Camera size={16} />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleIconChange} 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleIconChange}
+                    className="hidden"
                   />
                 </label>
               </div>
-              <p className="text-mini font-primary text-gray-400 mt-3">Upload a clean icon to represent your space.</p>
+              <p className="text-mini font-primary text-gray-400 mt-3">
+                Upload a clean icon to represent your space.
+              </p>
             </div>
 
             {/* Space Name (replaces custom input with Input UI component) */}
@@ -219,9 +232,24 @@ export default function CreateSpacePage() {
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   <span>Creating Space...</span>
                 </>
@@ -229,10 +257,8 @@ export default function CreateSpacePage() {
                 <span>Create Now</span>
               )}
             </Button>
-
           </form>
         </Card>
-
       </div>
     </main>
   );

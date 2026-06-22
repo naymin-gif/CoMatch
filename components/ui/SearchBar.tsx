@@ -13,7 +13,7 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         <span className="absolute inset-y-0 left-4 flex items-center text-gray-400 pointer-events-none">
           <Search size={20} />
         </span>
-        
+
         {/* Search Input Field */}
         <input
           ref={ref}

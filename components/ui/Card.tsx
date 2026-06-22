@@ -11,20 +11,16 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-export default function Card({ 
-  children, 
-  className = '', 
-  ...props 
+export default function Card({
+  children,
+  className = '',
+  ...props
 }: CardProps) {
-  
   // Base styles: white background, custom card border-radius, a soft shadow, and default padding
-  const baseStyle = "bg-white rounded-card shadow-md p-6";
+  const baseStyle = 'bg-white rounded-card shadow-md p-6';
 
   return (
-    <div 
-      className={`${baseStyle} ${className}`} 
-      {...props}
-    >
+    <div className={`${baseStyle} ${className}`} {...props}>
       {children}
     </div>
   );

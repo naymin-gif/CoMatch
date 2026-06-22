@@ -6,19 +6,18 @@ interface PageWrapperProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
-  headerAction?: React.ReactNode; 
+  headerAction?: React.ReactNode;
 }
 
-export default function PageWrapper({ 
-  children, 
-  title, 
+export default function PageWrapper({
+  children,
+  title,
   subtitle,
-  headerAction 
+  headerAction,
 }: PageWrapperProps) {
   return (
     <div className="w-full min-h-screen pb-40 pt-12 font-sans relative">
       <div className="max-w-3xl mx-auto px-6">
-        
         {/* Page Header */}
         <div className="flex justify-between items-start mb-6">
           <div>
@@ -26,16 +25,12 @@ export default function PageWrapper({
               {title}
             </h1>
             {subtitle && (
-              <p className="text-gray-500 text-mini mt-1">
-                {subtitle}
-              </p>
+              <p className="text-gray-500 text-mini mt-1">{subtitle}</p>
             )}
           </div>
-          
+
           {/* Optional buttons/actions opposite the title */}
-          {headerAction && (
-            <div>{headerAction}</div>
-          )}
+          {headerAction && <div>{headerAction}</div>}
         </div>
 
         {/* Page Content */}

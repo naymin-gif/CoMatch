@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -22,13 +22,13 @@
   --text-mini: 0.875rem;
   --text-mini--line-height: 1.25rem;
 
-  --text-primary: 1rem; 
+  --text-primary: 1rem;
   --text-primary--line-height: 1.5rem;
 
-  --text-heading: 1.5rem; 
+  --text-heading: 1.5rem;
   --text-heading--line-height: 2rem;
 
-  --text-heading-lg: 2.25rem; 
+  --text-heading-lg: 2.25rem;
   --text-heading-lg--line-height: 2.5rem;
 }
 

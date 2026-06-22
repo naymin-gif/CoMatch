@@ -4,7 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../utils/clients';
 import Loading from './loading';
-import { Plus, LayoutGrid, Users, ChevronRight, PlusCircle } from 'lucide-react';
+import {
+  Plus,
+  LayoutGrid,
+  Users,
+  ChevronRight,
+  PlusCircle,
+} from 'lucide-react';
 import PageWrapper from '@/components/ui/PageWrapper';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -38,7 +44,10 @@ export default function Home() {
       try {
         setLoading(true);
         // 1. Get logged in user
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
         if (authError || !user) {
           router.push('/login');
           return;
@@ -61,7 +70,7 @@ export default function Home() {
 
           const postToSpaceMap: Record<string, string> = {};
           if (postsData) {
-            postsData.forEach(p => {
+            postsData.forEach((p) => {
               postToSpaceMap[p.id] = p.space_id;
             });
           }
@@ -74,7 +83,7 @@ export default function Home() {
 
           const spaceMembersMap: Record<string, Set<string>> = {};
           if (appsData) {
-            appsData.forEach(app => {
+            appsData.forEach((app) => {
               const spaceId = postToSpaceMap[app.post_id];
               if (spaceId) {
                 if (!spaceMembersMap[spaceId]) {
@@ -92,7 +101,7 @@ export default function Home() {
             const totalMembers = uniqueApprovedPeers + 1;
             return {
               ...space,
-              memberCount: totalMembers
+              memberCount: totalMembers,
             };
           });
 
@@ -111,14 +120,15 @@ export default function Home() {
   }, [router, supabase]);
 
   // Filter spaces based on search query
-  const filteredSpaces = spaces.filter(space => 
-    space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    space.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSpaces = spaces.filter(
+    (space) =>
+      space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      space.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
-      return <Loading />;
-    }
+    return <Loading />;
+  }
 
   return (
     <PageWrapper
@@ -147,13 +157,15 @@ export default function Home() {
       {filteredSpaces.length === 0 ? (
         <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
           <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
-          <h3 className="text-heading font-heading font-extrabold text-gray-800">No spaces found</h3>
+          <h3 className="text-heading font-heading font-extrabold text-gray-800">
+            No spaces found
+          </h3>
           <p className="text-primary font-primary text-gray-400 max-w-sm mx-auto mt-1 mb-6">
-            {searchQuery 
-              ? "Try searching for a different keyword or create a new space." 
-              : "Get started by creating your very first space!"}
+            {searchQuery
+              ? 'Try searching for a different keyword or create a new space.'
+              : 'Get started by creating your very first space!'}
           </p>
-          
+
           <Button
             onClick={() => router.push('/spaces/new')}
             className="inline-flex items-center gap-2"
@@ -165,8 +177,8 @@ export default function Home() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredSpaces.map((space) => (
-            <Card 
-              key={space.id} 
+            <Card
+              key={space.id}
               onClick={() => router.push(`/spaces/${space.id}`)}
               className="hover:shadow-md hover:border-comatch-light transition duration-300 flex items-center justify-between cursor-pointer group p-5 border border-gray-100"
             >
@@ -179,16 +191,22 @@ export default function Home() {
                   className="group-hover:scale-105 transition duration-300"
                 />
                 <div className="min-w-0">
-                  <h2 className="text-heading font-heading font-extrabold text-gray-900 group-hover:text-comatch-primary transition truncate">{space.name}</h2>
+                  <h2 className="text-heading font-heading font-extrabold text-gray-900 group-hover:text-comatch-primary transition truncate">
+                    {space.name}
+                  </h2>
                   <p className="text-mini font-primary text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
                     <Users size={12} />
-                    {space.memberCount} {space.memberCount === 1 ? 'member' : 'members'}
+                    {space.memberCount}{' '}
+                    {space.memberCount === 1 ? 'member' : 'members'}
                   </p>
                 </div>
               </div>
 
               <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
-                <ChevronRight size={18} className="group-hover:translate-x-0.5 transition duration-300" />
+                <ChevronRight
+                  size={18}
+                  className="group-hover:translate-x-0.5 transition duration-300"
+                />
               </div>
             </Card>
           ))}
