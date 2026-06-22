@@ -114,6 +114,18 @@ export default function CreateSpacePage() {
         throw insertError;
       }
 
+      // 3b. Auto-join the creator to the space memberships
+      const { error: joinError } = await supabase
+        .from('space_members')
+        .insert({
+          space_id: newSpace.id,
+          profile_id: userId,
+        });
+
+      if (joinError) {
+        throw joinError;
+      }
+
       // 4. Redirect on success
       if (newSpace) {
         router.push(`/spaces/${newSpace.id}`);
