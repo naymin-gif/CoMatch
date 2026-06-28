@@ -16,6 +16,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import SearchBar from '@/components/ui/SearchBar';
 import Avatar from '@/components/ui/Avatar';
+import toast from 'react-hot-toast';
 
 interface Space {
   id: string;
@@ -28,6 +29,8 @@ interface Space {
 
 interface SpaceWithMemberCount extends Space {
   memberCount: number;
+  isJoined: boolean;
+  isOwner: boolean;
 }
 
 export default function Home() {
@@ -62,53 +65,39 @@ export default function Home() {
 
         if (spacesError) throw spacesError;
 
-        if (spacesData && spacesData.length > 0) {
-          // 3. Fetch all posts to map post_id -> space_id
-          const { data: postsData } = await supabase
-            .from('posts')
-            .select('id, space_id');
+        // 3. Fetch all space members
+        const { data: membersData, error: membersError } = await supabase
+          .from('space_members')
+          .select('space_id, profile_id');
 
-          const postToSpaceMap: Record<string, string> = {};
-          if (postsData) {
-            postsData.forEach((p) => {
-              postToSpaceMap[p.id] = p.space_id;
-            });
-          }
+        if (membersError) throw membersError;
 
-          // 4. Fetch approved applications to count unique members per space
-          const { data: appsData } = await supabase
-            .from('applications')
-            .select('post_id, applicant_id, status')
-            .eq('status', 'Approved');
-
-          const spaceMembersMap: Record<string, Set<string>> = {};
-          if (appsData) {
-            appsData.forEach((app) => {
-              const spaceId = postToSpaceMap[app.post_id];
-              if (spaceId) {
-                if (!spaceMembersMap[spaceId]) {
-                  spaceMembersMap[spaceId] = new Set();
-                }
-                spaceMembersMap[spaceId].add(app.applicant_id);
-              }
-            });
-          }
-
-          // 5. Build spaces listing with member counts
-          const processedSpaces = spacesData.map((space: Space) => {
-            const uniqueApprovedPeers = spaceMembersMap[space.id]?.size || 0;
-            // Total members = unique approved peers + 1 (the space owner)
-            const totalMembers = uniqueApprovedPeers + 1;
-            return {
-              ...space,
-              memberCount: totalMembers,
-            };
+        // 4. Map space memberships
+        const spaceMembersMap: Record<string, Set<string>> = {};
+        if (membersData) {
+          membersData.forEach(member => {
+            if (!spaceMembersMap[member.space_id]) {
+              spaceMembersMap[member.space_id] = new Set();
+            }
+            spaceMembersMap[member.space_id].add(member.profile_id);
           });
-
-          setSpaces(processedSpaces);
-        } else {
-          setSpaces([]);
         }
+
+        // 5. Build spaces listing with member counts
+        const processedSpaces = (spacesData || []).map((space: Space) => {
+          const membersSet = spaceMembersMap[space.id] || new Set();
+          const isJoined = membersSet.has(user.id);
+          const isOwner = space.owner_id === user.id;
+
+          return {
+            ...space,
+            memberCount: Math.max(membersSet.size, 1), // Fallback to 1 (creator) if membership table doesn't have rows
+            isJoined: isJoined || isOwner, // Owner is always joined
+            isOwner
+          };
+        });
+
+        setSpaces(processedSpaces);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
       } finally {
@@ -119,12 +108,85 @@ export default function Home() {
     checkSessionAndLoadData();
   }, [router, supabase]);
 
-  // Filter spaces based on search query
-  const filteredSpaces = spaces.filter(
-    (space) =>
+  const handleJoinSpace = async (spaceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUser) return;
+
+    const spaceName = spaces.find(s => s.id === spaceId)?.name || 'space';
+
+    try {
+      const { error } = await supabase
+        .from('space_members')
+        .insert({
+          space_id: spaceId,
+          profile_id: currentUser.id
+        });
+
+      if (error) throw error;
+
+      toast.success(`Joined ${spaceName} successfully!`);
+
+      // Update state locally
+      setSpaces(prevSpaces => 
+        prevSpaces.map(space => 
+          space.id === spaceId 
+            ? { ...space, isJoined: true, memberCount: space.memberCount + 1 }
+            : space
+        )
+      );
+    } catch (err: any) {
+      console.error('Error joining space:', err);
+      toast.error('Could not join space: ' + err.message);
+    }
+  };
+
+  const handleLeaveSpace = async (spaceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUser) return;
+
+    const spaceName = spaces.find(s => s.id === spaceId)?.name || 'space';
+
+    try {
+      const { error } = await supabase
+        .from('space_members')
+        .delete()
+        .eq('space_id', spaceId)
+        .eq('profile_id', currentUser.id);
+
+      if (error) throw error;
+
+      toast.success(`Left ${spaceName}.`);
+
+      // Update state locally
+      setSpaces(prevSpaces => 
+        prevSpaces.map(space => 
+          space.id === spaceId 
+            ? { ...space, isJoined: false, memberCount: Math.max(space.memberCount - 1, 1) }
+            : space
+        )
+      );
+    } catch (err: any) {
+      console.error('Error leaving space:', err);
+      toast.error('Could not leave space: ' + err.message);
+    }
+  };
+
+  // Filter spaces based on search query AND membership mode
+  const displayedSpaces = spaces.filter(space => {
+    const matchesSearch = 
       space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      space.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      space.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    // Mode A: Empty search => show only joined/owned spaces
+    if (!searchQuery) {
+      return space.isJoined;
+    }
+
+    // Mode B: Active search => show all matches
+    return true;
+  });
 
   if (loading) {
     return <Loading />;
@@ -147,23 +209,28 @@ export default function Home() {
       {/* Search Bar */}
       <div className="mb-6 w-full md:max-w-sm md:ml-auto">
         <SearchBar
-          placeholder="Search a space..."
+          placeholder="Search all spaces..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
+      {/* Directory Title */}
+      <h3 className="text-mini font-bold text-gray-400 uppercase tracking-widest mb-4">
+        {searchQuery ? "All Spaces Search Results" : "My Joined & Owned Spaces"}
+      </h3>
+
       {/* Spaces Directory */}
-      {filteredSpaces.length === 0 ? (
+      {displayedSpaces.length === 0 ? (
         <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
           <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
           <h3 className="text-heading font-heading font-extrabold text-gray-800">
             No spaces found
           </h3>
           <p className="text-primary font-primary text-gray-400 max-w-sm mx-auto mt-1 mb-6">
-            {searchQuery
-              ? 'Try searching for a different keyword or create a new space.'
-              : 'Get started by creating your very first space!'}
+            {searchQuery 
+              ? "Try searching for a different keyword or explore other spaces." 
+              : "You haven't joined or created any spaces yet. Try searching to explore!"}
           </p>
 
           <Button
@@ -176,9 +243,9 @@ export default function Home() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredSpaces.map((space) => (
-            <Card
-              key={space.id}
+          {displayedSpaces.map((space) => (
+            <Card 
+              key={space.id} 
               onClick={() => router.push(`/spaces/${space.id}`)}
               className="hover:shadow-md hover:border-comatch-light transition duration-300 flex items-center justify-between cursor-pointer group p-5 border border-gray-100"
             >
@@ -202,11 +269,38 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
-                <ChevronRight
-                  size={18}
-                  className="group-hover:translate-x-0.5 transition duration-300"
-                />
+              <div className="flex items-center gap-3">
+                {/* Membership Actions */}
+                {currentUser && (
+                  <div className="relative z-20">
+                    {space.isOwner ? (
+                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full select-none">
+                        Owner
+                      </span>
+                    ) : space.isJoined ? (
+                      <Button 
+                        variant="outline" 
+                        className="px-4! py-1! text-xs font-bold border-red-200! text-red-500! hover:bg-red-50! hover:border-red-300!"
+                        onClick={(e) => handleLeaveSpace(space.id, e)}
+                      >
+                        Leave
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="primary" 
+                        className="px-4! py-1! text-xs font-bold"
+                        onClick={(e) => handleJoinSpace(space.id, e)}
+                      >
+                        Join
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Chevron Link indicator */}
+                <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
+                  <ChevronRight size={18} className="group-hover:translate-x-0.5 transition duration-300" />
+                </div>
               </div>
             </Card>
           ))}
