@@ -132,7 +132,7 @@ export default function EditProfileForm({
               alt="Profile"
               className="w-full h-full"
             />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <label className="cursor-pointer text-white text-mini font-semibold py-1 px-3 rounded-full border border-white hover:bg-white/20 transition-colors">
                 {uploadingAvatar ? '...' : 'Upload'}
                 <input
@@ -143,6 +143,15 @@ export default function EditProfileForm({
                   className="hidden"
                 />
               </label>
+              {formData.avatar_url && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, avatar_url: null })}
+                  className="text-red-400 hover:text-red-300 text-xs font-semibold py-0.5 px-2 rounded-full border border-red-500/30 hover:border-red-500/50 bg-black/25 transition-colors cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
             </div>
           </div>
 
