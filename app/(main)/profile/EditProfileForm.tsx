@@ -108,7 +108,7 @@ export default function EditProfileForm({
               className="w-full h-full object-cover absolute inset-0"
             />
           )}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col sm:flex-row items-center justify-center gap-3">
             <label className="cursor-pointer bg-white/90 hover:bg-white text-gray-800 text-mini font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2">
               {uploadingBackground ? 'Uploading...' : 'Edit Cover Photo'}
               <input
@@ -119,6 +119,15 @@ export default function EditProfileForm({
                 className="hidden"
               />
             </label>
+            {formData.background_url && (
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, background_url: null })}
+                className="bg-red-600 hover:bg-red-700 text-white text-mini font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                Remove Cover
+              </button>
+            )}
           </div>
         </div>
       </div>
