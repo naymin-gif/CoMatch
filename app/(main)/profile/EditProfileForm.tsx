@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
+import Badge from '@/components/ui/Badge';
 
 interface EditProfileProps {
   initialData: any;
@@ -25,6 +26,47 @@ export default function EditProfileForm({
   const [formData, setFormData] = useState(initialData);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBackground, setUploadingBackground] = useState(false);
+
+  // States for dynamic skills & roles builder
+  const [skillsList, setSkillsList] = useState<string[]>(
+    initialData.skills
+      ? initialData.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : []
+  );
+  const [newSkill, setNewSkill] = useState('');
+
+  const [rolesList, setRolesList] = useState<string[]>(
+    initialData.roles
+      ? initialData.roles.split(',').map((r: string) => r.trim()).filter(Boolean)
+      : []
+  );
+  const [newRole, setNewRole] = useState('');
+
+  const handleAddSkill = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const trimmed = newSkill.trim();
+    if (trimmed && !skillsList.includes(trimmed)) {
+      setSkillsList([...skillsList, trimmed]);
+      setNewSkill('');
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkillsList(skillsList.filter((s) => s !== skillToRemove));
+  };
+
+  const handleAddRole = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const trimmed = newRole.trim();
+    if (trimmed && !rolesList.includes(trimmed)) {
+      setRolesList([...rolesList, trimmed]);
+      setNewRole('');
+    }
+  };
+
+  const handleRemoveRole = (roleToRemove: string) => {
+    setRolesList(rolesList.filter((r) => r !== roleToRemove));
+  };
 
   const uploadImage = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -69,13 +111,16 @@ export default function EditProfileForm({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const skillsString = skillsList.join(', ');
+    const rolesString = rolesList.join(', ');
+
     const { error } = await supabase.from('profiles').upsert({
       id: formData.id,
       name: formData.name,
       email: formData.email,
       bio: formData.bio,
-      skills: formData.skills,
-      roles: formData.roles,
+      skills: skillsString,
+      roles: rolesString,
       links: formData.links,
       avatar_url: formData.avatar_url,
       background_url: formData.background_url,
@@ -87,7 +132,12 @@ export default function EditProfileForm({
       return;
     }
 
-    onSaveSuccess(formData);
+    const updatedProfile = {
+      ...formData,
+      skills: skillsString,
+      roles: rolesString,
+    };
+    onSaveSuccess(updatedProfile);
   };
 
   const handleChange = (
@@ -216,20 +266,93 @@ export default function EditProfileForm({
               value={formData.bio || ''}
               onChange={handleChange}
             />
-            <Input
-              label="Skills (comma separated)"
-              type="text"
-              name="skills"
-              value={formData.skills || ''}
-              onChange={handleChange}
-            />
-            <Input
-              label="Preferred Roles"
-              type="text"
-              name="roles"
-              value={formData.roles || ''}
-              onChange={handleChange}
-            />
+            {/* Dynamic Skills Builder */}
+            <div className="space-y-2">
+              <label className="text-mini font-medium text-gray-700 block">Skills</label>
+              
+              {skillsList.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {skillsList.map((skill, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline"
+                      className="flex items-center gap-1.5 pr-2"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="text-gray-400 hover:text-red-500 font-bold leading-none cursor-pointer focus:outline-none transition-colors"
+                        aria-label={`Remove skill ${skill}`}
+                      >
+                        &times;
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  placeholder="Add a skill (e.g. React)"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddSkill}
+                  className="px-4! py-2! shrink-0 flex items-center justify-center font-bold"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            {/* Dynamic Roles Builder */}
+            <div className="space-y-2">
+              <label className="text-mini font-medium text-gray-700 block">Preferred Roles</label>
+              
+              {rolesList.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {rolesList.map((role, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline"
+                      className="flex items-center gap-1.5 pr-2"
+                    >
+                      {role}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRole(role)}
+                        className="text-gray-400 hover:text-red-500 font-bold leading-none cursor-pointer focus:outline-none transition-colors"
+                        aria-label={`Remove role ${role}`}
+                      >
+                        &times;
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                  placeholder="Add a role (e.g. Frontend)"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddRole}
+                  className="px-4! py-2! shrink-0 flex items-center justify-center font-bold"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
