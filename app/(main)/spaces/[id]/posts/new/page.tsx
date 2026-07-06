@@ -78,14 +78,129 @@ export default function NewPostPage({ params }: { params: Promise<{ id: string }
       setIsSubmitting(false);
     }
   };
-  return (
+    return (
     <PageWrapper
       title="Post Teammate Call"
       subtitle="Recruit members for your project or study group."
     >
-      <div className="max-w-3xl mx-auto">
-        <Card className="p-8 border border-gray-100 shadow-sm">
-          <p className="text-gray-500">Form initializing...</p>
+      <div className="max-w-3xl mx-auto pb-12">
+        <Card className="p-8 border border-gray-100 shadow-sm bg-white">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Title */}
+            <Input
+              label="Teammate Call Title"
+              type="text"
+              placeholder="e.g. Seeking React Native developers for mobile prototype"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+
+            {/* Description */}
+            <Textarea
+              label="Project Description & Expectations"
+              placeholder="Describe the project goal, what you have built so far, and what you expect from your teammates..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              className="min-h-[150px]"
+            />
+
+            {/* Commitment & Members Needed Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Commitment Level Dropdown */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-mini font-medium text-gray-700">Commitment Level</label>
+                <select
+                  value={commitmentLevel}
+                  onChange={(e) => setCommitmentLevel(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-comatch-primary focus:border-comatch-primary text-gray-900 bg-white text-sm min-h-[42px] transition-shadow"
+                >
+                  <option>Low (&lt; 5 hours/week)</option>
+                  <option>Medium (5-10 hours/week)</option>
+                  <option>High (10+ hours/week)</option>
+                </select>
+              </div>
+
+              {/* Total Members Required */}
+              <Input
+                label="Total Members Needed"
+                type="number"
+                min="1"
+                placeholder="1"
+                value={totalMembers}
+                onChange={(e) => setTotalMembers(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Roles Tag Builder */}
+            <div className="space-y-2">
+              <label className="text-mini font-medium text-gray-700 block">Open Roles</label>
+              
+              {/* Display currently added roles */}
+              {rolesList.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {rolesList.map((role, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline"
+                      className="flex items-center gap-1.5 pr-2 bg-blue-50/30"
+                    >
+                      {role}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRole(role)}
+                        className="text-gray-400 hover:text-red-500 font-bold leading-none cursor-pointer focus:outline-none transition-colors"
+                        aria-label={`Remove role ${role}`}
+                      >
+                        &times;
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Add dynamic role input */}
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="e.g. Frontend Developer"
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddRole}
+                  className="px-5! py-2! shrink-0 flex items-center justify-center font-bold"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            {/* Form Actions Footer */}
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => router.push(`/spaces/${spaceId}`)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Posting...' : 'Post Teammate Call'}
+              </Button>
+            </div>
+
+          </form>
         </Card>
       </div>
     </PageWrapper>
