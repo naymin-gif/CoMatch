@@ -35,6 +35,49 @@ export default function NewPostPage({ params }: { params: Promise<{ id: string }
   const handleRemoveRole = (roleToRemove: string) => {
     setRolesList(rolesList.filter((role) => role !== roleToRemove)); // Remove role from array
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !description.trim()) {
+      toast.error('Please fill in the title and description.');
+      return;
+    }
+    if (rolesList.length === 0) {
+      toast.error('Please add at least one open role.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      // 1. Get logged-in user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('You must be logged in to create a post.');
+      }
+      // 2. Insert the post into database
+      const { error: insertError } = await supabase
+        .from('posts')
+        .insert({
+          title: title.trim(),
+          description: description.trim(),
+          open_roles: rolesList, // Directly insert JavaScript string array into text[] column
+          commitment_level: commitmentLevel,
+          total_members_required: parseInt(totalMembers) || 1,
+          space_id: spaceId,
+          owner_id: user.id,
+        });
+      if (insertError) throw insertError;
+      toast.success('Teammate call posted successfully!');
+      
+      // 3. Go back to space dashboard page
+      router.push(`/spaces/${spaceId}`);
+      router.refresh();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Failed to post teammate call.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <PageWrapper
       title="Post Teammate Call"
