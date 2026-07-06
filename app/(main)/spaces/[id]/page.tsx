@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   Camera,
   Save,
+  Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -48,6 +49,18 @@ interface Profile {
   roles: string | null;
 }
 
+interface Comment {
+  id: string;
+  post_id: string;
+  profile_id: string;
+  content: string;
+  created_at: string;
+  profiles: {
+    name: string;
+    avatar_url: string | null;
+  } | null;
+}
+
 interface Post {
   id: string;
   title: string;
@@ -56,10 +69,13 @@ interface Post {
   commitment_level: string;
   total_members_required: number;
   created_at: string;
+  owner_id: string;
   owner: {
     name: string;
     avatar_url: string | null;
   };
+  likes: string[];
+  comments: Comment[];
 }
 
 export default function SpaceDetailPage({
@@ -77,6 +93,8 @@ export default function SpaceDetailPage({
   const [members, setMembers] = useState<Profile[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isJoined, setIsJoined] = useState(false);
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   
   // Tabs & Editing State
   const [activeTab, setActiveTab] = useState<
@@ -143,25 +161,58 @@ export default function SpaceDetailPage({
           .eq('space_id', spaceId)
           .order('created_at', { ascending: false });
 
-        if (postsData) {
-          // Fetch profiles for these posts
-          const postsWithProfiles = await Promise.all(
+        if (postsData && postsData.length > 0) {
+          const postIds = postsData.map((p) => p.id);
+
+          // Fetch likes and comments in parallel
+          const [likesRes, commentsRes] = await Promise.all([
+            supabase.from('post_likes').select('post_id, profile_id').in('post_id', postIds),
+            supabase
+              .from('post_comments')
+              .select('id, post_id, profile_id, content, created_at, profiles(name, avatar_url)')
+              .in('post_id', postIds)
+              .order('created_at', { ascending: true }),
+          ]);
+
+          const likesMap: Record<string, string[]> = {};
+          if (likesRes.data) {
+            likesRes.data.forEach((like) => {
+              if (!likesMap[like.post_id]) likesMap[like.post_id] = [];
+              likesMap[like.post_id].push(like.profile_id);
+            });
+          }
+
+          const commentsMap: Record<string, Comment[]> = {};
+          if (commentsRes.data) {
+            commentsRes.data.forEach((comment) => {
+              if (!commentsMap[comment.post_id]) commentsMap[comment.post_id] = [];
+              commentsMap[comment.post_id].push(comment as any);
+            });
+          }
+
+          // Fetch profiles for these posts and map likes & comments
+          const postsWithData = await Promise.all(
             postsData.map(async (post: any) => {
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('name, avatar_url')
                 .eq('id', post.owner_id)
                 .maybeSingle();
+
               return {
                 ...post,
                 owner: {
                   name: profile?.name || 'Unknown User',
                   avatar_url: profile?.avatar_url || null,
                 },
+                likes: likesMap[post.id] || [],
+                comments: commentsMap[post.id] || [],
               };
             })
           );
-          setPosts(postsWithProfiles);
+          setPosts(postsWithData);
+        } else {
+          setPosts([]);
         }
 
         // 5. Fetch members from space_members
@@ -265,6 +316,98 @@ export default function SpaceDetailPage({
     } catch (err: any) {
       console.error('Error leaving space:', err);
       toast.error('Failed to leave space: ' + err.message);
+    }
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    if (!currentUser) {
+      toast.error('You must be logged in to like posts.');
+      return;
+    }
+
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+
+    const alreadyLiked = post.likes.includes(currentUser.id);
+
+    try {
+      if (alreadyLiked) {
+        // Remove like
+        const { error } = await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('profile_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Update local state
+        setPosts((prevPosts) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, likes: p.likes.filter((uid) => uid !== currentUser.id) }
+              : p
+          )
+        );
+      } else {
+        // Add like
+        const { error } = await supabase.from('post_likes').insert({
+          post_id: postId,
+          profile_id: currentUser.id,
+        });
+
+        if (error) throw error;
+
+        // Update local state
+        setPosts((prevPosts) =>
+          prevPosts.map((p) =>
+            p.id === postId ? { ...p, likes: [...p.likes, currentUser.id] } : p
+          )
+        );
+      }
+    } catch (err: any) {
+      console.error('Error toggling like:', err);
+      toast.error('Failed to toggle like: ' + err.message);
+    }
+  };
+
+  const handleSaveComment = async (e: React.FormEvent, postId: string) => {
+    e.preventDefault();
+    if (!currentUser) {
+      toast.error('You must be logged in to comment.');
+      return;
+    }
+
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+
+    try {
+      const { data: newCommentData, error } = await supabase
+        .from('post_comments')
+        .insert({
+          post_id: postId,
+          profile_id: currentUser.id,
+          content,
+        })
+        .select('id, post_id, profile_id, content, created_at, profiles(name, avatar_url)')
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? { ...p, comments: [...(p.comments || []), newCommentData as any] }
+            : p
+        )
+      );
+
+      // Clear input
+      setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
+    } catch (err: any) {
+      console.error('Error posting comment:', err);
+      toast.error('Failed to post comment: ' + err.message);
     }
   };
 
@@ -640,6 +783,121 @@ export default function SpaceDetailPage({
                               Commitment: {post.commitment_level}
                             </Badge>
                           </div>
+
+                          {/* Likes & Comments Actions Bar */}
+                          <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100/50">
+                            {/* Like Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleLike(post.id);
+                              }}
+                              className={`flex items-center gap-1.5 text-mini font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                                currentUser && post.likes.includes(currentUser.id)
+                                  ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              <Heart
+                                size={15}
+                                fill={currentUser && post.likes.includes(currentUser.id) ? 'currentColor' : 'none'}
+                              />
+                              <span>{post.likes.length}</span>
+                            </button>
+
+                            {/* Comment Toggle Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedComments((prev) => ({
+                                  ...prev,
+                                  [post.id]: !prev[post.id],
+                                }));
+                              }}
+                              className={`flex items-center gap-1.5 text-mini font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                                expandedComments[post.id]
+                                  ? 'text-comatch-primary bg-blue-50 hover:bg-blue-100'
+                                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              <MessageSquare size={15} />
+                              <span>{post.comments?.length || 0}</span>
+                            </button>
+                          </div>
+
+                          {/* Comments Section (Expanded) */}
+                          {expandedComments[post.id] && (
+                            <div className="mt-4 pt-4 border-t border-gray-100 space-y-4 bg-slate-50/30 p-4 rounded-xl">
+                              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                                Discussion ({post.comments?.length || 0})
+                              </h4>
+
+                              {/* Comment List */}
+                              {post.comments?.length === 0 ? (
+                                <p className="text-xs text-gray-400 italic">No comments yet. Start the discussion!</p>
+                              ) : (
+                                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                                  {post.comments?.map((comment) => (
+                                    <div key={comment.id} className="flex gap-2.5 items-start text-sm">
+                                      <Avatar
+                                        src={comment.profiles?.avatar_url || undefined}
+                                        alt={comment.profiles?.name || 'User'}
+                                        size="sm"
+                                        className="mt-0.5 animate-in fade-in zoom-in-95"
+                                      />
+                                      <div className="flex-1 bg-white p-2.5 rounded-lg border border-gray-100 shadow-2xs animate-in slide-in-from-bottom-2 duration-150">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="font-semibold text-gray-800 text-xs">
+                                            {comment.profiles?.name || 'Unknown User'}
+                                          </span>
+                                          <span className="text-[10px] text-gray-400">
+                                            {new Date(comment.created_at).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                        <p className="text-gray-600 text-xs whitespace-pre-wrap leading-relaxed">
+                                          {comment.content}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Comment Form */}
+                              {currentUser ? (
+                                <form
+                                  onSubmit={(e) => handleSaveComment(e, post.id)}
+                                  className="flex gap-2 pt-2 border-t border-gray-100/70"
+                                >
+                                  <Input
+                                    type="text"
+                                    placeholder="Write a comment..."
+                                    value={commentInputs[post.id] || ''}
+                                    onChange={(e) =>
+                                      setCommentInputs((prev) => ({
+                                        ...prev,
+                                        [post.id]: e.target.value,
+                                      }))
+                                    }
+                                    className="flex-1"
+                                    required
+                                  />
+                                  <Button
+                                    type="submit"
+                                    className="px-4 py-2 text-xs font-bold"
+                                  >
+                                    Send
+                                  </Button>
+                                </form>
+                              ) : (
+                                <p className="text-xs text-gray-400 text-center pt-2">
+                                  Please log in to leave a comment.
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </Card>
                       ))}
                     </div>
