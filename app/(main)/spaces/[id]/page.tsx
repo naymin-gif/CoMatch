@@ -95,6 +95,11 @@ export default function SpaceDetailPage({
   const [isJoined, setIsJoined] = useState(false);
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [myApplications, setMyApplications] = useState<any[]>([]);
+  const [activeApplyPost, setActiveApplyPost] = useState<Post | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [introMessage, setIntroMessage] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
   
   // Tabs & Editing State
   const [activeTab, setActiveTab] = useState<
@@ -211,6 +216,18 @@ export default function SpaceDetailPage({
             })
           );
           setPosts(postsWithData);
+
+          // 4.5 Fetch current user's applications for these posts
+          if (user && postsData && postsData.length > 0) {
+            const postIds = postsData.map((p) => p.id);
+            const { data: appData } = await supabase
+              .from('applications')
+              .select('id, post_id, status, selected_roles, intro_message')
+              .eq('applicant_id', user.id)
+              .in('post_id', postIds);
+
+            if (appData) setMyApplications(appData);
+          }
         } else {
           setPosts([]);
         }
@@ -408,6 +425,53 @@ export default function SpaceDetailPage({
     } catch (err: any) {
       console.error('Error posting comment:', err);
       toast.error('Failed to post comment: ' + err.message);
+    }
+  };
+
+  const handleRoleToggle = (role: string) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
+
+  const handleApplySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || !activeApplyPost) return;
+    if (selectedRoles.length === 0) {
+      toast.error('Please select at least one role.');
+      return;
+    }
+
+    setIsApplying(true);
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .insert({
+          post_id: activeApplyPost.id,
+          applicant_id: currentUser.id,
+          selected_roles: selectedRoles,
+          intro_message: introMessage.trim(),
+          status: 'Pending',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Application submitted successfully!');
+
+      // Update local applications state
+      setMyApplications((prev) => [...prev, data]);
+
+      // Close modal and reset fields
+      setActiveApplyPost(null);
+      setSelectedRoles([]);
+      setIntroMessage('');
+    } catch (err: any) {
+      console.error('Error applying to post:', err);
+      toast.error('Failed to submit application: ' + err.message);
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -785,46 +849,83 @@ export default function SpaceDetailPage({
                           </div>
 
                           {/* Likes & Comments Actions Bar */}
-                          <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100/50">
-                            {/* Like Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleLike(post.id);
-                              }}
-                              className={`flex items-center gap-1.5 text-mini font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                                currentUser && post.likes.includes(currentUser.id)
-                                  ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              <Heart
-                                size={15}
-                                fill={currentUser && post.likes.includes(currentUser.id) ? 'currentColor' : 'none'}
-                              />
-                              <span>{post.likes.length}</span>
-                            </button>
+                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100/50">
+                            <div className="flex items-center gap-4">
+                              {/* Like Button */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleLike(post.id);
+                                }}
+                                className={`flex items-center gap-1.5 text-mini font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  currentUser && post.likes.includes(currentUser.id)
+                                    ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                }`}
+                              >
+                                <Heart
+                                  size={15}
+                                  fill={currentUser && post.likes.includes(currentUser.id) ? 'currentColor' : 'none'}
+                                />
+                                <span>{post.likes.length}</span>
+                              </button>
 
-                            {/* Comment Toggle Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedComments((prev) => ({
-                                  ...prev,
-                                  [post.id]: !prev[post.id],
-                                }));
-                              }}
-                              className={`flex items-center gap-1.5 text-mini font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                                expandedComments[post.id]
-                                  ? 'text-comatch-primary bg-blue-50 hover:bg-blue-100'
-                                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              <MessageSquare size={15} />
-                              <span>{post.comments?.length || 0}</span>
-                            </button>
+                              {/* Comment Toggle Button */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedComments((prev) => ({
+                                    ...prev,
+                                    [post.id]: !prev[post.id],
+                                  }));
+                                }}
+                                className={`flex items-center gap-1.5 text-mini font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  expandedComments[post.id]
+                                    ? 'text-comatch-primary bg-blue-50 hover:bg-blue-100'
+                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                }`}
+                              >
+                                <MessageSquare size={15} />
+                                <span>{post.comments?.length || 0}</span>
+                              </button>
+                            </div>
+
+                            {/* Application Action / Status */}
+                            {currentUser && currentUser.id !== post.owner_id && (
+                              <div>
+                                {myApplications.some((a) => a.post_id === post.id) ? (
+                                  (() => {
+                                    const app = myApplications.find((a) => a.post_id === post.id);
+                                    return (
+                                      <span
+                                        className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                                          app.status === 'Approved'
+                                            ? 'bg-green-50 text-green-700 border-green-100'
+                                            : app.status === 'Rejected'
+                                            ? 'bg-red-50 text-red-700 border-red-100'
+                                            : 'bg-yellow-50 text-yellow-700 border-yellow-100'
+                                        }`}
+                                      >
+                                        {app.status}
+                                      </span>
+                                    );
+                                  })()
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveApplyPost(post);
+                                    }}
+                                    className="!px-3.5 !py-1.5 text-xs font-bold"
+                                  >
+                                    Apply
+                                  </Button>
+                                )}
+                              </div>
+                            )}
                           </div>
 
                           {/* Comments Section (Expanded) */}
@@ -1137,6 +1238,81 @@ export default function SpaceDetailPage({
           </div>
         </div>
       </div>
+      {/* Application Modal */}
+      {activeApplyPost && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full mx-4 shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Apply to Join Team
+            </h3>
+            <p className="text-xs text-gray-500 mb-6">
+              Post: <span className="font-semibold text-gray-700">{activeApplyPost.title}</span>
+            </p>
+
+            <form onSubmit={handleApplySubmit} className="space-y-5">
+              {/* Select Roles (Checkboxes) */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider block">
+                  Select Roles You Want to Fill *
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {activeApplyPost.open_roles.map((role) => (
+                    <label
+                      key={role}
+                      className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors ${
+                        selectedRoles.includes(role)
+                          ? 'border-comatch-primary bg-blue-50/20'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedRoles.includes(role)}
+                        onChange={() => handleRoleToggle(role)}
+                        className="w-4.5 h-4.5 rounded text-comatch-primary border-gray-300 focus:ring-comatch-primary cursor-pointer"
+                      />
+                      <span className="text-xs font-semibold text-gray-800">{role}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Intro Message */}
+              <Textarea
+                label="Introduce Yourself & Your Fit"
+                placeholder="Tell the team creator about your skills, background, and why you are interested in this post..."
+                value={introMessage}
+                onChange={(e) => setIntroMessage(e.target.value)}
+                className="min-h-[120px]"
+                required
+              />
+
+              {/* Modal Footer Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    setActiveApplyPost(null);
+                    setSelectedRoles([]);
+                    setIntroMessage('');
+                  }}
+                  disabled={isApplying}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={isApplying}
+                >
+                  {isApplying ? 'Submitting...' : 'Submit Application'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
