@@ -96,24 +96,28 @@ export async function updateApplicationStatus(
   newStatus: ApplicationStatus,
   currentUserId: string
 ): Promise<Dashboard> {
-  // Authorization Check
+  // Authorization Check & fetch applicant details and space ID
   const { data: appData, error: verifyError } = await supabase
     .from('applications')
-    .select('posts!inner(owner_id)')
+    .select('applicant_id, posts!inner(owner_id, space_id)')
     .eq('id', applicationId)
     .single();
 
-  const postData = appData?.posts as any;
-  const ownerId = Array.isArray(postData)
-    ? postData[0]?.owner_id
-    : postData?.owner_id;
+  if (verifyError || !appData) {
+    throw new Error('Application not found.');
+  }
 
-  if (verifyError || ownerId !== currentUserId) {
+  const postData = appData.posts as any;
+  const ownerId = Array.isArray(postData) ? postData[0]?.owner_id : postData?.owner_id;
+  const spaceId = Array.isArray(postData) ? postData[0]?.space_id : postData?.space_id;
+
+  if (ownerId !== currentUserId) {
     throw new Error(
       'Unauthorized: You do not have permission to update this application.'
     );
   }
 
+  // 1. Update the application status
   const { data, error } = await supabase
     .from('applications')
     .update({ status: newStatus })
@@ -124,6 +128,30 @@ export async function updateApplicationStatus(
   if (error) {
     console.error('Error updating application status:', error);
     throw new Error('Failed to update status.');
+  }
+
+  // 2. Consequence: If approved, automatically insert applicant into space_members
+  if (newStatus === 'Approved' && spaceId && appData.applicant_id) {
+    try {
+      const { error: memberError } = await supabase
+        .from('space_members')
+        .upsert(
+          {
+            space_id: spaceId,
+            profile_id: appData.applicant_id,
+          },
+          { onConflict: 'space_id,profile_id' }
+        );
+
+      if (memberError) {
+        console.error(
+          'Error adding approved applicant to space members:',
+          memberError.message
+        );
+      }
+    } catch (err) {
+      console.error('Failed to auto-join member:', err);
+    }
   }
 
   return data as unknown as Dashboard;
