@@ -318,7 +318,7 @@ export default function EditProfile({
                 {/* background */}
                 <div className="flex flex-row gap-3 justify-center items-center relative h-48 sm:h-64 w-full bg-muted">
                     {backgrounds && (
-                        <Image src={backgrounds} alt="Background" fill className="object-cover opacity-60" priority />
+                        <Image src={backgrounds} alt="Background" fill className="object-cover opacity-60" priority unoptimized />
                     )}
                     <div className="z-10 flex flex-row gap-3">
                         <Button
@@ -344,7 +344,13 @@ export default function EditProfile({
                 <div className="relative px-6 sm:px-8 -mt-16 sm:-mt-24 z-10 pb-8">
                     <div className="relative flex flex-col gap-2 justify-center items-center h-32 w-32 sm:h-48 sm:w-48 bg-muted rounded-full border-4 border-background shadow-md overflow-hidden">
                         {avatars && (
-                            <Image src={avatars} alt="Profile" fill className="object-cover opacity-60" />
+                            <Image 
+                                src={avatars} 
+                                alt="Profile" 
+                                fill 
+                                className="object-cover opacity-60" 
+                                unoptimized
+                            />
                         )}
                         <div className="z-10 flex flex-row justify-center gap-2 items-center w-full px-2">
                             <Button

@@ -56,6 +56,7 @@ export default function PictureCard({
                         fill
                         className="object-cover"
                         priority
+                        unoptimized
                     />
                 )}
             </div>
