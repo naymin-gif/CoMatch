@@ -13,8 +13,8 @@ import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 
 interface PictureCardProps {
     name : string;
-    profilePic ?: string | StaticImageData; 
-    bgPic ?: string | StaticImageData;
+    profile_pic_url ?: string | StaticImageData; 
+    bg_pic_url ?: string | StaticImageData;
     pronouns ?: string;
     bio ?: string;
     organization ?: string;
@@ -30,8 +30,8 @@ interface PictureCardProps {
 
 export default function PictureCard({
     name,
-    profilePic, 
-    bgPic,
+    profile_pic_url, 
+    bg_pic_url,
     pronouns, 
     bio,
     organization,
@@ -47,11 +47,10 @@ export default function PictureCard({
     return (
         <Card className="w-full max-w-4xl mx-auto rounded-[var(--radius-card)] shadow-lg border border-border bg-comatch-background text-card-foreground overflow-hidden p-0">
             
-            {/* Background Banner Container */}
             <div className="relative h-48 sm:h-64 w-full bg-muted">
-                {bgPic && (
+                {bg_pic_url && (
                     <Image 
-                        src={bgPic}
+                        src={bg_pic_url}
                         alt="background"
                         fill
                         className="object-cover"
@@ -63,15 +62,13 @@ export default function PictureCard({
         
             <div className="relative px-6 sm:px-8 pb-8">
                 <div className="flex flex-row justify-between items-start pt-2 sm:pt-0">
-                    {/* Avatar with 50% overlap */}
                     <div className="relative -mt-16 sm:-mt-20 mb-4 z-20">
                         <Avatar 
                             name={name}
-                            src={profilePic}
+                            src={profile_pic_url}
                         />
                     </div>
 
-                    {/* Edit/ Chat */}
                     {isOwner ? (
                         <Button variant="secondary" onClick={onEdit}>
                             <FaUserEdit className="mr-2" /> Edit
@@ -83,14 +80,11 @@ export default function PictureCard({
                     )}
                 </div>
                 
-                {/* Profile Text */}
                 <div className="mt-2">
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* Name and Pronouns */}
                         <h1 className="font-heading text-heading text-foreground font-bold">{name}</h1>
                         <span className="text-mini text-muted-foreground font-normal mt-1">{pronouns}</span>
                     </div>
-                    {/* bio */}
                     <p className="mt-1 text-base text-foreground font-sans">
                         {bio}
                     </p>
