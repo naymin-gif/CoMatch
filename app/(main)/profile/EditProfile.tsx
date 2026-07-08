@@ -138,7 +138,7 @@ export default function EditProfile({
     const [skills, setSkills] = useState(initialSkills && initialSkills.length > 0 ? [...initialSkills, ""] : [""]);
     const [roles, setRoles] = useState(initialRoles && initialRoles.length > 0 ? [...initialRoles, ""] : [""]);
 
-    const [profileImage, setProfileImage] = useState<string | StaticImageData | undefined>(profilePic);
+    const [avatars, setAvatars] = useState<string | StaticImageData | undefined>(profilePic);
     const [backgroundImage, setBackgroundImage] = useState<string | StaticImageData | undefined>(bgPic);
 
     const [profileFile, setProfileFile] = useState<File | null>(null);
@@ -156,14 +156,14 @@ export default function EditProfile({
     // Cleanup object URLs to avoid memory leaks
     useEffect(() => {
         return () => {
-            if (typeof profileImage === 'string' && profileImage.startsWith('blob:')) {
-                URL.revokeObjectURL(profileImage);
+            if (typeof avatars === 'string' && avatars.startsWith('blob:')) {
+                URL.revokeObjectURL(avatars);
             }
             if (typeof backgroundImage === 'string' && backgroundImage.startsWith('blob:')) {
                 URL.revokeObjectURL(backgroundImage);
             }
         };
-    }, [profileImage, backgroundImage]);
+    }, [avatars, backgroundImage]);
 
     const handleInputChange = (items : string[], index : number, value : string) => {
         const newItems = [...items]; 
@@ -200,7 +200,7 @@ export default function EditProfile({
         if (!file) return;
 
         setProfileFile(file);
-        setProfileImage(URL.createObjectURL(file)); 
+        setAvatars(URL.createObjectURL(file)); 
     };
 
     const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,7 +212,7 @@ export default function EditProfile({
     };
 
     const removeProfileImage = () => {
-        setProfileImage(undefined);
+        setAvatars(undefined);
     };
 
     const removeBackgroundImage = () => {
@@ -343,8 +343,8 @@ export default function EditProfile({
                 {/* profile image */}
                 <div className="relative px-6 sm:px-8 -mt-16 sm:-mt-24 z-10 pb-8">
                     <div className="relative flex flex-col gap-2 justify-center items-center h-32 w-32 sm:h-48 sm:w-48 bg-muted rounded-full border-4 border-background shadow-md overflow-hidden">
-                        {profileImage && (
-                            <Image src={profileImage} alt="Profile" fill className="object-cover opacity-60" />
+                        {avatars && (
+                            <Image src={avatars} alt="Profile" fill className="object-cover opacity-60" />
                         )}
                         <div className="z-10 flex flex-row justify-center gap-2 items-center w-full px-2">
                             <Button
