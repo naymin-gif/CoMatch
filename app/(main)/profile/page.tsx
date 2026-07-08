@@ -35,6 +35,7 @@ export interface ProfileData {
     roles: string[];
     profile_pic_url: string;
     bg_pic_url: string;
+    show_email: boolean;
 }
 
 export default function Profile() {
@@ -60,6 +61,7 @@ export default function Profile() {
         roles: [],
         profile_pic_url: '',
         bg_pic_url: '',
+        show_email: false,
     });
 
     // Log out
@@ -147,6 +149,7 @@ export default function Profile() {
             <div className="lg:col-start-2 lg:col-span-3">
                 <PictureCard 
                     {...profileData}
+                    email={profileData.show_email ? profileData.email : ""}
                     onEdit={() => setIsEditing(true)}
                     isOwner={isOwner}
                     onChat={() => console.log("Navigate to chat")}
