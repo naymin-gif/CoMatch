@@ -43,7 +43,6 @@ export default function Profile() {
 
     const [isEditing, setIsEditing] = useState(false); 
     const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
 
     const [isOwner, setIsOwner] = useState(false);
     const [profileData, setProfileData] = useState<ProfileData>({
