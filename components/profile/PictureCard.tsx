@@ -24,7 +24,7 @@ interface PictureCardProps {
     github ?: string;
     onEdit?: () => void;
     email ?: string;
-    isOwnProfile?: boolean; 
+    isOwner?: boolean; 
     onChat?: () => void;
 }
 
@@ -41,7 +41,7 @@ export default function PictureCard({
     linkedin,
     onEdit,
     email, 
-    isOwnProfile,
+    isOwner,
     onChat
 } : PictureCardProps) {
     return (
@@ -71,7 +71,7 @@ export default function PictureCard({
                     </div>
 
                     {/* Edit/ Chat */}
-                    {isOwnProfile ? (
+                    {isOwner ? (
                         <Button variant="secondary" onClick={onEdit}>
                             <FaUserEdit className="mr-2" /> Edit
                         </Button>
