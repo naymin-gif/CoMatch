@@ -1,52 +1,176 @@
 @import 'tailwindcss';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@font-face {
+  font-family: 'Feather Bold';
+  src: url('/fonts/featherbolds.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-palette-values --strip-duolingo-green {
+  font-family: "Feather Bold";
+  base-palette: 0;
+  override-colors: 0 currentColor, 1 currentColor, 2 currentColor, 3 currentColor, 4 currentColor;
+}
 
 @theme {
   --color-comatch-primary: #3b82f6;
-  --color-comatch-light: #93c5fd;
-  --color-comatch-success: #4ade80;
-  --color-comatch-danger: #f87171;
-  --color-comatch-background: #f8fafc;
+  --color-comatch-light: #60a5fa;
+  --color-comatch-success: #10b981;
+  --color-comatch-danger: #f43f5e;
+  --color-comatch-background: #f0f4f8;
 
   --radius-card: 16px;
   --radius-pill: 9999px;
 
-  /* Fonts */
-  --font-primary: var(--font-crimson), ui-serif, Georgia, serif;
-  --font-heading: var(--font-young-serif), ui-serif, Georgia, serif;
-  --font-quote: var(--font-cormorant), ui-serif, Georgia, serif;
+  /* FONTS */
+  --font-sans: var(--font-fredoka), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: "Feather Bold", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-quote: var(--font-fredoka), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 
   /* Font Sizes */
-  --text-mini: 0.875rem;
-  --text-mini--line-height: 1.25rem;
-
-  --text-primary: 1rem;
-  --text-primary--line-height: 1.5rem;
-
-  --text-heading: 1.5rem;
-  --text-heading--line-height: 2rem;
-
-  --text-heading-lg: 2.25rem;
-  --text-heading-lg--line-height: 2.5rem;
+  --text-mini: 0.875rem;       /* 14px */
+  --text-base: 1rem;           /* 16px */
+  --text-large: 1.125rem;      /* 18px */
+  --text-heading: 1.5rem;      /* 24px */
+  --text-heading-lg: 2.25rem;  /* 36px */
 }
 
-:root {
-  --background: --color-comatch-background;
-  --foreground: #171717;
-}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: oklch(0.96 0.012 245);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.55 0.22 255);
+  --primary-foreground: oklch(0.99 0.005 240);
+  --secondary: oklch(0.92 0.02 245);
+  --secondary-foreground: oklch(0.15 0 0);
+  --muted: oklch(0.92 0.02 245);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.89 0.03 245);
+  --accent-foreground: oklch(0.15 0 0);
+  --destructive: oklch(0.60 0.21 25);
+  --border: oklch(0.88 0.02 245);
+  --input: oklch(0.88 0.02 245);
+  --ring: oklch(0.55 0.22 255 / 50%);
+
+  --chart-1: oklch(0.55 0.22 255);
+  --chart-2: oklch(0.68 0.18 220);
+  --chart-3: oklch(0.42 0.17 275);
+  --chart-4: oklch(0.78 0.12 200);
+  --chart-5: oklch(0.32 0.12 260);
+
+  --radius: 0.625rem;
+  --sidebar: oklch(0.95 0.02 245);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.55 0.22 255);
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-accent: oklch(0.89 0.03 245);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.86 0.02 245);
+  --sidebar-ring: oklch(0.55 0.22 255 / 30%);
+}
+
+.dark {
+  --background: oklch(0.14 0.03 255);
+  --foreground: oklch(0.93 0.02 240);
+  --card: oklch(0.18 0.03 255);
+  --card-foreground: oklch(0.93 0.02 240);
+  --popover: oklch(0.18 0.03 255);
+  --popover-foreground: oklch(0.93 0.02 240);
+  --primary: oklch(0.68 0.19 250);
+  --primary-foreground: oklch(0.12 0.04 255);
+  --secondary: oklch(0.24 0.04 255);
+  --secondary-foreground: oklch(0.90 0.03 240);
+  --muted: oklch(0.24 0.04 255);
+  --muted-foreground: oklch(0.65 0.04 245);
+  --accent: oklch(0.26 0.06 250);
+  --accent-foreground: oklch(0.72 0.16 250);
+  --destructive: oklch(0.58 0.19 24);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.68 0.19 250 / 60%);
+
+  --chart-1: oklch(0.68 0.19 250);
+  --chart-2: oklch(0.52 0.17 270);
+  --chart-3: oklch(0.74 0.13 210);
+  --chart-4: oklch(0.44 0.14 240);
+  --chart-5: oklch(0.82 0.09 190);
+
+  --sidebar: oklch(0.16 0.03 255);
+  --sidebar-foreground: oklch(0.93 0.02 240);
+  --sidebar-primary: oklch(0.68 0.19 250);
+  --sidebar-primary-foreground: oklch(0.12 0.04 255);
+  --sidebar-accent: oklch(0.24 0.04 255);
+  --sidebar-accent-foreground: oklch(0.90 0.03 240);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.68 0.19 250 / 40%);
+}
+
+/* 4. GLOBAL ELEMENT SELECTORS */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    font-palette: --strip-duolingo-green;
+  }
+
+  html, body {
+    @apply text-foreground font-sans text-base;
+    font-synthesis: none; 
+    font-weight: 340;
+    font-variation-settings: "wght" 340, "wdth" 100; 
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading text-foreground text-heading;
   }
 }
