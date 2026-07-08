@@ -139,7 +139,7 @@ export default function EditProfile({
     const [roles, setRoles] = useState(initialRoles && initialRoles.length > 0 ? [...initialRoles, ""] : [""]);
 
     const [avatars, setAvatars] = useState<string | StaticImageData | undefined>(profilePic);
-    const [backgroundImage, setBackgroundImage] = useState<string | StaticImageData | undefined>(bgPic);
+    const [backgrounds, setBackgrounds] = useState<string | StaticImageData | undefined>(bgPic);
 
     const [profileFile, setProfileFile] = useState<File | null>(null);
     const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
@@ -159,11 +159,11 @@ export default function EditProfile({
             if (typeof avatars === 'string' && avatars.startsWith('blob:')) {
                 URL.revokeObjectURL(avatars);
             }
-            if (typeof backgroundImage === 'string' && backgroundImage.startsWith('blob:')) {
-                URL.revokeObjectURL(backgroundImage);
+            if (typeof backgrounds === 'string' && backgrounds.startsWith('blob:')) {
+                URL.revokeObjectURL(backgrounds);
             }
         };
-    }, [avatars, backgroundImage]);
+    }, [avatars, backgrounds]);
 
     const handleInputChange = (items : string[], index : number, value : string) => {
         const newItems = [...items]; 
@@ -208,7 +208,7 @@ export default function EditProfile({
         if (!file) return;
 
         setBackgroundFile(file);
-        setBackgroundImage(URL.createObjectURL(file));
+        setBackgrounds(URL.createObjectURL(file));
     };
 
     const removeProfileImage = () => {
@@ -216,7 +216,7 @@ export default function EditProfile({
     };
 
     const removeBackgroundImage = () => {
-        setBackgroundImage(undefined);
+        setBackgrounds(undefined);
     };
 
     const onSubmit = async (data: ProfileFormValues, e?: React.BaseSyntheticEvent) => {
@@ -253,13 +253,13 @@ export default function EditProfile({
                 const fileName = `${user.id}/${pathPrefix}-${Date.now()}.${fileExt}`;
                 
                 const { error: uploadError } = await supabase.storage
-                    .from('profile_images') 
+                    .from('avatars') 
                     .upload(fileName, file, { upsert: true });
 
                 if (uploadError) throw uploadError;
 
                 const { data: { publicUrl } } = supabase.storage
-                    .from('profile_images')
+                    .from('avatars')
                     .getPublicUrl(fileName);
 
                 return publicUrl;
@@ -317,8 +317,8 @@ export default function EditProfile({
             <Card className="w-full max-w-4xl mx-auto rounded-[var(--radius-card)] shadow-lg border border-border bg-comatch-background text-card-foreground overflow-hidden p-0">
                 {/* background */}
                 <div className="flex flex-row gap-3 justify-center items-center relative h-48 sm:h-64 w-full bg-muted">
-                    {backgroundImage && (
-                        <Image src={backgroundImage} alt="Background" fill className="object-cover opacity-60" priority />
+                    {backgrounds && (
+                        <Image src={backgrounds} alt="Background" fill className="object-cover opacity-60" priority />
                     )}
                     <div className="z-10 flex flex-row gap-3">
                         <Button
