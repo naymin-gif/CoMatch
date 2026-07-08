@@ -7,11 +7,11 @@ import { ArrowLeft, Camera, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 // Import shared UI components
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
-import Avatar from '@/components/ui/Avatar';
+import Card from '@/components/old-ui/Card';
+import Button from '@/components/old-ui/Button';
+import Input from '@/components/old-ui/Input';
+import Textarea from '@/components/old-ui/Textarea';
+import Avatar from '@/components/old-ui/Avatar';
 
 export default function CreateSpacePage() {
   const router = useRouter();

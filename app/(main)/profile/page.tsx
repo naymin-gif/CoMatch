@@ -6,10 +6,10 @@ import EditProfileForm from './EditProfileForm';
 import { FaCalendar, FaGithub } from 'react-icons/fa';
 
 // UI Components
-import Avatar from '@/components/ui/Avatar';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
+import Avatar from '@/components/old-ui/Avatar';
+import Badge from '@/components/old-ui/Badge';
+import Button from '@/components/old-ui/Button';
+import Card from '@/components/old-ui/Card';
 
 export default function ProfilePage() {
   const supabase = createClient();

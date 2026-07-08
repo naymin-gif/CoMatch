@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Loading from '@/app/loading';
-import PageWrapper from '@/components/ui/PageWrapper';
+import PageWrapper from '@/components/old-ui/PageWrapper';
 
 import {
   Dashboard,
@@ -14,11 +14,11 @@ import {
 } from '@/utils/DashboardActions';
 
 // UI Components
-import StatusBadge, { ApplicationStatus } from '@/components/ui/StatusBadge';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Avatar from '@/components/ui/Avatar';
-import SearchBar from '@/components/ui/SearchBar';
+import StatusBadge, { ApplicationStatus } from '@/components/old-ui/StatusBadge';
+import Button from '@/components/old-ui/Button';
+import Card from '@/components/old-ui/Card';
+import Avatar from '@/components/old-ui/Avatar';
+import SearchBar from '@/components/old-ui/SearchBar';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

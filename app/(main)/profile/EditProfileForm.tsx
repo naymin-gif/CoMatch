@@ -5,11 +5,11 @@ import { createClient } from '../../../utils/clients';
 import toast from 'react-hot-toast';
 
 // UI Components
-import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
-import Button from '@/components/ui/Button';
-import Avatar from '@/components/ui/Avatar';
-import Badge from '@/components/ui/Badge';
+import Input from '@/components/old-ui/Input';
+import Textarea from '@/components/old-ui/Textarea';
+import Button from '@/components/old-ui/Button';
+import Avatar from '@/components/old-ui/Avatar';
+import Badge from '@/components/old-ui/Badge';
 
 interface EditProfileProps {
   initialData: any;

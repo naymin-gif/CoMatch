@@ -23,12 +23,12 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 // Import shared UI components
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
-import Avatar from '@/components/ui/Avatar';
-import Badge from '@/components/ui/Badge';
+import Card from '@/components/old-ui/Card';
+import Button from '@/components/old-ui/Button';
+import Input from '@/components/old-ui/Input';
+import Textarea from '@/components/old-ui/Textarea';
+import Avatar from '@/components/old-ui/Avatar';
+import Badge from '@/components/old-ui/Badge';
 
 interface Space {
   id: string;

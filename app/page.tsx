@@ -11,11 +11,11 @@ import {
   ChevronRight,
   PlusCircle,
 } from 'lucide-react';
-import PageWrapper from '@/components/ui/PageWrapper';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import SearchBar from '@/components/ui/SearchBar';
-import Avatar from '@/components/ui/Avatar';
+import PageWrapper from '@/components/old-ui/PageWrapper';
+import Card from '@/components/old-ui/Card';
+import Button from '@/components/old-ui/Button';
+import SearchBar from '@/components/old-ui/SearchBar';
+import Avatar from '@/components/old-ui/Avatar';
 import toast from 'react-hot-toast';
 
 interface Space {

@@ -6,12 +6,12 @@ import { createClient } from '../../../../../../utils/clients';
 import toast from 'react-hot-toast';
 
 // UI Components
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
-import Badge from '@/components/ui/Badge';
-import PageWrapper from '@/components/ui/PageWrapper';
+import Card from '@/components/old-ui/Card';
+import Button from '@/components/old-ui/Button';
+import Input from '@/components/old-ui/Input';
+import Textarea from '@/components/old-ui/Textarea';
+import Badge from '@/components/old-ui/Badge';
+import PageWrapper from '@/components/old-ui/PageWrapper';
 
 export default function NewPostPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
