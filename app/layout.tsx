@@ -1,34 +1,14 @@
-import type { Metadata } from 'next';
-import { Crimson_Pro, Young_Serif, Cormorant_Garamond } from 'next/font/google';
-import './globals.css';
-import NavigationBar from '@/components/layouts/NavigationBar';
+import "./globals.css";
+import NavBar from "@/components/layouts/NavBar";
+import { Fredoka } from 'next/font/google';
+import { Toaster } from "@/components/ui/sonner";
 
-// fonts
-const fontPrimary = Crimson_Pro({
+const fredoka = Fredoka({
   subsets: ['latin'],
-  variable: '--font-crimson',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-fredoka',
   display: 'swap',
-});
-
-const fontHeading = Young_Serif({
-  weight: ['400'],
-  subsets: ['latin'],
-  variable: '--font-young-serif',
-  display: 'swap',
-});
-
-const fontQuote = Cormorant_Garamond({
-  weight: ['400', '600'], // You can add multiple weights if you want bold italics
-  style: ['italic'], // Italics are now supported!
-  subsets: ['latin'],
-  variable: '--font-cormorant', // Keep the same variable name so CSS doesn't break
-  display: 'swap',
-});
-
-export const metadata: Metadata = {
-  title: 'CoMatch',
-  description: 'Connect. Collaborate. Conquer.',
-};
+})
 
 export default function RootLayout({
   children,
@@ -36,15 +16,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${fontPrimary.variable} ${fontHeading.variable} ${fontQuote.variable}`}
-    >
-      <body
-        className={`font-primary bg-comatch-background text-slate-900 min-h-screen pb-24 antialiased`}
-      >
-        <main>{children}</main>
-        <NavigationBar />
+    <html lang="en" className={fredoka.variable}>
+      <body>
+        <NavBar />
+        {children}
+        <Toaster position="top-center" />
       </body>
     </html>
   );
