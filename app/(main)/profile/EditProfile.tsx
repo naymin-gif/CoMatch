@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createClient } from '@/utils/clients';
 
 import { 
     Card,
@@ -64,6 +65,37 @@ interface EditProfileProps {
     email ?: string; 
 }
 
+const createProfileSchema = (supabase: any, currentEmail: string) => 
+    z.object({
+        email: z
+            .string()
+            .min(1, { message: "Email is required." })
+            .email({ message: "Must be a valid email address." })
+            .refine(
+                async (email) => {
+                    if (email.toLowerCase() === currentEmail.toLowerCase()) {
+                        return true;
+                    }
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('email')
+                        .eq('email', email.toLowerCase())
+                        .maybeSingle();
+
+                    if (error) {
+                        console.error("Uniqueness check failed:", error);
+                        return false; 
+                    }
+                    return !data; 
+                },
+                { message: "This email is already in use." }
+            ),
+    });
+
+type ProfileFormValues = {
+    email: string;
+};
+
 export default function EditProfile({ 
     onCancel, 
     name, 
@@ -86,24 +118,19 @@ export default function EditProfile({
         {label : "She/ Her", value : "she/her"},
         {label : "They/ Them", value : "they/them"},
         {label : "Ze/ Hir", value : "ze/hir"}
-    ]
+    ];
+    const supabase = createClient();
+    type ProfileFormValues = { email: string; };
 
-    const profileSchema = z.object({
-        email: z
-            .string()
-            .min(1, { message: "Email is required." })
-            .email({ message: "Must be a valid email address." })
-            .refine(
-                async (email) => {
-                    // TODO: Implement your actual Supabase uniqueness check here.
-                    // Example: const { data } = await supabase.from('profiles').select('email').eq('email', email).single();
-                    // return !data; 
-                    return true; 
-                },
-                { message: "This email is already in use." }
-            ),
+    const {
+        register,
+        handleSubmit: rhfSubmit,
+        formState: { errors },
+    } = useForm<ProfileFormValues>({
+        resolver: zodResolver(createProfileSchema(supabase, email || "")),
+        defaultValues: { email: email || "" },
+        mode: "onBlur", 
     });
-    type ProfileFormValues = z.infer<typeof profileSchema>;
     
 
     const [skills, setSkills] = useState(initialSkills && initialSkills.length > 0 ? [...initialSkills, ""] : [""]);
@@ -123,16 +150,6 @@ export default function EditProfile({
     const [selectedPronouns, setSelectedPronouns] = useState(
         pronouns?.toLowerCase().replace(" ", "") || "null"
     );
-
-    const {
-        register,
-        handleSubmit: rhfSubmit,
-        formState: { errors },
-    } = useForm<ProfileFormValues>({
-        resolver: zodResolver(profileSchema as any),
-        defaultValues: { email: email || "" },
-        mode: "onBlur",
-    });
 
     // Cleanup object URLs to avoid memory leaks
     useEffect(() => {
@@ -201,19 +218,24 @@ export default function EditProfile({
     };
 
     const onSubmit = async (data: ProfileFormValues, e?: React.BaseSyntheticEvent) => {
+        e?.preventDefault();
+
         try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (authError || !user) {
+                toast.error("Authentication Error", {
+                    description: "You must be logged in to update your profile.",
+                });
+                return;
+            }
+
             const formData = new FormData(e?.target as HTMLFormElement);
-
-            const filesForStorage = {
-                profileImage: profileFile,
-                backgroundImage: backgroundFile,
-            };
-
-            const dbPayload = {
+            const dbPayload: any = {
                 name: formData.get("name"),
-                email: formData.get("email"),
+                email: data.email, 
                 show_email: checked, 
-                pronouns: selectedPronouns, 
+                pronouns: selectedPronouns === "null" ? null : selectedPronouns, 
                 bio: formData.get("bio"),
                 organization: formData.get("org"),
                 city: formData.get("city"),
@@ -224,24 +246,50 @@ export default function EditProfile({
                 roles: roles.filter(role => role.trim() !== "")      
             };
 
-            console.log("Files to upload to Supabase Storage:", filesForStorage);
-            console.log("Data to insert/update in Supabase DB:", dbPayload);
+            const uploadImage = async (file: File, pathPrefix: string) => {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${user.id}/${pathPrefix}-${Date.now()}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('profile_images') 
+                    .upload(fileName, file, { upsert: true });
 
-            /* 
-            TODO FOR BACKEND DEVELOPER:
-            1. If filesForStorage has files, upload them
-            2. Get the public URLs for those uploaded files.
-            3. Append the URLs to dbPayload
-            4. AWAIT the database update here: await supabase.from('profiles').update(dbPayload).eq('id', userId)
-            */
+                if (uploadError) throw uploadError;
 
-            // Show success toast if everything above passes
-            toast.success("Updated Successful");
+                const { data: { publicUrl } } = supabase.storage
+                    .from('profile_images')
+                    .getPublicUrl(fileName);
 
-        } catch (error) {
-            console.error(error);
-            // Show error toast if something fails
-            toast.error("Update Fails");
+                return publicUrl;
+            };
+
+            if (profileFile) {
+                dbPayload.profile_pic_url = await uploadImage(profileFile, 'avatar');
+            }
+            if (backgroundFile) {
+                dbPayload.bg_pic_url = await uploadImage(backgroundFile, 'background');
+            }
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update(dbPayload)
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            toast.success("Profile Updated", {
+                description: "Your profile has been saved successfully.",
+            });
+
+            if (onCancel) {
+                onCancel(); 
+            }
+
+        } catch (error: any) {
+            console.error("Profile update failed:", error);
+            toast.error("Update Failed", {
+                description: error.message || "An unexpected error occurred while saving.",
+            });
         }
     };
 
