@@ -1,235 +1,175 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { createClient } from '../../../utils/clients';
-import EditProfileForm from './EditProfileForm';
-import { FaCalendar, FaGithub } from 'react-icons/fa';
+import { useState, useEffect } from "react"; 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import PictureCard from "@/components/profile/PictureCard";
+import BadgeCard from "@/components/profile/BadgeCard";
+import { Button } from "@/components/ui/button"; 
+import EditProfile from "./EditProfile";
+import { MdOutlineLogout, MdErrorOutline } from "react-icons/md";
+import { toast } from "sonner";
+import { 
+    AlertDialog, 
+    AlertDialogTrigger, 
+    AlertDialogContent, 
+    AlertDialogHeader, 
+    AlertDialogFooter, 
+    AlertDialogCancel, 
+    AlertDialogAction
+} from "@/components/ui/alert-dialog"; 
 
-// UI Components
-import Avatar from '@/components/old-ui/Avatar';
-import Badge from '@/components/old-ui/Badge';
-import Button from '@/components/old-ui/Button';
-import Card from '@/components/old-ui/Card';
+export interface UserProfile {
+    id?: string; // Supabase will generate a UUID for the user
+    name: string;
+    bio: string;
+    pronouns: string;
+    organization: string;
+    city: string;
+    country: string;
+    github: string;
+    linkedin: string;
+    email: string;
+    skills: string[];
+    roles: string[];
+    profile_pic_url: string; // Updated from static imports
+    bg_pic_url: string;      // Updated from static imports
+}
 
-export default function ProfilePage() {
-  const supabase = createClient();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    email: '',
-    bio: '',
-    skills: '',
-    roles: '',
-    links: '',
-    joinDate: '',
-    avatar_url: '',
-    background_url: '',
-  });
-  const [isOwner, setIsOwner] = useState(false);
+const mockSupabaseData: UserProfile = {
+    id: "d290f1ee-6c54-4b01-90e6-d701748f0851", // Mock UUID
+    name: "Win Htut Khaung Soe",
+    bio: "NUS Computer Science ’29 | NUS ASEAN Undergraduate Scholar | Vice President of Myanmar Community @ NUS | YSEALI AFP ‘24",
+    pronouns: "He/ Him",
+    organization: "National University of Singapore",
+    city: "Singapore",
+    country: "Singapore",
+    github: "https://github.com/winhks25",
+    linkedin: "https://www.linkedin.com/in/winhks25",
+    email: "whks3777@gmail.com",
+    skills: ["Love", "Laugh", "Play", "Sleep"],
+    roles: ["Software Engineer", "Product Manager", "Front End Developer", "AI Engineer"],
+    // Mocking the URLs that Supabase Storage would return
+    profile_pic_url: "/pics/profilepicture.jpg", 
+    bg_pic_url: "/pics/background.jpg"
+};
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+export default function Profile() {
+    const profileData = mockSupabaseData;
+    const [isEditing, setIsEditing] = useState(false); 
+    const isOwnProfile = true;
 
-      if (authError || !user) {
-        console.error('No user logged in!');
-        return;
-      }
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (data) {
-        let prettyDate = '';
-        if (data.join_date) {
-          prettyDate = new Date(data.join_date).toLocaleDateString('en-US', {
-            month: 'long',
-            year: 'numeric',
-          });
+    // Stubbed out action handler for the backend developer
+    const handleLogout = async () => {
+        try {
+            // Backend developer will place actual auth sign-out logic here
+            // throw new Error("Network timeout"); // Uncomment to test the error UI
+            
+            // Optional: Show a success toast using the CircleCheckIcon mapped in your wrapper
+            toast.success("Logged out successfully"); 
+        } catch (err) {
+            // Trigger the error toast using the OctagonXIcon mapped in your wrapper
+            toast.error("Uh oh! Something went wrong.", {
+                description: "There was a problem logging you out. Please try again.",
+            });
         }
-        setFormData({ ...data, joinDate: prettyDate });
-        setIsOwner(true);
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          id: user.id,
-          email: user.email || '',
-          name: 'New Member',
-        }));
-        setIsOwner(true);
-      }
-
-      if (error) {
-        console.error('Database fetch error:', error.message);
-      }
     };
 
-    fetchProfile();
-  }, []);
+    // Mocking a data fetch to show where the error would be set
+    useEffect(() => {
+        // Backend developer will replace this with actual fetch logic
+        const fetchProfile = async () => {
+            setIsLoading(true);
+            try {
+                // throw new Error("Failed to connect to the database."); // Uncomment to test error state
+            } catch (err: any) {
+                setError(err.message || "Failed to load profile data.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
 
-  const handleSaveSuccess = (updatedData: any) => {
-    setFormData(updatedData);
-    setIsEditing(false);
-  };
+    if (error) {
+        return (
+            <div className="flex justify-center mt-10 w-full">
+                <Alert variant="destructive" className="max-w-xl">
+                    <MdErrorOutline className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                        {error} Please try refreshing the page.
+                    </AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
 
-  return (
-    <div className="w-full min-h-screen">
-      {isEditing ? (
-        <EditProfileForm
-          initialData={formData}
-          onCancel={() => setIsEditing(false)}
-          onSaveSuccess={handleSaveSuccess}
-        />
-      ) : (
-        <div className="animate-in fade-in pb-12">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-            {/* Cover Photo */}
-            <div
-              className="relative h-64 sm:h-80 w-full bg-gray-100 flex items-center shadow-xl justify-center overflow-hidden"
-              style={{ borderRadius: 'var(--radius-card)' }}
-            >
-              {formData.background_url ? (
-                <img
-                  src={formData.background_url}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
+    // if loading to be standardized across all pages
+
+    if (isEditing) {
+        return <EditProfile 
+            onCancel={() => setIsEditing(false)} 
+            {...profileData}
+            initialSkills={profileData.skills}
+            initialRoles={profileData.roles}
+        />;
+    }
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 w-full mt-4 px-4 lg:px-0">
+            <div className="lg:col-start-2 lg:col-span-3">
+                <PictureCard 
+                    {...profileData}
+                    onEdit={() => setIsEditing(true)}
+                    isOwnProfile={isOwnProfile}
+                    onChat={() => console.log("Navigate to chat")}
                 />
-              ) : (
-                <div className="text-gray-400 font-medium">No cover photo</div>
-              )}
             </div>
-
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 pb-6 border-b border-gray-200">
-              <Avatar
-                src={formData.avatar_url}
-                alt={formData.name || 'Profile'}
-                className="relative -mt-14 w-40 h-40 border-4 shadow-sm z-10 text-heading-lg"
-              />
-
-              <div className="flex-1 flex flex-col sm:flex-row justify-between items-center sm:items-end w-full pt-2 sm:pt-0">
-                <div className="text-center sm:text-left">
-                  <h1 className="text-heading-lg font-heading font-bold tracking-tight">
-                    {formData.name}
-                  </h1>
-                  {formData.bio && (
-                    <p className="text-gray-600 mt-2 text-sm max-w-2xl leading-relaxed">
-                      {formData.bio}
-                    </p>
-                  )}
-                </div>
-
-                {isOwner && (
-                  <div className="mt-4 sm:mt-0 flex shrink-0">
-                    <Button
-                      onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-2"
-                    >
-                      Edit Profile
-                    </Button>
-                  </div>
+            <div className="lg:col-start-5 lg:col-span-1">
+                <BadgeCard 
+                    title="Technical Skills"
+                    items={profileData.skills}
+                />
+                <BadgeCard 
+                    title="Preferred Roles"
+                    items={profileData.roles}
+                    className="mt-5"
+                />
+                {isOwnProfile && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="mt-5 w-full lg:w-auto">
+                                <MdOutlineLogout /> Log Out
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader className="font-heading">
+                                Are you sure to log out?
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                    variant="destructive"
+                                    onClick={handleLogout}
+                                >
+                                    Log Out
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 )}
-              </div>
             </div>
-
-            {/* Content Layout */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Left Column: Contact & Info */}
-              <div className="md:col-span-1">
-                <Card className="flex flex-col gap-5">
-                  <div>
-                    <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Email
-                    </span>
-                    <span className="text-primary text-gray-800 font-medium">
-                      {formData.email}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Joined
-                    </span>
-                    <span className="text-primary text-gray-800 font-medium flex items-center gap-2">
-                      <FaCalendar className="text-gray-400" />
-                      {formData.joinDate}
-                    </span>
-                  </div>
-
-                  {formData.links && (
-                    <div>
-                      <span className="block text-mini font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Links
-                      </span>
-                      <a
-                        href={
-                          formData.links?.startsWith('http')
-                            ? formData.links
-                            : `https://${formData.links}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary text-comatch-primary hover:underline font-medium break-all flex items-center gap-2"
-                      >
-                        <FaGithub className="text-gray-700 text-primary" />
-                        {formData.links.replace(/^https?:\/\//, '')}
-                      </a>
-                    </div>
-                  )}
-                </Card>
-              </div>
-
-              {/* Right Column: Skills & Roles */}
-              <div className="md:col-span-2 space-y-8">
-                <section>
-                  <h3 className="text-heading font-heading mb-4">
-                    Technical Skills
-                  </h3>
-                  {formData.skills ? (
-                    <div className="flex flex-wrap gap-2">
-                      {formData.skills.split(',').map((skill, index) => (
-                        <Badge key={index} variant="outline">
-                          {skill.trim()}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-primary italic">
-                      No skills listed.
-                    </p>
-                  )}
-                </section>
-
-                <section>
-                  <h3 className="text-heading font-heading mb-4">
-                    Preferred Roles
-                  </h3>
-                  {formData.roles ? (
-                    <div className="flex flex-wrap gap-2">
-                      {formData.roles.split(',').map((role, index) => (
-                        <Badge key={index} variant="outline">
-                          {role.trim()}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-primary italic">
-                      No roles listed.
-                    </p>
-                  )}
-                </section>
-              </div>
-            </div>
-          </div>
         </div>
-      )}
-    </div>
-  );
+    );
 }
+/*
+    Expected Supabase Schema (Table: profiles)
+
+    id: uuid (Primary Key, references auth.users)
+    name, bio, pronouns, organization, city, country, github, linkedin, email: text
+    skills, roles: text[] (Array of text)
+    profile_pic_url, bg_pic_url: text (URLs from Supabase Storage)
+*/
