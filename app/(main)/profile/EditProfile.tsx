@@ -60,8 +60,8 @@ interface EditProfileProps {
     linkedin?: string;
     initialSkills?: string[];
     initialRoles?: string[];
-    profilePic?: string | StaticImageData;
-    bgPic?: string | StaticImageData;
+    profile_pic_url?: string; 
+    bg_pic_url?: string;
     email ?: string; 
     showEmail ?: boolean; 
 }
@@ -109,8 +109,8 @@ export default function EditProfile({
     linkedin, 
     initialSkills, 
     initialRoles, 
-    profilePic, 
-    bgPic,
+    profile_pic_url, 
+    bg_pic_url,
     email, 
     showEmail,
 }: EditProfileProps) {
@@ -138,8 +138,8 @@ export default function EditProfile({
     const [skills, setSkills] = useState(initialSkills && initialSkills.length > 0 ? [...initialSkills, ""] : [""]);
     const [roles, setRoles] = useState(initialRoles && initialRoles.length > 0 ? [...initialRoles, ""] : [""]);
 
-    const [avatars, setAvatars] = useState<string | StaticImageData | undefined>(profilePic);
-    const [backgrounds, setBackgrounds] = useState<string | StaticImageData | undefined>(bgPic);
+    const [avatars, setAvatars] = useState<string | StaticImageData | undefined>(profile_pic_url);
+    const [backgrounds, setBackgrounds] = useState<string | StaticImageData | undefined>(bg_pic_url);
 
     const [profileFile, setProfileFile] = useState<File | null>(null);
     const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
@@ -248,28 +248,28 @@ export default function EditProfile({
                 roles: roles.filter(role => role.trim() !== "")      
             };
 
-            const uploadImage = async (file: File, pathPrefix: string) => {
+            const uploadImage = async (file: File, bucketName: string, pathPrefix: string) => {
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${user.id}/${pathPrefix}-${Date.now()}.${fileExt}`;
                 
                 const { error: uploadError } = await supabase.storage
-                    .from('avatars') 
+                    .from(bucketName) 
                     .upload(fileName, file, { upsert: true });
 
                 if (uploadError) throw uploadError;
 
                 const { data: { publicUrl } } = supabase.storage
-                    .from('avatars')
+                    .from(bucketName)
                     .getPublicUrl(fileName);
 
                 return publicUrl;
             };
 
             if (profileFile) {
-                dbPayload.profile_pic_url = await uploadImage(profileFile, 'avatar');
+                dbPayload.profile_pic_url = await uploadImage(profileFile, 'avatars', 'avatar');
             }
             if (backgroundFile) {
-                dbPayload.bg_pic_url = await uploadImage(backgroundFile, 'background');
+                dbPayload.bg_pic_url = await uploadImage(backgroundFile, 'backgrounds', 'background');
             }
 
             const { error: updateError } = await supabase
@@ -284,7 +284,7 @@ export default function EditProfile({
             });
 
             if (onCancel) {
-                onCancel(); 
+                window.location.reload(); 
             }
 
         } catch (error: any) {
