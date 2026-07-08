@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import EditProfile from "./EditProfile";
 import { MdOutlineLogout, MdErrorOutline } from "react-icons/md";
 import { toast } from "sonner";
+import { createClient } from '../../../utils/clients';
 import { 
     AlertDialog, 
     AlertDialogTrigger, 
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"; 
 
 export interface UserProfile {
-    id?: string; // Supabase will generate a UUID for the user
+    id?: string; 
     name: string;
     bio: string;
     pronouns: string;
@@ -31,8 +32,8 @@ export interface UserProfile {
     email: string;
     skills: string[];
     roles: string[];
-    profile_pic_url: string; // Updated from static imports
-    bg_pic_url: string;      // Updated from static imports
+    profile_pic_url: string; 
+    bg_pic_url: string;      
 }
 
 const mockSupabaseData: UserProfile = {
@@ -54,14 +55,27 @@ const mockSupabaseData: UserProfile = {
 };
 
 export default function Profile() {
-    const profileData = mockSupabaseData;
+    const supabase = createClient();
     const [isEditing, setIsEditing] = useState(false); 
-    const isOwnProfile = true;
 
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Stubbed out action handler for the backend developer
+    const [isOwner, setIsOwner] = useState(false);
+    const [profileData, setProfileData] = useState({
+        id: '',
+        name: '',
+        email: '',
+        bio: '',
+        skills: [''],
+        roles: [''],
+        links: '',
+        joinDate: '',
+        avatar_url: '',
+        background_url: '',
+    });
+
+    // Log out
     const handleLogout = async () => {
         try {
             // Backend developer will place actual auth sign-out logic here
@@ -77,22 +91,54 @@ export default function Profile() {
         }
     };
 
-    // Mocking a data fetch to show where the error would be set
+    // Fetching data from supabase
     useEffect(() => {
-        // Backend developer will replace this with actual fetch logic
-        const fetchProfile = async () => {
-            setIsLoading(true);
-            try {
-                // throw new Error("Failed to connect to the database."); // Uncomment to test error state
-            } catch (err: any) {
-                setError(err.message || "Failed to load profile data.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchProfile();
-    }, []);
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
+      if (authError || !user) {
+        console.error('No user logged in!');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        let prettyDate = '';
+        if (data.join_date) {
+          prettyDate = new Date(data.join_date).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+          });
+        }
+        setProfileData({ ...data, joinDate: prettyDate });
+        setIsOwner(true);
+      } else {
+        setProfileData((prev) => ({
+          ...prev,
+          id: user.id,
+          email: user.email || '',
+          name: 'New Member',
+        }));
+        setIsOwner(true);
+      }
+
+      if (error) {
+        console.error('Database fetch error:', error.message);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+    // Error Handling
     if (error) {
         return (
             <div className="flex justify-center mt-10 w-full">
@@ -106,8 +152,6 @@ export default function Profile() {
             </div>
         );
     }
-
-    // if loading to be standardized across all pages
 
     if (isEditing) {
         return <EditProfile 
@@ -124,7 +168,7 @@ export default function Profile() {
                 <PictureCard 
                     {...profileData}
                     onEdit={() => setIsEditing(true)}
-                    isOwnProfile={isOwnProfile}
+                    isOwner={isOwner}
                     onChat={() => console.log("Navigate to chat")}
                 />
             </div>
@@ -138,7 +182,7 @@ export default function Profile() {
                     items={profileData.roles}
                     className="mt-5"
                 />
-                {isOwnProfile && (
+                {isOwner && (
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive" className="mt-5 w-full lg:w-auto">
