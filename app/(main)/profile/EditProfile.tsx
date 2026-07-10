@@ -63,7 +63,7 @@ interface EditProfileProps {
     profile_pic_url?: string; 
     bg_pic_url?: string;
     email ?: string; 
-    showEmail ?: boolean; 
+    show_email ?: boolean; 
 }
 
 const createProfileSchema = (supabase: any, currentEmail: string) => 
@@ -112,7 +112,7 @@ export default function EditProfile({
     profile_pic_url, 
     bg_pic_url,
     email, 
-    showEmail,
+    show_email,
 }: EditProfileProps) {
     const pronounsList = [
         {label : "Select your pronouns", value : "null"},
@@ -147,7 +147,7 @@ export default function EditProfile({
     const profileInputRef = useRef<HTMLInputElement>(null);
     const backgroundInputRef = useRef<HTMLInputElement>(null);
 
-    const [checked, setChecked] = useState(showEmail ?? false);
+    const [checked, setChecked] = useState(show_email ?? false);
 
     const [selectedPronouns, setSelectedPronouns] = useState(
         pronouns?.toLowerCase().replace(" ", "") || "null"
