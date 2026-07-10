@@ -128,6 +128,7 @@ export default function NavBar() {
                             {/* 4. Use your Avatar component here! */}
                             <Avatar 
                                 name={userName} 
+                                variant="small"
                                 src={profilePic || undefined} 
                             />
                         </button>
