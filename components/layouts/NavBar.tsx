@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Logo from "@/public/pics/logo.png"; 
-import defaultPf from "@/public/pics/profilepicture.jpg"; 
+import Avatar from "@/components/ui/Avatar"; 
 import { Badge } from "@/components/ui/badge";
 import SearchBar from "@/components/ui/searchbar";
 import { FiBell, FiSearch, FiMessageSquare, FiX } from 'react-icons/fi';
@@ -13,6 +13,7 @@ import { createClient } from '@/utils/clients';
 export default function NavBar() {
     const [showSearch, setShowSearch] = useState(false);
     const [profilePic, setProfilePic] = useState<string | null>(null);
+    const [userName, setUserName] = useState<string>("User"); 
 
     const pageTitles : Record<string, string> = {
         "/profile": "My Profile",
@@ -23,25 +24,26 @@ export default function NavBar() {
     const currentTitle = pageTitles[pathname] || "My Spaces";
 
     useEffect(() => {
-        const fetchProfilePic = async () => {
+        const fetchProfileData = async () => {
             const supabase = createClient();
             
-            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
             
             if (user) {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('profile_pic_url')
+                    .select('profile_pic_url, name')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                if (data && data.profile_pic_url) {
-                    setProfilePic(data.profile_pic_url);
+                if (data) {
+                    if (data.profile_pic_url) setProfilePic(data.profile_pic_url);
+                    if (data.name) setUserName(data.name);
                 }
             }
         };
 
-        fetchProfilePic();
+        fetchProfileData();
     }, []);
 
     return (
@@ -123,14 +125,10 @@ export default function NavBar() {
                             className="w-9 h-9 cursor-pointer rounded-full overflow-hidden border border-input bg-muted flex items-center justify-center relative"
                             type="button"
                         >
-                            {/* 3. Render real image, with fallback, and unoptimized flag */}
-                            <Image
-                                src={profilePic || defaultPf} 
-                                alt="Profile" 
-                                fill 
-                                sizes="36px"
-                                className="object-cover" 
-                                unoptimized={!!profilePic} 
+                            {/* 4. Use your Avatar component here! */}
+                            <Avatar 
+                                name={userName} 
+                                src={profilePic || undefined} 
                             />
                         </button>
                     </a>
