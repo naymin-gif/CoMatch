@@ -64,6 +64,7 @@ interface EditProfileProps {
     bg_pic_url?: string;
     email ?: string; 
     show_email ?: boolean; 
+    onSuccess?: () => void;
 }
 
 const createProfileSchema = (supabase: any, currentEmail: string) => 
@@ -113,6 +114,7 @@ export default function EditProfile({
     bg_pic_url,
     email, 
     show_email,
+    onSuccess,
 }: EditProfileProps) {
     const pronounsList = [
         {label : "Select your pronouns", value : "null"},
@@ -283,10 +285,11 @@ export default function EditProfile({
                 description: "Your profile has been saved successfully.",
             });
 
-            if (onCancel) {
-                window.location.reload(); 
+            if (onSuccess) {
+                onSuccess(); 
+            } else if (onCancel) {
+                onCancel(); 
             }
-
         } catch (error: any) {
             console.error("Profile update failed:", error);
             toast.error("Update Failed", {

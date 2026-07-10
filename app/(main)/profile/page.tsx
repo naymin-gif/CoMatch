@@ -80,9 +80,7 @@ export default function Profile() {
         }
     };
 
-    // Fetching data from supabase
-    useEffect(() => {
-        const fetchProfile = async () => {
+    const fetchProfile = async () => {
             const { data: { user }, error: authError } = await supabase.auth.getUser();
 
             if (authError || !user) {
@@ -117,8 +115,15 @@ export default function Profile() {
             }
         };
 
+    // Fetching data from supabase
+    useEffect(() => {
         fetchProfile();
     }, []);
+
+    const handleProfileUpdate = async () => {
+        await fetchProfile(); 
+        setIsEditing(false);  
+    };
 
     // Error Handling
     if (error) {
@@ -141,6 +146,7 @@ export default function Profile() {
             {...profileData}
             initialSkills={profileData.skills}
             initialRoles={profileData.roles}
+            onSuccess={handleProfileUpdate}
         />;
     }
 
