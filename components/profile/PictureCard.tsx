@@ -44,6 +44,7 @@ export default function PictureCard({
     isOwner,
     onChat
 } : PictureCardProps) {
+    const location = [city, country].filter(Boolean).join(", ");
     return (
         <Card className="w-full max-w-4xl mx-auto rounded-[var(--radius-card)] shadow-lg border border-border bg-comatch-background text-card-foreground overflow-hidden p-0">
             
@@ -96,7 +97,7 @@ export default function PictureCard({
                         )}
                         {(city || country) && (
                             <Badge variant="outline">
-                                <IoLocation className="mr-1" />{city}, {country}
+                                <IoLocation className="mr-1" />{location}
                             </Badge>  
                         )}
                     </div>
