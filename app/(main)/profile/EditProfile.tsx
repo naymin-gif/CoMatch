@@ -215,12 +215,19 @@ export default function EditProfile({
 
     const removeProfileImage = () => {
         setAvatars(undefined);
+        setProfileFile(null); 
+        if (profileInputRef.current) {
+            profileInputRef.current.value = ''; 
+        }
     };
 
     const removeBackgroundImage = () => {
         setBackgrounds(undefined);
+        setBackgroundFile(null); 
+        if (backgroundInputRef.current) {
+            backgroundInputRef.current.value = ''; 
+        }
     };
-
     const onSubmit = async (data: ProfileFormValues, e?: React.BaseSyntheticEvent) => {
         e?.preventDefault();
 
@@ -269,9 +276,14 @@ export default function EditProfile({
 
             if (profileFile) {
                 dbPayload.profile_pic_url = await uploadImage(profileFile, 'avatars', 'avatar');
+            } else if (avatars === undefined) {
+                dbPayload.profile_pic_url = null; 
             }
+
             if (backgroundFile) {
                 dbPayload.bg_pic_url = await uploadImage(backgroundFile, 'backgrounds', 'background');
+            } else if (backgrounds === undefined) {
+                dbPayload.bg_pic_url = null;
             }
 
             const { error: updateError } = await supabase
