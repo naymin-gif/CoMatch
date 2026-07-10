@@ -26,7 +26,6 @@ export default function NavBar() {
     useEffect(() => {
         const fetchProfileData = async () => {
             const supabase = createClient();
-            
             const { data: { user } } = await supabase.auth.getUser();
             
             if (user) {
@@ -37,13 +36,22 @@ export default function NavBar() {
                     .maybeSingle();
 
                 if (data) {
-                    if (data.profile_pic_url) setProfilePic(data.profile_pic_url);
+                    setProfilePic(data.profile_pic_url || null);
                     if (data.name) setUserName(data.name);
                 }
             }
         };
 
         fetchProfileData();
+
+        const handleProfileUpdate = () => {
+            fetchProfileData();
+        };
+        window.addEventListener('profileUpdated', handleProfileUpdate);
+
+        return () => {
+            window.removeEventListener('profileUpdated', handleProfileUpdate);
+        };
     }, []);
 
     return (

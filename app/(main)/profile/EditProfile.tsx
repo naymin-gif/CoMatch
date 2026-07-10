@@ -296,6 +296,7 @@ export default function EditProfile({
             toast.success("Profile Updated", {
                 description: "Your profile has been saved successfully.",
             });
+            window.dispatchEvent(new Event('profileUpdated'));
 
             if (onSuccess) {
                 onSuccess(); 
