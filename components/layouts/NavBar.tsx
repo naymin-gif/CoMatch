@@ -122,10 +122,12 @@ export default function NavBar() {
                     </button>
 
                     {/* Notification Bell Icon */}
-                    <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors relative text-foreground">
-                        <FiBell className="w-[17px] h-[17px]" />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" aria-hidden="true"></span>
-                    </button>
+                    <a href="/dashboard">
+                        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors relative text-foreground">
+                            <FiBell className="w-[17px] h-[17px]" />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" aria-hidden="true"></span>
+                        </button>
+                    </a>
 
                     {/* User Avatar Circle */}
                     <a href="/profile">
