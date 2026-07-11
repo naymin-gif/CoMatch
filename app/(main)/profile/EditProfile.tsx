@@ -311,6 +311,40 @@ export default function EditProfile({
         }
     };
 
+    const handleDeleteAccount = async () => {
+        try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (authError || !user) {
+                toast.error("Authentication Error", {
+                    description: "You must be logged in to delete your account.",
+                });
+                return;
+            }
+
+            // Call the secure RPC function to delete the user's account
+            const { error: deleteError } = await supabase.rpc('delete_user_account');
+
+            if (deleteError) throw deleteError;
+
+            // Sign the user out locally after successful deletion
+            await supabase.auth.signOut();
+
+            toast.success("Account Deleted", {
+                description: "Your account and all related data have been permanently deleted.",
+            });
+            
+            // Force the page to reload automatically
+            window.location.reload();
+
+        } catch (error: any) {
+            console.error("Account deletion failed:", error);
+            toast.error("Deletion Failed", {
+                description: error.message || "An unexpected error occurred while deleting your account.",
+            });
+        }
+    };
+
     return (
         <form className="mb-6 mt-4" onSubmit={rhfSubmit(onSubmit)}>
                 <input
@@ -653,7 +687,13 @@ export default function EditProfile({
                                 <AlertDialogCancel>
                                     Cancel
                                 </AlertDialogCancel>
-                                <AlertDialogAction variant="destructive">
+                                <AlertDialogAction 
+                                    variant="destructive" 
+                                    onClick={(e) => {
+                                        e.preventDefault(); // Prevent form submission
+                                        handleDeleteAccount();
+                                    }}
+                                >
                                     Delete
                                 </AlertDialogAction>
                             </AlertDialogFooter>
