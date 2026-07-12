@@ -10,6 +10,7 @@ type SearchResult = {
     type: 'post' | 'space' | 'profile';
     title: string;
     subtitle?: string; 
+    spaceId?: string;
 };
 
 interface GlobalSearchProps {
@@ -23,17 +24,21 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const handleResultClick = (type: 'post' | 'space' | 'profile', id: string) => {
+    const handleResultClick = (result: SearchResult) => {
         setQuery("");         
-        switch (type) {
+        switch (result.type) {
             case 'space':
-                router.push(`/spaces/${id}`);
+                router.push(`/spaces/${result.id}`);
                 break;
             case 'post':
-                router.push(`/posts/${id}`); 
+                if (result.spaceId) {
+                    router.push(`/spaces/${result.spaceId}/posts/${result.id}`); 
+                } else {
+                    console.error("Missing spaceId for this post");
+                }
                 break;
             case 'profile':
-                router.push(`/profile/${id}`);
+                router.push(`/profile/${result.id}`);
                 break;
             default:
                 break;
@@ -63,20 +68,17 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
                 const [postsResponse, spacesResponse, profilesResponse] = await Promise.all([
                     supabase
                         .from('posts')
-                        .select('id, title, description')
-                        // Use safeSearchTerm here
+                        .select('id, title, description, space_id') 
                         .or(`title.ilike.${safeSearchTerm},description.ilike.${safeSearchTerm}`)
                         .limit(10),
                     supabase
                         .from('spaces')
                         .select('id, name, description')
-                        // Use safeSearchTerm here
                         .or(`name.ilike.${safeSearchTerm},description.ilike.${safeSearchTerm}`)
                         .limit(10),
                     supabase
                         .from('profiles')
                         .select('id, name')
-                        // Standard .ilike doesn't need the string-based double quotes, so we can stick to standard query here
                         .ilike('name', `%${query}%`)
                         .limit(10)
                 ]);
@@ -90,7 +92,8 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
                             id: post.id,
                             type: 'post',
                             title: post.title,
-                            subtitle: post.description?.substring(0, 50) + "...", // Truncate long descriptions
+                            subtitle: post.description?.substring(0, 50) + "...", 
+                            spaceId: post.space_id 
                         });
                     });
                 }
@@ -150,7 +153,7 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
                                     <li 
                                         key={`${result.type}-${result.id}`}
                                         onMouseDown={(e) => e.preventDefault()} 
-                                        onClick={() => handleResultClick(result.type, result.id)}
+                                        onClick={() => handleResultClick(result)}
                                         className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-0 transition-colors"
                                     >
                                         <div className="flex flex-col">
