@@ -22,7 +22,7 @@ export default function NavBar() {
         "/chat" : "Chats"
     };
     const pathname = usePathname();
-    const currentTitle = pageTitles[pathname] || "My Spaces";
+    const currentTitle = pageTitles[pathname] || "Spaces";
 
     useEffect(() => {
         const fetchProfileData = async () => {
