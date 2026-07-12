@@ -9,6 +9,7 @@ import SearchBar from "@/components/ui/searchbar";
 import { FiBell, FiSearch, FiMessageSquare, FiX } from 'react-icons/fi';
 import { usePathname } from "next/navigation";
 import { createClient } from '@/utils/clients';
+import GlobalSearch from "./GlobalSearch";
 
 export default function NavBar() {
     const [showSearch, setShowSearch] = useState(false);
@@ -92,7 +93,7 @@ export default function NavBar() {
                         }`}
                     >
                         <div className="w-[280px] sm:w-[320px]">
-                            <SearchBar />
+                            <GlobalSearch />
                         </div>
 
                         {/* Close Search icon */}
