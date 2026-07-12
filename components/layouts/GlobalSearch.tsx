@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import SearchBar from "@/components/ui/searchbar";
 import { createClient } from '@/utils/clients';
+import { useRouter } from "next/navigation";
 
 type SearchResult = {
     id: string;
@@ -20,6 +21,24 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
+
+    const handleResultClick = (type: 'post' | 'space' | 'profile', id: string) => {
+        setQuery("");         
+        switch (type) {
+            case 'space':
+                router.push(`/spaces/${id}`);
+                break;
+            case 'post':
+                router.push(`/posts/${id}`); 
+                break;
+            case 'profile':
+                router.push(`/profile/${id}`);
+                break;
+            default:
+                break;
+        }
+    };
 
     useEffect(() => {
         if (isOpen && inputRef.current) {
@@ -121,35 +140,37 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
             />
             
             {/* Dropdown UI */}
-            {query.trim() !== "" && (
-                <div className="absolute top-full mt-2 w-full bg-background border border-border rounded-xl shadow-lg overflow-hidden z-50">
-                    {isSearching ? (
-                        <div className="p-4 text-sm text-muted-foreground text-center">Searching...</div>
-                    ) : results.length > 0 ? (
-                        <ul className="max-h-[400px] overflow-y-auto">
-                            {results.map((result) => (
-                                <li 
-                                    key={`${result.type}-${result.id}`}
-                                    className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-0 transition-colors"
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-medium text-foreground">
-                                            {result.title}
-                                        </span>
-                                        {result.subtitle && (
-                                            <span className="text-xs text-muted-foreground truncate">
-                                                {result.type.toUpperCase()} • {result.subtitle}
+                {query.trim() !== "" && (
+                    <div className="absolute top-full mt-2 w-full bg-background border border-border rounded-xl shadow-lg overflow-hidden z-50">
+                        {isSearching ? (
+                            <div className="p-4 text-sm text-muted-foreground text-center">Searching...</div>
+                        ) : results.length > 0 ? (
+                            <ul className="max-h-[400px] overflow-y-auto">
+                                {results.map((result) => (
+                                    <li 
+                                        key={`${result.type}-${result.id}`}
+                                        onMouseDown={(e) => e.preventDefault()} 
+                                        onClick={() => handleResultClick(result.type, result.id)}
+                                        className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-0 transition-colors"
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium text-foreground">
+                                                {result.title}
                                             </span>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="p-4 text-sm text-muted-foreground text-center">No results found for "{query}"</div>
-                    )}
-                </div>
-            )}
+                                            {result.subtitle && (
+                                                <span className="text-xs text-muted-foreground truncate">
+                                                    {result.type.toUpperCase()} • {result.subtitle}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="p-4 text-sm text-muted-foreground text-center">No results found for "{query}"</div>
+                        )}
+                    </div>
+                )}
         </div>
     );
 }
