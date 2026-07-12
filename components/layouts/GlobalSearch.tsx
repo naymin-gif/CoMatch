@@ -25,24 +25,27 @@ export default function GlobalSearch() {
 
             setIsSearching(true);
             const supabase = createClient();
-            const searchTerm = `%${query}%`; 
+            const safeSearchTerm = `"%${query}%"`; 
 
             try {
                 const [postsResponse, spacesResponse, profilesResponse] = await Promise.all([
                     supabase
                         .from('posts')
                         .select('id, title, description')
-                        .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
+                        // Use safeSearchTerm here
+                        .or(`title.ilike.${safeSearchTerm},description.ilike.${safeSearchTerm}`)
                         .limit(10),
                     supabase
                         .from('spaces')
                         .select('id, name, description')
-                        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm}`)
+                        // Use safeSearchTerm here
+                        .or(`name.ilike.${safeSearchTerm},description.ilike.${safeSearchTerm}`)
                         .limit(10),
                     supabase
                         .from('profiles')
                         .select('id, name')
-                        .ilike('name', searchTerm)
+                        // Standard .ilike doesn't need the string-based double quotes, so we can stick to standard query here
+                        .ilike('name', `%${query}%`)
                         .limit(10)
                 ]);
 

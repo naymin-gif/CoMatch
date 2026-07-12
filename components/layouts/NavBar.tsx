@@ -88,8 +88,8 @@ export default function NavBar() {
                     
                     {/* Animated Search Area Wrapper (Expands to the left) */}
                     <div 
-                        className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out ${
-                            showSearch ? "max-w-md opacity-100" : "max-w-0 opacity-0 pointer-events-none"
+                        className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${
+                            showSearch ? "max-w-md opacity-100 overflow-visible" : "max-w-0 opacity-0 pointer-events-none overflow-hidden"
                         }`}
                     >
                         <div className="w-[280px] sm:w-[320px]">
