@@ -3,16 +3,16 @@ import { Badge } from "@/components/ui/badge";
 
 interface BadgeCardProps {
     title: string;
-    items?: string[]; 
+    items?: string[] | null; 
     className ?: string;
 }
 
 export default function BadgeCard({
     title, 
-    items = [],
+    items,
     className = ""
 }: BadgeCardProps) {
-
+    const safeItems = items || [];
     return (
         <Card className={`bg-comatch-background ${className}`.trim()} >
             <CardHeader className="border-b">
@@ -20,8 +20,8 @@ export default function BadgeCard({
             </CardHeader>
             
             <CardContent className="flex flex-wrap gap-2">
-                {items.length > 0 ? (
-                    items.map((item, index) => (
+                {safeItems.length > 0 ? (
+                    safeItems.map((item, index) => (
                         <Badge key={index} variant="secondary">
                             {item}
                         </Badge>
