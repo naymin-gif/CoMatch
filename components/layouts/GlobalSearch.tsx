@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import SearchBar from "@/components/ui/searchbar";
 import { createClient } from '@/utils/clients';
 
@@ -11,10 +11,23 @@ type SearchResult = {
     subtitle?: string; 
 };
 
-export default function GlobalSearch() {
+interface GlobalSearchProps {
+    isOpen: boolean;
+}
+
+export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
@@ -102,6 +115,7 @@ export default function GlobalSearch() {
     return (
         <div className="relative w-full">
             <SearchBar 
+                ref={inputRef} 
                 value={query} 
                 onChange={(e) => setQuery(e.target.value)} 
             />

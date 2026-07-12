@@ -93,7 +93,7 @@ export default function NavBar() {
                         }`}
                     >
                         <div className="w-[280px] sm:w-[320px]">
-                            <GlobalSearch />
+                            <GlobalSearch isOpen={showSearch} />
                         </div>
 
                         {/* Close Search icon */}
