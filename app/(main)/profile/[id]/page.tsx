@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"; 
+import { useState, useEffect, use } from "react"; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import PictureCard from "@/components/profile/PictureCard";
 import BadgeCard from "@/components/profile/BadgeCard";
@@ -25,7 +25,9 @@ export interface ProfileData {
     show_email: boolean;
 }
 
-export default function PublicProfile({ params }: { params: { id: string } }) {
+export default function PublicProfile({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
+    const profileId = resolvedParams.id;
     const supabase = createClient();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +41,7 @@ export default function PublicProfile({ params }: { params: { id: string } }) {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', profileId) 
                 .maybeSingle();
 
             if (error) {
@@ -53,7 +55,7 @@ export default function PublicProfile({ params }: { params: { id: string } }) {
                 setProfileData(data as ProfileData);
                 
                 const { data: { user } } = await supabase.auth.getUser();
-                if (user && user.id === params.id) {
+                if (user && user.id === profileId) { 
                     setIsOwner(true);
                 }
             } else {
@@ -64,7 +66,7 @@ export default function PublicProfile({ params }: { params: { id: string } }) {
         };
 
         fetchPublicProfile();
-    }, [params.id]); 
+    }, [profileId]);
 
     // Error Handling
     if (error) {
