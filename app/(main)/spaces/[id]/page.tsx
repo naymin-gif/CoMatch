@@ -946,17 +946,25 @@ export default function SpaceDetailPage({
                                 <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                                   {post.comments?.map((comment) => (
                                     <div key={comment.id} className="flex gap-2.5 items-start text-sm">
-                                      <Avatar
-                                        src={comment.profiles?.profile_pic_url || undefined}
-                                        alt={comment.profiles?.name || 'User'}
-                                        size="sm"
-                                        className="mt-0.5 animate-in fade-in zoom-in-95"
-                                      />
+                                      <Link
+                                        href={`/profile/${comment.profile_id}`}
+                                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                                      >
+                                        <Avatar
+                                          src={comment.profiles?.profile_pic_url || undefined}
+                                          alt={comment.profiles?.name || 'User'}
+                                          size="sm"
+                                          className="mt-0.5 animate-in fade-in zoom-in-95"
+                                        />
+                                      </Link>
                                       <div className="flex-1 bg-white p-2.5 rounded-lg border border-gray-100 shadow-2xs animate-in slide-in-from-bottom-2 duration-150">
                                         <div className="flex items-center justify-between mb-1">
-                                          <span className="font-semibold text-gray-800 text-xs">
+                                          <Link
+                                            href={`/profile/${comment.profile_id}`}
+                                            className="font-semibold text-gray-800 text-xs hover:text-comatch-primary hover:underline cursor-pointer"
+                                          >
                                             {comment.profiles?.name || 'Unknown User'}
-                                          </span>
+                                          </Link>
                                           <span className="text-[10px] text-gray-400">
                                             {new Date(comment.created_at).toLocaleDateString()}
                                           </span>
