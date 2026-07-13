@@ -806,15 +806,19 @@ export default function SpaceDetailPage({
                           className="border border-gray-100 hover:shadow-md hover:border-comatch-light transition duration-300 flex flex-col justify-between p-6"
                         >
                           <div>
-                            <div className="flex items-center gap-3 mb-4">
+                            <Link
+                              href={`/profile/${post.owner_id}`}
+                              className="flex items-center gap-3 mb-4 group cursor-pointer"
+                            >
                               {/* Post Author Avatar (replaces custom profile picture div with Avatar UI component) */}
                               <Avatar
                                 src={post.owner.profile_pic_url || undefined}
                                 alt={post.owner.name}
                                 size="sm"
+                                className="group-hover:opacity-90 transition-opacity"
                               />
                               <div>
-                                <h4 className="text-mini font-primary font-semibold text-gray-900">
+                                <h4 className="text-mini font-primary font-semibold text-gray-900 group-hover:text-comatch-primary group-hover:underline transition-colors">
                                   {post.owner.name}
                                 </h4>
                                 <span className="text-mini font-primary text-gray-400 flex items-center gap-1">
@@ -824,7 +828,7 @@ export default function SpaceDetailPage({
                                   ).toLocaleDateString()}
                                 </span>
                               </div>
-                            </div>
+                            </Link>
 
                             <h3 className="text-heading font-heading font-bold text-gray-900 mb-2">
                               {post.title}
