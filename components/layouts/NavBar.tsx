@@ -118,9 +118,11 @@ export default function NavBar() {
                     )}
 
                     {/* Chat Icon Button */}
-                    <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground">
-                        <FiMessageSquare className="w-[18px] h-[18px]" />
-                    </button>
+                    <a href="/chat">
+                        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground">
+                            <FiMessageSquare className="w-[18px] h-[18px]" />
+                        </button>
+                    </a>
 
                     {/* Notification Bell Icon */}
                     <a href="/dashboard">
