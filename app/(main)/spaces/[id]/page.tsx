@@ -45,7 +45,7 @@ interface Profile {
   id: string;
   name: string;
   email: string;
-  avatar_url: string | null;
+  profile_pic_url: string | null;
   roles: string | null;
 }
 
@@ -57,7 +57,7 @@ interface Comment {
   created_at: string;
   profiles: {
     name: string;
-    avatar_url: string | null;
+    profile_pic_url: string | null;
   } | null;
 }
 
@@ -72,7 +72,7 @@ interface Post {
   owner_id: string;
   owner: {
     name: string;
-    avatar_url: string | null;
+    profile_pic_url: string | null;
   };
   likes: string[];
   comments: Comment[];
@@ -149,7 +149,7 @@ export default function SpaceDetailPage({
         // 3. Fetch owner profile
         const { data: ownerData } = await supabase
           .from('profiles')
-          .select('id, name, email, avatar_url, roles')
+          .select('id, name, email, profile_pic_url, roles')
           .eq('id', spaceData.owner_id)
           .maybeSingle();
 
@@ -174,7 +174,7 @@ export default function SpaceDetailPage({
             supabase.from('post_likes').select('post_id, profile_id').in('post_id', postIds),
             supabase
               .from('post_comments')
-              .select('id, post_id, profile_id, content, created_at, profiles(name, avatar_url)')
+              .select('id, post_id, profile_id, content, created_at, profiles(name, profile_pic_url)')
               .in('post_id', postIds)
               .order('created_at', { ascending: true }),
           ]);
@@ -200,7 +200,7 @@ export default function SpaceDetailPage({
             postsData.map(async (post: any) => {
               const { data: profile } = await supabase
                 .from('profiles')
-                .select('name, avatar_url')
+                .select('name, profile_pic_url')
                 .eq('id', post.owner_id)
                 .maybeSingle();
 
@@ -208,7 +208,7 @@ export default function SpaceDetailPage({
                 ...post,
                 owner: {
                   name: profile?.name || 'Unknown User',
-                  avatar_url: profile?.avatar_url || null,
+                  profile_pic_url: profile?.profile_pic_url || null,
                 },
                 likes: likesMap[post.id] || [],
                 comments: commentsMap[post.id] || [],
@@ -251,7 +251,7 @@ export default function SpaceDetailPage({
 
           const { data: profileList } = await supabase
             .from('profiles')
-            .select('id, name, email, avatar_url, roles')
+            .select('id, name, email, profile_pic_url, roles')
             .in('id', profileIds);
 
           if (profileList) {
@@ -300,7 +300,7 @@ export default function SpaceDetailPage({
       // Add currentUser profile to the local member list
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('id, name, email, avatar_url, roles')
+        .select('id, name, email, profile_pic_url, roles')
         .eq('id', currentUser.id)
         .maybeSingle();
 
@@ -406,7 +406,7 @@ export default function SpaceDetailPage({
           profile_id: currentUser.id,
           content,
         })
-        .select('id, post_id, profile_id, content, created_at, profiles(name, avatar_url)')
+        .select('id, post_id, profile_id, content, created_at, profiles(name, profile_pic_url)')
         .single();
 
       if (error) throw error;
@@ -809,7 +809,7 @@ export default function SpaceDetailPage({
                             <div className="flex items-center gap-3 mb-4">
                               {/* Post Author Avatar (replaces custom profile picture div with Avatar UI component) */}
                               <Avatar
-                                src={post.owner.avatar_url || undefined}
+                                src={post.owner.profile_pic_url || undefined}
                                 alt={post.owner.name}
                                 size="sm"
                               />
@@ -943,7 +943,7 @@ export default function SpaceDetailPage({
                                   {post.comments?.map((comment) => (
                                     <div key={comment.id} className="flex gap-2.5 items-start text-sm">
                                       <Avatar
-                                        src={comment.profiles?.avatar_url || undefined}
+                                        src={comment.profiles?.profile_pic_url || undefined}
                                         alt={comment.profiles?.name || 'User'}
                                         size="sm"
                                         className="mt-0.5 animate-in fade-in zoom-in-95"
@@ -1027,7 +1027,7 @@ export default function SpaceDetailPage({
                         <div className="flex items-center gap-3">
                           {/* Member Avatar (replaces custom div with Avatar UI component) */}
                           <Avatar
-                            src={member.avatar_url || undefined}
+                            src={member.profile_pic_url || undefined}
                             alt={member.name}
                             size="md"
                             className="border"
