@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"; 
 import Image, { StaticImageData } from "next/image";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { IoLocation } from "react-icons/io5";
 import { Badge } from "@/components/ui/badge";
 import { FaSchool } from "react-icons/fa";
