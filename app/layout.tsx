@@ -1,7 +1,10 @@
 import "./globals.css";
 import NavBar from "@/components/layouts/NavBar";
-import { Fredoka } from 'next/font/google';
+import { Fredoka, Geist } from 'next/font/google';
 import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const fredoka = Fredoka({
   subsets: ['latin'],
@@ -16,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={fredoka.variable}>
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>
         <NavBar />
         {children}
