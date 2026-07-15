@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Logo from "@/public/pics/logo.png"; 
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import SearchBar from "@/components/ui/searchbar";
 import { FiBell, FiSearch, FiMessageSquare, FiX } from 'react-icons/fi';
@@ -142,7 +142,9 @@ export default function NavBar() {
                             <Avatar name={userName}>
                                 <AvatarImage
                                     src={profilePic || undefined}
+                                    alt={`${userName} Profile Picture`}
                                 />
+                                <AvatarFallback />
                             </Avatar>
                         </button>
                     </a>

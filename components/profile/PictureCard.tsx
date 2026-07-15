@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"; 
 import Image, { StaticImageData } from "next/image";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { IoLocation } from "react-icons/io5";
 import { Badge } from "@/components/ui/badge";
 import { FaSchool } from "react-icons/fa";
@@ -64,11 +64,15 @@ export default function PictureCard({
             <div className="relative px-6 sm:px-8 pb-8">
                 <div className="flex flex-row justify-between items-start pt-2 sm:pt-0">
                     <div className="relative -mt-16 sm:-mt-20 mb-4 z-20">
-                        <Avatar name={name}>
+                        <Avatar 
+                            name={name}
+                            size="lg"
+                        >
                             <AvatarImage
                                 src={profile_pic_url}
                                 alt={`${name} Profile Picture`}
                             />
+                            <AvatarFallback />
                         </Avatar>
                     </div>
 
