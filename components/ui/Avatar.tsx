@@ -5,23 +5,37 @@ import { Avatar as AvatarPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+function getInitials(name?: string) {
+  if (!name) return ""
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 0) return ""
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+const AvatarContext = React.createContext<{ name?: string }>({})
+
 function Avatar({
   className,
   size = "default",
+  name, 
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root> & {
   size?: "default" | "sm" | "lg"
+  name?: string
 }) {
   return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      data-size={size}
-      className={cn(
-        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
-        className
-      )}
-      {...props}
-    />
+    <AvatarContext.Provider value={{ name }}>
+      <AvatarPrimitive.Root
+        data-slot="avatar"
+        data-size={size}
+        className={cn(
+          "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
+          className
+        )}
+        {...props}
+      />
+    </AvatarContext.Provider>
   )
 }
 
@@ -43,8 +57,11 @@ function AvatarImage({
 
 function AvatarFallback({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+  const { name } = React.useContext(AvatarContext)
+
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
@@ -53,7 +70,9 @@ function AvatarFallback({
         className
       )}
       {...props}
-    />
+    >
+      {children || getInitials(name)}
+    </AvatarPrimitive.Fallback>
   )
 }
 

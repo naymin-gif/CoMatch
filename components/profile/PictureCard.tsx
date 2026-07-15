@@ -64,14 +64,11 @@ export default function PictureCard({
             <div className="relative px-6 sm:px-8 pb-8">
                 <div className="flex flex-row justify-between items-start pt-2 sm:pt-0">
                     <div className="relative -mt-16 sm:-mt-20 mb-4 z-20">
-                        <Avatar>
+                        <Avatar name={name}>
                             <AvatarImage
                                 src={profile_pic_url}
-                                alt={name} + "Profile Picture"
+                                alt={`${name} Profile Picture`}
                             />
-                            <AvatarFallback>
-                                
-                            </AvatarFallback>
                         </Avatar>
                     </div>
 
