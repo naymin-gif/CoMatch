@@ -249,7 +249,39 @@ function ChatContent() {
         .select()
         .single();
 
-      if (createError) throw createError;
+      if (createError) {
+        // If unique constraint violation (code '23505' or similar PG error), fetch the existing one instead
+        if (createError.code === '23505' || createError.message.includes('duplicate key')) {
+          const { data: existingDbData } = await supabase
+            .from('conversations')
+            .select('*')
+            .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`);
+
+          const existingDb = existingDbData?.find(
+            (c) =>
+              (c.user1_id === currentUserId && c.user2_id === recipId) ||
+              (c.user1_id === recipId && c.user2_id === currentUserId)
+          );
+
+          if (existingDb) {
+            const formattedConv: Conversation = {
+              ...existingDb,
+              otherParticipant: profile,
+              lastMessage: 'No messages yet',
+            };
+            
+            // Add to list if not present
+            setConversations((prev) => {
+              if (prev.some((c) => c.id === formattedConv.id)) return prev;
+              return [formattedConv, ...prev];
+            });
+            setActiveConversation(formattedConv);
+            setShowSidebarMobile(false);
+            return;
+          }
+        }
+        throw createError;
+      }
 
       const formattedNewConv: Conversation = {
         ...newConv,
