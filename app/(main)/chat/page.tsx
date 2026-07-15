@@ -148,7 +148,7 @@ function ChatContent() {
 
   // 2. Fetch messages and bind realtime listener when active conversation changes
   useEffect(() => {
-    if (!activeConversation) return;
+    if (!activeConversation || !currentUser) return;
 
     const fetchMessages = async () => {
       setIsLoadingMessages(true);
@@ -161,6 +161,12 @@ function ChatContent() {
 
         if (error) throw error;
         setMessages(data || []);
+        // Making all the existing messages as read
+        await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', activeConversation.id)
+          .order('created_at', { ascending: true });
       } catch (err: any) {
         console.error('Error loading messages:', err);
         toast.error('Failed to load message history.');
