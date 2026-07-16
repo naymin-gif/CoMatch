@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/clients';
-import Avatar from '@/components/ui/Avatar';
+//import Avatar from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, MessageSquare, Search, ArrowLeft, ExternalLink } from 'lucide-react';
@@ -437,11 +438,14 @@ function ChatContent() {
                         : 'hover:bg-gray-50 border border-transparent'
                     }`}
                   >
-                    <Avatar
+                    
+                    <Avatar name={conv.otherParticipant.name} size="sm">
+                    <AvatarImage
                       src={conv.otherParticipant.profile_pic_url || undefined}
-                      name={conv.otherParticipant.name}
-                      variant="small"
+                      alt={conv.otherParticipant.name}
                     />
+                    <AvatarFallback />
+                    </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
                         <span className="font-semibold text-xs text-gray-950 truncate block">
@@ -484,11 +488,14 @@ function ChatContent() {
                     <ArrowLeft size={18} className="text-gray-600" />
                   </Button>
                   
-                  <Avatar
+                  
+                  <Avatar name={activeConversation.otherParticipant.name} size="sm">
+                  <AvatarImage
                     src={activeConversation.otherParticipant.profile_pic_url || undefined}
-                    name={activeConversation.otherParticipant.name}
-                    variant="small"
+                    alt={activeConversation.otherParticipant.name}
                   />
+                  <AvatarFallback />
+                  </Avatar>
                   <div>
                     <h3 className="text-xs font-bold text-gray-900 leading-tight">
                       {activeConversation.otherParticipant.name}
