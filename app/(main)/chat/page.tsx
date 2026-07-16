@@ -161,12 +161,22 @@ function ChatContent() {
 
         if (error) throw error;
         setMessages(data || []);
-        // Making all the existing messages as read
-        await supabase
+
+        // MARK AS READ: Mark all messages sent by the other user as read
+        const { data: updateData, error: updateError, status: updateStatus } = await supabase
           .from('messages')
-          .select('*')
+          .update({ is_read: true })
           .eq('conversation_id', activeConversation.id)
-          .order('created_at', { ascending: true });
+          .neq('sender_id', currentUser.id)
+          .eq('is_read', false)
+          .select();
+
+        console.log("MARK AS READ QUERY RESULT (LOAD):", { 
+          data: updateData, 
+          error: updateError, 
+          status: updateStatus 
+        });
+
       } catch (err: any) {
         console.error('Error loading messages:', err);
         toast.error('Failed to load message history.');
@@ -188,13 +198,29 @@ function ChatContent() {
           table: 'messages',
           filter: `conversation_id=eq.${activeConversation.id}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as Message;
+          
           // Append message if it is not already in the list
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
+
+          // MARK AS READ: If we receive a message from the other person while chat is open, mark it as read immediately
+          if (newMsg.sender_id !== currentUser.id) {
+            const { data: realtimeData, error: realtimeError, status: realtimeStatus } = await supabase
+              .from('messages')
+              .update({ is_read: true })
+              .eq('id', newMsg.id)
+              .select();
+
+            console.log("MARK AS READ QUERY RESULT (REALTIME):", { 
+              data: realtimeData, 
+              error: realtimeError, 
+              status: realtimeStatus 
+            });
+          }
 
           // Update last message in active conversation list preview
           setConversations((prevConvs) =>
@@ -215,7 +241,7 @@ function ChatContent() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeConversation]);
+  }, [activeConversation, currentUser]);
 
   // Check or create a conversation with the query parameter user
   const handleQueryRecipient = async (recipId: string, currentUserId: string, currentList: Conversation[]) => {
