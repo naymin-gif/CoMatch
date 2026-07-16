@@ -15,7 +15,7 @@ export default function NavBar() {
     const [showSearch, setShowSearch] = useState(false);
     const [profilePic, setProfilePic] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("User"); 
-
+    const [unreadCount, setUnreadCount] = useState<number>(0);
     const pageTitles : Record<string, string> = {
         "/profile": "My Profile",
         "/dashboard" : "Dashboard",
@@ -25,8 +25,8 @@ export default function NavBar() {
     const currentTitle = pageTitles[pathname] || "Spaces";
 
     useEffect(() => {
+        const supabase = createClient();
         const fetchProfileData = async () => {
-            const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             
             if (user) {
@@ -45,6 +45,42 @@ export default function NavBar() {
 
         fetchProfileData();
 
+        // Real-time unread messages listener
+        let messagesChannel: any;
+
+        const fetchUnreadCount = async (userId: string) => {
+            const { count, error } = await supabase
+                .from('messages')
+                .select('id, conversations!inner(user1_id, user2_id)', { count: 'exact', head: true })
+                .eq('is_read', false)
+                .neq('sender_id', userId)
+                .or(`user1_id.eq.${userId},user2_id.eq.${userId}`, { foreignTable: 'conversations' });
+
+            if (!error && count !== null) {
+                setUnreadCount(count);
+            }
+        };
+
+        const setupRealtimeInbox = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                await fetchUnreadCount(user.id);
+
+                messagesChannel = supabase
+                    .channel('global_inbox')
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'messages' },
+                        () => {
+                            fetchUnreadCount(user.id);
+                        }
+                    )
+                    .subscribe();
+            }
+        };
+
+        setupRealtimeInbox();
+
         const handleProfileUpdate = () => {
             fetchProfileData();
         };
@@ -52,6 +88,7 @@ export default function NavBar() {
 
         return () => {
             window.removeEventListener('profileUpdated', handleProfileUpdate);
+            if (messagesChannel) supabase.removeChannel(messagesChannel);
         };
     }, []);
 
@@ -119,8 +156,13 @@ export default function NavBar() {
 
                     {/* Chat Icon Button */}
                     <a href="/chat">
-                        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-foreground">
+                        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors relative text-foreground">
                             <FiMessageSquare className="w-[18px] h-[18px]" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] font-extrabold px-1 animate-pulse shadow-sm">
+                                    {unreadCount}
+                                </span>
+                            )}
                         </button>
                     </a>
 
