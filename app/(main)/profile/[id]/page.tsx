@@ -6,6 +6,7 @@ import PictureCard from "@/components/profile/PictureCard";
 import BadgeCard from "@/components/profile/BadgeCard";
 import { MdErrorOutline } from "react-icons/md";
 import { createClient } from '@/utils/clients'; 
+import { useRouter } from 'next/navigation';
 
 export interface ProfileData {
     id?: string;
@@ -29,6 +30,7 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
     const resolvedParams = use(params);
     const profileId = resolvedParams.id;
     const supabase = createClient();
+    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
@@ -101,7 +103,7 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
                     email={profileData.show_email ? profileData.email : ""}
                     onEdit={() => {}} 
                     isOwner={isOwner}
-                    onChat={() => console.log("Navigate to chat")}
+                    onChat={() => router.push(`/chat?user=${profileId}`)}
                 />
             </div>
             <div className="lg:col-start-5 lg:col-span-1">
