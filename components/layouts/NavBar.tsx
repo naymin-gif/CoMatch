@@ -16,6 +16,7 @@ export default function NavBar() {
     const [profilePic, setProfilePic] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("User"); 
     const [unreadCount, setUnreadCount] = useState<number>(0);
+    const [hasNotifications, setHasNotifications] = useState<boolean>(false);
     const pageTitles : Record<string, string> = {
         "/profile": "My Profile",
         "/dashboard" : "Dashboard",
@@ -81,6 +82,52 @@ export default function NavBar() {
 
         setupRealtimeInbox();
 
+        // Real-time pending applications notification listener
+        let appsChannel: any;
+
+        const fetchNotificationStatus = async (userId: string) => {
+            // 1. Check inbound applications (where we are the post owner, status is Pending, and not seen)
+            const { count: inboundCount, error: inboundError } = await supabase
+                .from('applications')
+                .select('id, posts!inner(owner_id)', { count: 'exact', head: true })
+                .eq('status', 'Pending')
+                .eq('owner_seen', false)
+                .eq('posts.owner_id', userId);
+
+            // 2. Check outbound applications (where we are the applicant, status is Approved/Rejected, and not seen)
+            const { count: outboundCount, error: outboundError } = await supabase
+                .from('applications')
+                .select('id', { count: 'exact', head: true })
+                .eq('applicant_id', userId)
+                .in('status', ['Approved', 'Rejected'])
+                .eq('applicant_seen', false);
+
+            if (!inboundError && !outboundError) {
+                const totalNotifications = (inboundCount || 0) + (outboundCount || 0);
+                setHasNotifications(totalNotifications > 0);
+            }
+        };
+
+        const setupRealtimeNotifications = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                await fetchNotificationStatus(user.id);
+
+                appsChannel = supabase
+                    .channel('global_applications_notifications')
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'applications' },
+                        () => {
+                            fetchNotificationStatus(user.id);
+                        }
+                    )
+                    .subscribe();
+            }
+        };
+
+        setupRealtimeNotifications();
+
         const handleProfileUpdate = () => {
             fetchProfileData();
         };
@@ -89,6 +136,7 @@ export default function NavBar() {
         return () => {
             window.removeEventListener('profileUpdated', handleProfileUpdate);
             if (messagesChannel) supabase.removeChannel(messagesChannel);
+            if (appsChannel) supabase.removeChannel(appsChannel);
         };
     }, []);
 
@@ -170,7 +218,9 @@ export default function NavBar() {
                     <a href="/dashboard">
                         <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors relative text-foreground">
                             <FiBell className="w-[17px] h-[17px]" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" aria-hidden="true"></span>
+                            {hasNotifications && (
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full animate-pulse" aria-hidden="true"></span>
+                            )}
                         </button>
                     </a>
 
@@ -180,7 +230,7 @@ export default function NavBar() {
                             className="w-9 h-9 cursor-pointer rounded-full overflow-hidden border border-input bg-muted flex items-center justify-center relative"
                             type="button"
                         >
-                            {/* 4. Use your Avatar component here! */}
+                            
                             <Avatar name={userName}>
                                 <AvatarImage
                                     src={profilePic || undefined}
