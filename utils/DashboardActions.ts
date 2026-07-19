@@ -8,6 +8,8 @@ export interface Dashboard {
   created_at: string;
   intro_message?: string;
   selected_roles?: string[];
+  owner_seen?: boolean;
+  applicant_seen?: boolean;
   posts?: {
     id: string;
     title: string;
@@ -34,6 +36,7 @@ export async function getMyApplications(
       id,
       status,
       created_at,
+      applicant_seen,
       posts (
         id,
         title,
@@ -68,6 +71,7 @@ export async function getRequestsReceived(
       selected_roles,
       status,
       created_at,
+      owner_seen,
       profiles (
         id,
         name
@@ -117,10 +121,10 @@ export async function updateApplicationStatus(
     );
   }
 
-  // 1. Update the application status
+  // 1. Update the application status and reset applicant_seen to false
   const { data, error } = await supabase
     .from('applications')
-    .update({ status: newStatus })
+    .update({ status: newStatus, applicant_seen: false })
     .eq('id', applicationId)
     .select()
     .single();

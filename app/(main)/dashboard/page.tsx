@@ -68,6 +68,61 @@ export default function DashboardPage() {
     loadDashboard();
   }, [router]);
 
+  // Mark received applications as seen
+  const markInboundAsSeen = async (unseenIds: string[]) => {
+    if (unseenIds.length === 0) return;
+    const { error } = await supabase
+      .from('applications')
+      .update({ owner_seen: true })
+      .in('id', unseenIds);
+      
+    if (!error) {
+      setInbound((prev) =>
+        prev.map((app) =>
+          unseenIds.includes(app.id) ? { ...app, owner_seen: true } : app
+        )
+      );
+    }
+  };
+
+  // Mark my applications as seen
+  const markOutboundAsSeen = async (unseenIds: string[]) => {
+    if (unseenIds.length === 0) return;
+    const { error } = await supabase
+      .from('applications')
+      .update({ applicant_seen: true })
+      .in('id', unseenIds);
+
+    if (!error) {
+      setOutbound((prev) =>
+        prev.map((app) =>
+          unseenIds.includes(app.id) ? { ...app, applicant_seen: true } : app
+        )
+      );
+    }
+  };
+
+  // Find unseen IDs
+  const unseenInboundIds = inbound
+    .filter((app) => app.status === 'Pending' && !app.owner_seen)
+    .map((app) => app.id);
+
+  const unseenOutboundIds = outbound
+    .filter((app) => app.status !== 'Pending' && !app.applicant_seen)
+    .map((app) => app.id);
+
+  useEffect(() => {
+    if (activeTab === 'inbound') {
+      if (unseenInboundIds.length > 0) {
+        markInboundAsSeen(unseenInboundIds);
+      }
+    } else {
+      if (unseenOutboundIds.length > 0) {
+        markOutboundAsSeen(unseenOutboundIds);
+      }
+    }
+  }, [activeTab, unseenInboundIds.length, unseenOutboundIds.length]);
+
   const handleAction = async (
     appId: string,
     newStatus: 'Approved' | 'Rejected'
@@ -240,14 +295,24 @@ export default function DashboardPage() {
           variant={activeTab === 'inbound' ? 'tab-active' : 'tab-inactive'}
           onClick={() => setActiveTab('inbound')}
         >
-          Requests Received
+          <span className="flex items-center gap-1.5">
+            Requests Received
+            {unseenInboundIds.length > 0 && (
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-xs inline-block"></span>
+            )}
+          </span>
         </Button>
 
         <Button
           variant={activeTab === 'outbound' ? 'tab-active' : 'tab-inactive'}
           onClick={() => setActiveTab('outbound')}
         >
-          My Applications
+          <span className="flex items-center gap-1.5">
+            My Applications
+            {unseenOutboundIds.length > 0 && (
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-xs inline-block"></span>
+            )}
+          </span>
         </Button>
       </div>
 
