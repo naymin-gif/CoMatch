@@ -71,12 +71,13 @@ export default function DashboardPage() {
   // Mark received applications as seen
   const markInboundAsSeen = async (unseenIds: string[]) => {
     if (unseenIds.length === 0) return;
-    const { error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from('applications')
       .update({ owner_seen: true })
-      .in('id', unseenIds);
+      .in('id', unseenIds)
+      .select();
       
-    if (!error) {
+    if (!error && updatedData && updatedData.length > 0) {
       setInbound((prev) =>
         prev.map((app) =>
           unseenIds.includes(app.id) ? { ...app, owner_seen: true } : app
@@ -88,12 +89,13 @@ export default function DashboardPage() {
   // Mark my applications as seen
   const markOutboundAsSeen = async (unseenIds: string[]) => {
     if (unseenIds.length === 0) return;
-    const { error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from('applications')
       .update({ applicant_seen: true })
-      .in('id', unseenIds);
+      .in('id', unseenIds)
+      .select();
 
-    if (!error) {
+    if (!error && updatedData && updatedData.length > 0) {
       setOutbound((prev) =>
         prev.map((app) =>
           unseenIds.includes(app.id) ? { ...app, applicant_seen: true } : app
