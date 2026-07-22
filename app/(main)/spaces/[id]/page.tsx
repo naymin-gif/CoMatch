@@ -339,7 +339,7 @@ export default function SpacePage({ params }: SpacePageProps) {
                 />
             </TabsContent>
             <TabsContent value="posts">
-                <PostPage postIds={postIds} />
+                <PostPage currentUserName={currentUser.name} postIds={postIds} />
             </TabsContent>
             <TabsContent value="settings">
                 {isEditing ? (
