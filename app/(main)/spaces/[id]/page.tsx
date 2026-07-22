@@ -15,8 +15,6 @@ import SpaceEdit from "@/components/space/SpaceEdit";
 import Loading from "@/app/loading";
 
 // Static Assets
-import bg from "@/public/pics/background.jpg";
-import pf from "@/public/pics/profilepicture.jpg";
 import { supabase } from "@/utils/supabse";
 
 // Interfaces
