@@ -9,21 +9,27 @@ import { MdOutlineLogout } from "react-icons/md";
 import { GrGroup } from "react-icons/gr";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"; 
 import ShareLink from "@/components/ui/ShareLink";
-
+import { IoMdAddCircleOutline } from "react-icons/io";
 
 interface SpaceHeaderProps {
     image?: string | StaticImageData;
     name: string;
     memberCount: number; 
     spaceLink: string;
+    hasJoined: boolean; 
+    onJoinToggle: () => void;
 }
 
 export default function SpaceHeader({
     image,
     name, 
     memberCount,
-    spaceLink
+    spaceLink, 
+    hasJoined,
+    onJoinToggle
 } : SpaceHeaderProps) {
+    // states
+
     return (
         <Card className="mt-3 mb-3 w-6xl p-0 bg-comatch-background">
             {/* Space Image */}
@@ -62,9 +68,15 @@ export default function SpaceHeader({
                                     <ShareLink name="space" link={spaceLink} />
                                 </PopoverContent>
                             </Popover>
-                            <Button variant="destructive">
-                                Leave <MdOutlineLogout />
-                            </Button>
+                            {hasJoined ? (
+                                <Button variant="destructive" onClick={onJoinToggle}> 
+                                    Leave <MdOutlineLogout />
+                                </Button>
+                            ) : (
+                                <Button variant="green" onClick={onJoinToggle}>
+                                    <IoMdAddCircleOutline /> Join
+                                </Button>
+                            )}
                         </div>
                     </div>
                     {/* Tabs */}
