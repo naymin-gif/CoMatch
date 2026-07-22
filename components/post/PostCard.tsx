@@ -12,11 +12,11 @@ import { MdArrowOutward } from "react-icons/md";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"; 
 import ShareLink from "@/components/ui/ShareLink";
-import { Comment } from "./CommentPage";
-import CommentPage from "./CommentPage";
+import CommentPage, { Comment } from "./CommentPage";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import ApplyModal from "./ApplyModal";
 import { MdOutlineDownloadDone } from "react-icons/md";
+import { RoleAndPosition } from "./PostPage";
 
 import { 
     Card,
@@ -41,21 +41,32 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-// mock data
-import pf from "@/public/pics/profilepicture.jpg"; 
-import pp from "@/public/pics/background.jpg"; 
-
-interface PostCardProps {
+export interface PostCardProps {
     postid: string;
-}
-
-export interface RoleAndPosition {
-    role: string;
-    position: number;
+    ownerName: string;
+    ownerAvatarUrl?: string;
+    postDate: string;
+    initialLikeCount: number;
+    postTitle: string;
+    postDescription: string;
+    postImageUrl?: string;
+    commitmentLevel: string;
+    rolesAndPositions: RoleAndPosition[];
+    initialComments: Comment[];
 }
 
 export default function PostCard({
-    postid
+    postid,
+    ownerName,
+    ownerAvatarUrl,
+    postDate,
+    initialLikeCount,
+    postTitle,
+    postDescription,
+    postImageUrl,
+    commitmentLevel,
+    rolesAndPositions,
+    initialComments
 } : PostCardProps) {
     // container reference
     const containerRef = useRef<HTMLDivElement>(null); 
@@ -69,61 +80,17 @@ export default function PostCard({
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
     const [applied, setApplied] = useState<boolean>(false);
 
+    // Initializing state with props
+    const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
+    const [comments, setComments] = useState<Comment[]>(initialComments); 
+
     useEffect(() => {
         setIsMounted(true);
     }, [])
-
-    // mock data 
-    const ownerName: string = "Win"
-    const postDate: string = "12 hours ago"
-    const [likeCount, setLikeCount] = useState<number>(12);
-    const postTitle: string = "3 Frontend Developers Needed"
-    const postDescription: string = "Writebox is a text editor designed with simplicity and distraction-free writing. While many applications tend to become feature-rich and complex over time, Writebox takes a different approach. Writebox continues to focus on the essential features required for writing on a computer, providing an environment that allows writers to concentrate without unnecessary distractions."
-    const postImage: string = "somelink"
-    const commitmentLevel: string = "Medium";
-    const RolesAndPositions: RoleAndPosition[] = [
-        {role: "Software Engineer", position: 1},
-        {role: "AI Engineer", position: 2},
-        {role: "Prompt Engineer", position: 100},
-        {role: "Vibe Engineer", position: 1},
-        {role: "Social Engineer", position: 2},
-        {role: "Eating Engineer", position: 100},
-        {role: "Shitting Engineer", position: 1},
-        {role: "Screwing Engineer", position: 2},
-        {role: "Nutting Engineer", position: 100},
-    ]
-    const [comments, setComments] = useState<Comment[]>([
-        {
-            id: "c1a2b3c4-1234-5678-90ab-cdef12345678",
-            content: "This is a fantastic feature! Really looking forward to seeing how it evolves in the next update. Great job to the team.",
-            created_at: "2026-07-20T14:30:00Z",
-            profiles: {
-            name: "Alice Chen",
-            profile_pic_url: "https://i.pravatar.cc/150?u=alice"
-            }
-        },
-        {
-            id: "d5e6f7a8-2345-6789-01bc-def012345679",
-            content: "I've been testing this extensively over the past few weeks and I have to say, the performance improvements are staggering. However, I did notice a small edge case when loading a massive dataset on slower networks. It might be worth adding some skeleton loaders or a more prominent loading spinner to keep the user engaged while the backend crunches the numbers. Otherwise, stellar work!",
-            created_at: "2026-07-21T09:15:22Z",
-            profiles: {
-            name: "Marcus Johnson",
-            }
-        },
-        {
-            id: "e9f0a1b2-3456-7890-12cd-ef0123456780",
-            content: "Looks good to me 👍",
-            created_at: "2026-07-21T11:45:10Z",
-            profiles: {
-            name: "Samira Patel",
-            profile_pic_url: "https://i.pravatar.cc/150?u=samira"
-            }
-        },
-    ]); 
     
     // ###################################################
 
-    const displayedRoles = rolesSeeMore ? RolesAndPositions : RolesAndPositions.slice(0, 3);
+    const displayedRoles = rolesSeeMore ? rolesAndPositions : rolesAndPositions.slice(0, 3);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
     const postLink = `${baseUrl}/posts/${postid}`;
 
@@ -159,7 +126,7 @@ export default function PostCard({
             <CardHeader className="flex flex-row gap-4 items-center">
                 <Avatar name={ownerName}>
                     <AvatarImage
-                        src={pf.src}
+                        src={ownerAvatarUrl || ""}
                         alt={`${ownerName}'s Profile`}
                     />
                     <AvatarFallback />
@@ -176,12 +143,13 @@ export default function PostCard({
 
             {/* Image */}
             <div>
-                {postImage && (
+                {postImageUrl && (
                     <Image 
-                        src={pp}
+                        src={postImageUrl}
                         alt="Post Image"
                         className="w-full aspect-[4/3] object-cover rounded-sm"
-                        height={32}
+                        width={800}
+                        height={600}
                         sizes="(max-width: 768px) 100vw, 600px"
                     />
                 )}
@@ -235,7 +203,7 @@ export default function PostCard({
                 </CardDescription>
 
                 {/* View More Roles */}
-                {RolesAndPositions.length > 3 && (
+                {rolesAndPositions.length > 3 && (
                     <Button 
                         variant="secondary" 
                         className="w-32 mt-2"
@@ -280,10 +248,10 @@ export default function PostCard({
                                 </DrawerHeader>
                                 <div className="flex-1 p-4 overflow-y-auto">
                                     <CommentPage 
-                                        profile_pic_url={pf.src}
+                                        profile_pic_url={ownerAvatarUrl || ""}
                                         name={ownerName}
                                         comments={comments}
-                                        postid= {postid}
+                                        postid={postid}
                                         onAddComment={handleNewComment}
                                     />
                                 </div>
@@ -321,12 +289,10 @@ export default function PostCard({
                     <ApplyModal
                         onCancel={onCancel} 
                         onApply={onApply}
-                        rolesAndPositions={RolesAndPositions}
+                        rolesAndPositions={rolesAndPositions}
                     />
                 </AlertDialogContent>
             </AlertDialog>
         </Card>
     );  
-
 }
- 

@@ -8,6 +8,24 @@ interface PostPageProps {
     postIds: string[]
 }
 
+interface Post {
+    id: string;
+    owner_id: string;
+    title: string;
+    description: string;
+    commitment_level: string;
+    image_url: string;
+    created_at: string;
+}
+
+interface Comment {
+    id: string;
+    post_id: string;
+    profile_id: string;
+    content: string;
+    created_at: string;
+}
+
 export default function PostPage({
     currentUserName,
     postIds
