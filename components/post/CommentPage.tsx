@@ -5,16 +5,7 @@ import CommentCard from "./CommentCard";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
-
-export interface Comment {
-    id: string; 
-    content: string; 
-    created_at: string; 
-    profiles: {
-        name: string;
-        profile_pic_url?: string;
-    }
-}
+import { Comment } from "./PostPage";
 
 interface CommentPageProps {
     name: string;
