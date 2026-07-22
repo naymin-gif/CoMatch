@@ -1,7 +1,6 @@
 "use client"; 
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LuTriangleAlert } from "react-icons/lu";
 
@@ -13,10 +12,12 @@ import SpaceMembers from "@/components/space/SpaceMembers";
 import PostPage from "@/components/post/PostPage";
 import SpaceSettings from "@/components/space/SpaceSettings";
 import SpaceEdit from "@/components/space/SpaceEdit";
+import Loading from "@/app/loading";
 
 // Static Assets
 import bg from "@/public/pics/background.jpg";
 import pf from "@/public/pics/profilepicture.jpg";
+import { supabase } from "@/utils/supabse";
 
 // Interfaces
 interface SpacePageProps {
@@ -36,44 +37,129 @@ interface Space {
   id: string;
   name: string;
   description: string;
-  external_link: string | null;
-  icon_url: string | null;
+  external_links: string[] | null;
+  image: string | null;
   owner_id: string;
   created_at: string;
   last_edited_at: string;
 }
 
-// TODO: BACKEND - Replace mock data below with real database fetch
-const MOCK_MEMBER_1: Profile = { id: "1", profile_pic_url: pf.src, name: "win", bio: "I am Win"}; 
-const MOCK_MEMBER_2: Profile = { id: "2", profile_pic_url: pf.src, name: "nay", bio: "I am nay"}; 
-const MOCK_MEMBER_3: Profile = { id: "3", profile_pic_url: pf.src, name: "henry", bio: "I am henry"}; 
-const MOCK_MEMBERS: Profile[] = [MOCK_MEMBER_1, MOCK_MEMBER_2, MOCK_MEMBER_3]; 
-const MOCK_POST_IDS: string[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
-
-const MOCK_SPACE_NAME: string = "Win Space";
-const MOCK_SPACE_DESC: string = "This is win testing space";
-const MOCK_SPACE_CREATED_AT: string = "2026-07-16"; 
-const MOCK_SPACE_OWNER_ID: string = "1"; 
-const MOCK_SPACE_OWNER_NAME: string = "Win";
-const MOCK_SPACE_ICON_URL: string = bg.src;
-const MOCK_EXTERNAL_LINKS: string[] = ["www.this.com", "www.that.com"]; 
-// ============================================================================
-
 export default function SpacePage({ params }: SpacePageProps) {
     const spaceId = params.id;
 
-    // TODO: BACKEND - Fetch space members
-    // We need a list of Profile objects for this space. 
-    // Please perform a JOIN between 'space_members' and 'profiles' using space_members.profile_id = profiles.id.
-    // Required fields from profiles: id, name, profile_pic_url, bio.
-
     // States for edit space
-    const [isEditing, setIsEditing] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [spaceName, setSpaceName] = useState(MOCK_SPACE_NAME);
-    const [spaceDesc, setSpaceDesc] = useState(MOCK_SPACE_DESC);
-    const [iconUrl, setIconUrl] = useState(MOCK_SPACE_ICON_URL); 
-    const [externalLinks, setExternalLinks] = useState(MOCK_EXTERNAL_LINKS); 
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [spaceName, setSpaceName] = useState<string>('');
+    const [spaceDesc, setSpaceDesc] = useState<string>('');
+    const [spaceImage, setSpaceImage] = useState<string>(''); 
+    const [externalLinks, setExternalLinks] = useState<string[]>([]); 
+    const [hasJoined, setHasJoined] = useState<boolean>(false);
+    const [members, setMembers] = useState<Profile[]>([]);
+    const [currentUser, setCurrentUser] = useState<any | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [errorMsg, setErrorMsg] = useState<string>('');
+    const [space, setSpace] = useState<Space>();
+    const [ownerProfile, setOwnerProfile] = useState<Profile>();
+    const [postIds, setPostIds] = useState<string[]>([]);
+
+    // Load Space Data
+    useEffect(() => {
+        const loadSpaceData = async () => {
+            try {
+                setIsLoading(true);
+                setErrorMsg('');
+
+                // Current user
+                const {
+                data: { user },
+                } = await supabase.auth.getUser();
+                setCurrentUser(user);
+
+                // Space Details
+                const { data: spaceData, error: spaceError } = await supabase
+                    .from('spaces')
+                    .select('*')
+                    .eq('id', spaceId)
+                    .maybeSingle();
+
+                if (spaceError) throw spaceError;
+                if (!spaceData) {
+                    setErrorMsg('Space not found.');
+                    setIsLoading(false);
+                    return;
+                }
+
+                setSpace(spaceData);
+                setSpaceName(spaceData.name);
+                setSpaceDesc(spaceData.description); 
+                setExternalLinks(spaceData.external_links ? [...spaceData.external_links] : []);
+                setSpaceImage(spaceData.image || "");
+
+                // Owner Profile
+                const { data: ownerData } = await supabase
+                    .from('profiles')
+                    .select('id, name, email, profile_pic_url, roles')
+                    .eq('id', spaceData.owner_id)
+                    .maybeSingle();
+
+                if (ownerData) setOwnerProfile(ownerData);
+
+                // Posts
+                const { data: postsData } = await supabase
+                    .from('posts')
+                    .select(`id`)
+                    .eq('space_id', spaceId)
+                    .order('created_at', { ascending: false });
+                    
+
+                if (postsData && postsData.length > 0) {
+                    setPostIds(postsData.map((p) => p.id));
+                }
+
+                // Space Members
+                const { data: membersData, error: membersError } = await supabase
+                    .from('space_members')
+                    .select('profile_id')
+                    .eq('space_id', spaceId);
+
+                if (membersError) throw membersError;
+
+                const memberList: Profile[] = [];
+
+                if (membersData && membersData.length > 0) {
+                    const profileIds = membersData.map(m => m.profile_id);
+                    if (user) {
+                        setHasJoined(profileIds.includes(user.id));
+                    }
+
+                    const { data: profileList } = await supabase
+                        .from('profiles')
+                        .select('id, name, profile_pic_url, bio')
+                        .in('id', profileIds);
+
+                    if (profileList) {
+                        memberList.push(...profileList);
+                    }
+                } else {
+                    if (ownerData) {
+                        memberList.push(ownerData);
+                    }
+                    if (user && spaceData.owner_id === user.id) {
+                        setHasJoined(true);
+                    }
+                }
+                setMembers(memberList); 
+            } catch (err: any) {
+                console.error(err);
+                setErrorMsg(err.message || 'Error loading space data.');
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadSpaceData();
+  }, [spaceId, supabase]);
+    
 
     // Save Function
     const handleSave = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -85,25 +171,59 @@ export default function SpacePage({ params }: SpacePageProps) {
             const imageFile = formData.get("image") as File;
             const isImageRemoved = formData.get("isImageRemoved") === "true";
             
-            // TODO: BACKEND - Add API call here to update the 'spaces' table
-            // Example: await fetch(`/api/space/${spaceId}`, { method: 'PUT', body: formData })
-            // The backend developer will handle uploading this File to a storage bucket 
-            // and saving the resulting public URL to the icon_url column.
-
-            setSpaceName(formData.get("name") as string);
-            setSpaceDesc(formData.get("description") as string);
+            const newName = formData.get("name") as string;
+            const newDesc = formData.get("description") as string;
             
             const updatedLinks = formData.getAll("external_links") as string[];
             const filteredLinks = updatedLinks.filter(link => link.trim() !== "");
-            setExternalLinks(filteredLinks);
+            
+            let finalImageUrl = spaceImage; 
             
             if (isImageRemoved) {
-                setIconUrl(""); 
+                finalImageUrl = ""; 
             } else if (imageFile && imageFile.size > 0) {
-                setIconUrl(URL.createObjectURL(imageFile));
+                // IMPORTANT: Replace 'space-images' with your actual Supabase storage bucket name
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${spaceId}-${Math.random()}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('space-images') 
+                    .upload(`public/${fileName}`, imageFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('space-images')
+                    .getPublicUrl(`public/${fileName}`);
+                    
+                finalImageUrl = publicUrlData.publicUrl;
             }
+
+            // 2. Update the 'spaces' table in Supabase
+            const { error: updateError } = await supabase
+                .from('spaces')
+                .update({
+                    name: newName,
+                    description: newDesc,
+                    external_links: filteredLinks,
+                    image: finalImageUrl,
+                    last_edited_at: new Date().toISOString() // Update timestamp per schema
+                })
+                .eq('id', spaceId);
+
+            if (updateError) throw updateError;
+
+            // 3. Update local UI state only on success
+            setSpaceName(newName);
+            setSpaceDesc(newDesc);
+            setExternalLinks(filteredLinks);
+            setSpaceImage(finalImageUrl);
             
             setIsEditing(false);
+            
+            // Optional: Show success toast
+            toast("Space updated successfully!");
+            
         } catch (error) {
             console.error("Failed to update space:", error);
             toast(
@@ -119,8 +239,73 @@ export default function SpacePage({ params }: SpacePageProps) {
 
     // Cancel Function
     const onCancel = () => {
+        if (space) {
+            setSpaceName(space.name);
+            setSpaceDesc(space.description);
+            setExternalLinks(space.external_links ? [...space.external_links] : []);
+            setSpaceImage(space.image || "");
+        }
         setIsEditing(false); 
     };
+
+    // Join Space Function
+    const handleJoinToggle = async () => {
+        if (!currentUser) {
+            toast("You must be logged in to join a space.");
+            return;
+        }
+
+        try {
+            if (hasJoined) {
+                const { error } = await supabase
+                    .from('space_members')
+                    .delete()
+                    .eq('space_id', spaceId)
+                    .eq('profile_id', currentUser.id);
+
+                if (error) throw error;
+
+                setMembers(members.filter(member => member.id !== currentUser.id));
+                setHasJoined(false);
+                toast("You have left the space.");
+                
+            } else {
+                const { error } = await supabase
+                    .from('space_members')
+                    .insert({
+                        space_id: spaceId,
+                        profile_id: currentUser.id
+                    });
+
+                if (error) throw error;
+
+                setMembers([...members, currentUser]);
+                setHasJoined(true);
+                toast("You have successfully joined the space!");
+            }
+        } catch (error) {
+            console.error("Failed to toggle join status:", error);
+            toast(
+                <div className="flex items-center gap-2">
+                    <LuTriangleAlert className="text-comatch-danger"/>
+                    <span>Failed to update membership status!</span>
+                </div>
+            );
+        }
+    };
+
+    if (isLoading) {
+        return <Loading />;
+    }
+
+    if (errorMsg || !space || !ownerProfile) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen text-red-500 gap-2">
+                <LuTriangleAlert size={32} />
+                <p>{errorMsg || "Space or Owner not found."}</p>
+            </div>
+        );
+    }
 
     // Space Link Getter
     const spaceLink = `/spaces/${spaceId}`;
@@ -129,39 +314,41 @@ export default function SpacePage({ params }: SpacePageProps) {
         <Tabs defaultValue="posts" className="flex flex-col items-center">
             <SpaceHeader 
                 name={spaceName} 
-                image={iconUrl} 
-                memberCount={MOCK_MEMBERS.length} 
-                spaceLink={spaceLink}    
+                image={spaceImage} 
+                memberCount={members.length}
+                spaceLink={spaceLink}  
+                hasJoined={hasJoined} 
+                onJoinToggle={handleJoinToggle} 
             />
             <TabsContent value="about">
                 <AboutSpace 
                     name={spaceName} 
-                    created_at={MOCK_SPACE_CREATED_AT} 
-                    memberCount={MOCK_MEMBERS.length} 
-                    owner={MOCK_SPACE_OWNER_NAME} 
-                    postCount={MOCK_POST_IDS.length} 
+                    created_at={space.created_at} 
+                    memberCount={members.length}
+                    owner={ownerProfile.name} 
+                    postCount={postIds.length} 
                     external_links={externalLinks}
                     spaceDescription={spaceDesc} 
                 />
             </TabsContent>
             <TabsContent value="members">
                 <SpaceMembers 
-                    members={MOCK_MEMBERS}
-                    memberCount={MOCK_MEMBERS.length}
-                    owner_id={MOCK_SPACE_OWNER_ID}
+                    members={members} 
+                    memberCount={members.length}
+                    owner_id={ownerProfile.id}
                     spaceName={spaceName}
                     space_id={spaceId}
                 />
             </TabsContent>
             <TabsContent value="posts">
-                <PostPage postIds={MOCK_POST_IDS} />
+                <PostPage postIds={postIds} />
             </TabsContent>
             <TabsContent value="settings">
                 {isEditing ? (
                     <SpaceEdit 
                         spaceName={spaceName}
                         spaceDescription={spaceDesc}
-                        spaceImage={iconUrl}
+                        spaceImage={spaceImage}
                         external_links={externalLinks}
                         onSubmit={handleSave} 
                         isSubmitting={isSubmitting}
@@ -171,7 +358,7 @@ export default function SpacePage({ params }: SpacePageProps) {
                     <SpaceSettings 
                         spaceName={spaceName}
                         spaceDescription={spaceDesc}
-                        spaceImage={iconUrl}
+                        spaceImage={spaceImage}
                         onEdit={() => setIsEditing(true)} 
                         external_links={externalLinks}
                     />
