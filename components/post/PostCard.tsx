@@ -18,7 +18,6 @@ import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import ApplyModal from "./ApplyModal";
 import { MdOutlineDownloadDone } from "react-icons/md";
 import { RoleAndPosition } from "./PostPage";
-import { supabase } from "@/utils/supabse";
 
 import { 
     Card,
