@@ -190,7 +190,7 @@ export default function PostCard({
                 )}
             </div>
 
-            <CardContent className="flex flex-col gap-3 min-h-[500px]">
+            <CardContent className={`flex flex-col gap-3 ${!postImageUrl ? 'min-h-[500px]' : ''}`}>
                 {/* Title */}
                 <CardTitle>
                     {postTitle}
