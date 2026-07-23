@@ -33,6 +33,7 @@ export default function PostPage({
     const [fetchedPosts, setFetchedPosts] = useState<PostCardProps[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Fetch Post data
     useEffect(() => {
         async function fetchPostData() {
             if (postIds.length === 0) {
@@ -90,6 +91,51 @@ export default function PostPage({
         fetchPostData();
     }, [postIds]);
 
+    // Functions
+    // Handle like 
+    const handleLike = async (postId: string, previousLiked: boolean) => {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+            throw new Error("User not authenticated");
+        }
+
+        if (previousLiked) {
+            const { error } = await supabase
+                .from('post_likes')
+                .delete()
+                .match({ post_id: postId, profile_id: user.id });
+            
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('post_likes')
+                .insert({ post_id: postId, profile_id: user.id });
+            
+            if (error) throw error;
+        }
+    }
+
+    // Handle New Comment
+    const handleNewComment = async (postId: string, newComment: Comment) => {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+            throw new Error("User not authenticated");
+        }
+
+        const { error } = await supabase
+            .from('post_comments')
+            .insert({
+                id: newComment.id, 
+                post_id: postId,
+                profile_id: user.id,
+                content: newComment.content
+            });
+        
+        if (error) throw error;
+    }
+
     if (postIds.length === 0) {
         return (
             <div className="flex flex-row gap-3 items-center mt-3">
@@ -121,6 +167,8 @@ export default function PostPage({
                         commitmentLevel={post.commitmentLevel}
                         rolesAndPositions={post.rolesAndPositions}
                         initialComments={post.initialComments}
+                        onLike={handleLike}
+                        onNewComment={handleNewComment}
                     />
                 ))}
             </div>

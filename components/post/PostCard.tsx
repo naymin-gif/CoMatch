@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import ApplyModal from "./ApplyModal";
 import { MdOutlineDownloadDone } from "react-icons/md";
 import { RoleAndPosition } from "./PostPage";
+import { supabase } from "@/utils/supabse";
 
 import { 
     Card,
@@ -54,6 +55,8 @@ export interface PostCardProps {
     commitmentLevel: string;
     rolesAndPositions: RoleAndPosition[];
     initialComments: Comment[];
+    onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
+    onNewComment?: (postId: string, newComment: Comment) => Promise<void>;
 }
 
 export default function PostCard({
@@ -67,7 +70,9 @@ export default function PostCard({
     postImageUrl,
     commitmentLevel,
     rolesAndPositions,
-    initialComments
+    initialComments,
+    onLike,
+    onNewComment,
 } : PostCardProps) {
     // container reference
     const containerRef = useRef<HTMLDivElement>(null); 
@@ -89,24 +94,40 @@ export default function PostCard({
         setIsMounted(true);
     }, [])
     
-    // ###################################################
-
     const displayedRoles = rolesSeeMore ? rolesAndPositions : rolesAndPositions.slice(0, 3);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
     const postLink = `${baseUrl}/posts/${postid}`;
 
-    // functions
-    const handleLike = () => {
-        if (liked) {
-            setLikeCount(likeCount - 1)
-        } else {
-            setLikeCount(likeCount + 1)
+    // handleLike function
+    const handleLike = async () => {
+        const previousLiked = liked;
+        const previousCount = likeCount;
+
+        setLiked(!previousLiked);
+        setLikeCount(previousLiked ? previousCount - 1 : previousCount + 1);
+
+        try {
+            if (onLike) {
+                await onLike(postid, previousLiked);
+            }
+        } catch (error) {
+            console.error("Error updating like status:", error);
+            setLiked(previousLiked);
+            setLikeCount(previousCount);
         }
-        setLiked(!liked);
     }
 
-    const handleNewComment = (newComment: Comment) => {
+    const handleNewComment = async (newComment: Comment) => {
         setComments(prevComments => [...prevComments, newComment]); 
+
+        try {
+            if (onNewComment) {
+                await onNewComment(postid, newComment);
+            }
+        } catch (error) {
+            console.error("Error posting comment:", error);
+            setComments(prevComments => prevComments.filter(c => c.id !== newComment.id));
+        }
     }
 
     const onCancel = () => {
