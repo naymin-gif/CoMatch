@@ -1,6 +1,6 @@
 "use client"; 
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { toast } from "sonner";
 import { LuTriangleAlert } from "react-icons/lu";
 
@@ -19,9 +19,9 @@ import { supabase } from "@/utils/supabse";
 
 // Interfaces
 interface SpacePageProps {
-    params: {
+    params: Promise<{
         id: string; 
-    }
+    }>
 }
 
 interface Profile {
@@ -43,7 +43,8 @@ interface Space {
 }
 
 export default function SpacePage({ params }: SpacePageProps) {
-    const spaceId = params.id;
+    const resolvedParams = use(params);
+    const spaceId = resolvedParams.id;
 
     // States for edit space
     const [isEditing, setIsEditing] = useState<boolean>(false);
