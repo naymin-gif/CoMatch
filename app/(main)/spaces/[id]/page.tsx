@@ -324,7 +324,8 @@ export default function SpacePage({ params }: SpacePageProps) {
     }
 
     // Space Link Getter
-    const spaceLink = `/spaces/${spaceId}`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const spaceLink = `${baseUrl}/spaces/${spaceId}`;
 
     return (
         <Tabs defaultValue="posts" className="flex flex-col items-center mb-5">
