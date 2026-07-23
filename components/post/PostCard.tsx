@@ -50,9 +50,9 @@ export interface PostCardProps {
     postDate: string;
     initialLikeCount: number;
     postTitle: string;
-    postDescription: string;
+    postDescription?: string;
     postImageUrl?: string;
-    commitmentLevel: string;
+    commitmentLevel?: string;
     rolesAndPositions: RoleAndPosition[];
     initialComments: Comment[];
     onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
@@ -195,23 +195,27 @@ export default function PostCard({
                 </CardTitle>
 
                 {/* Description */}
-                <div className="flex flex-col items-start">
-                    <CardDescription className={textSeeMore ? "" : "line-clamp-1"}>
-                        {postDescription}
-                    </CardDescription>
-                    <button 
-                        onClick={() => setTextSeeMore(!textSeeMore)}
-                        className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline mt-2"
-                    >
-                        {textSeeMore ? "See less" : "See more"}
-                    </button>
-                </div>
+                {postDescription && (
+                    <div className="flex flex-col items-start">
+                        <CardDescription className={textSeeMore ? "" : "line-clamp-1"}>
+                            {postDescription}
+                        </CardDescription>
+                        <button 
+                            onClick={() => setTextSeeMore(!textSeeMore)}
+                            className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline mt-2"
+                        >
+                            {textSeeMore ? "See less" : "See more"}
+                        </button>
+                    </div>
+                )}
 
                 {/* Commitment Level  */}
-                <CardDescription>
-                    <span className="font-heading">Commitment Level: </span> 
-                    <Badge variant="outline">{commitmentLevel}</Badge>
-                </CardDescription>
+                {commitmentLevel && (
+                    <CardDescription>
+                        <span className="font-heading">Commitment Level: </span> 
+                        <Badge variant="outline">{commitmentLevel}</Badge>
+                    </CardDescription>
+                )}
 
                 {/* Roles and Positions */}
                 <CardDescription>
