@@ -334,6 +334,7 @@ export default function SpacePage({ params }: SpacePageProps) {
                 memberCount={members.length}
                 spaceLink={spaceLink}  
                 hasJoined={hasJoined} 
+                currentUserIsOwner={currentUser?.id === ownerProfile.id}
                 onJoinToggle={handleJoinToggle} 
             />
             <TabsContent value="about">

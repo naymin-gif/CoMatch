@@ -17,6 +17,7 @@ interface SpaceHeaderProps {
     memberCount: number; 
     spaceLink: string;
     hasJoined: boolean; 
+    currentUserIsOwner: boolean;
     onJoinToggle: () => void;
 }
 
@@ -26,6 +27,7 @@ export default function SpaceHeader({
     memberCount,
     spaceLink, 
     hasJoined,
+    currentUserIsOwner,
     onJoinToggle
 } : SpaceHeaderProps) {
     // states
@@ -84,7 +86,9 @@ export default function SpaceHeader({
                         <TabsTrigger value="about">About</TabsTrigger>
                         <TabsTrigger value="posts">Posts</TabsTrigger>
                         <TabsTrigger value="members">Members</TabsTrigger>
-                        <TabsTrigger value="settings">Settings</TabsTrigger>
+                        {currentUserIsOwner && 
+                            <TabsTrigger value="settings">Settings</TabsTrigger>
+                        }
                     </TabsList>
                 </CardContent>
             </Card>
