@@ -327,7 +327,7 @@ export default function SpacePage({ params }: SpacePageProps) {
     const spaceLink = `/spaces/${spaceId}`;
 
     return (
-        <Tabs defaultValue="posts" className="flex flex-col items-center">
+        <Tabs defaultValue="posts" className="flex flex-col items-center mb-5">
             <SpaceHeader 
                 name={spaceName} 
                 image={spaceImage} 
