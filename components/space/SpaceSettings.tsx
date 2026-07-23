@@ -90,11 +90,11 @@ export default function SpaceSettings({
                         {
                             external_links && external_links.length > 0 
                             ? (
-                                external_links.map((el) => (
+                                external_links.map((el, index) => (
                                     <Button
                                         variant="link"
                                         className="h-auto p-0"
-                                        key={el}
+                                        key={index}
                                     >
                                         <BsLink45Deg />
                                         {el}
