@@ -6,6 +6,7 @@ import { RiSendPlaneFill } from "react-icons/ri";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
 import { Comment } from "./PostPage";
+import { supabase } from "@/utils/supabse";
 
 interface CommentPageProps {
     name: string;
@@ -26,35 +27,50 @@ export default function CommentPage({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async () => {
-        // Prevent empty submissions
-        if (!commentText.trim()) return; 
+        const text = commentText.trim();
+        if (!text) return; 
 
         setIsSubmitting(true);
 
-        // Simulate a 1-second delay so you can test your loading state
-        setTimeout(() => {
+        try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
             
-            // 1. Create a fake comment object simulating what the backend WOULD return
-            const mockNewComment: Comment = {
-                id: crypto.randomUUID(), // Generates a random fake ID
-                content: commentText,
-                created_at: new Date().toISOString(),
+            if (authError || !user) {
+                throw new Error("User not authenticated");
+            }
+
+            const newCommentId = crypto.randomUUID();
+            const timestamp = new Date().toISOString();
+
+            const { error: insertError } = await supabase
+                .from('post_comments')
+                .insert({
+                    id: newCommentId,
+                    post_id: postid,
+                    profile_id: user.id,
+                    content: text
+                });
+
+            if (insertError) throw insertError;
+
+            const newComment: Comment = {
+                id: newCommentId, 
+                content: text,
+                created_at: timestamp,
                 profiles: {
-                    name: "Current User", // You will eventually use the logged-in user's name
+                    name: name,
                     profile_pic_url: profile_pic_url,
                 }
             };
 
-            // 2. Update the UI with the new fake comment
-            onAddComment(mockNewComment); 
-            
-            // 3. Clear the textarea
-            setCommentText(""); 
-            
-            // 4. Stop the loading state
-            setIsSubmitting(false); 
+            onAddComment(newComment); 
+            setCommentText("");             
 
-        }, 1000); 
+        } catch (error) {
+            console.error("Failed to post comment:", error);
+        } finally {
+            setIsSubmitting(false); 
+        }
     };
 
     return (
