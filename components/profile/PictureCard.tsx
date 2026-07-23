@@ -1,6 +1,6 @@
-import { Card } from "@/components/ui/card"; 
+import { Card } from "@/components/ui/card";
 import Image, { StaticImageData } from "next/image";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/Avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { IoLocation } from "react-icons/io5";
 import { Badge } from "@/components/ui/badge";
 import { FaSchool } from "react-icons/fa";
@@ -12,45 +12,45 @@ import { IoMail } from "react-icons/io5";
 import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 
 interface PictureCardProps {
-    name : string;
-    profile_pic_url ?: string; 
-    bg_pic_url ?: string | StaticImageData;
-    pronouns ?: string;
-    bio ?: string;
-    organization ?: string;
-    city ?: string;
-    country ?: string;
-    linkedin ?: string;
-    github ?: string;
+    name: string;
+    profile_pic_url?: string;
+    bg_pic_url?: string | StaticImageData;
+    pronouns?: string;
+    bio?: string;
+    organization?: string;
+    city?: string;
+    country?: string;
+    linkedin?: string;
+    github?: string;
     onEdit?: () => void;
-    email ?: string;
-    isOwner?: boolean; 
+    email?: string;
+    isOwner?: boolean;
     onChat?: () => void;
 }
 
 export default function PictureCard({
     name,
-    profile_pic_url, 
+    profile_pic_url,
     bg_pic_url,
-    pronouns, 
+    pronouns,
     bio,
     organization,
-    city, 
+    city,
     country,
     github,
     linkedin,
     onEdit,
-    email, 
+    email,
     isOwner,
     onChat
-} : PictureCardProps) {
+}: PictureCardProps) {
     const location = [city, country].filter(Boolean).join(", ");
     return (
         <Card className="w-full max-w-4xl mx-auto rounded-[var(--radius-card)] shadow-lg border border-border bg-comatch-background text-card-foreground overflow-hidden p-0">
-            
+
             <div className="relative h-48 sm:h-64 w-full bg-muted">
                 {bg_pic_url && (
-                    <Image 
+                    <Image
                         src={bg_pic_url}
                         alt="background"
                         fill
@@ -60,11 +60,11 @@ export default function PictureCard({
                     />
                 )}
             </div>
-        
+
             <div className="relative px-6 sm:px-8 pb-8">
                 <div className="flex flex-row justify-between items-start pt-2 sm:pt-0">
                     <div className="relative -mt-16 sm:-mt-20 mb-4 z-20">
-                        <Avatar 
+                        <Avatar
                             name={name}
                             size="lg"
                         >
@@ -86,7 +86,7 @@ export default function PictureCard({
                         </Button>
                     )}
                 </div>
-                
+
                 <div className="mt-2">
                     <div className="flex flex-wrap items-center gap-2">
                         <h1 className="font-heading text-heading text-foreground font-bold">{name}</h1>
@@ -104,7 +104,7 @@ export default function PictureCard({
                         {(city || country) && (
                             <Badge variant="outline">
                                 <IoLocation className="mr-1" />{location}
-                            </Badge>  
+                            </Badge>
                         )}
                     </div>
                     {github && (
@@ -120,14 +120,14 @@ export default function PictureCard({
                                 <IoLogoLinkedin /> LinkedIn
                             </Badge>
                         </a>
-                    )} 
+                    )}
                     {email && (
                         <a href={`mailto:${email}`}>
                             <Badge className="mt-3" variant="link">
                                 <IoMail /> {email}
                             </Badge>
                         </a>
-                    )}            
+                    )}
                 </div>
             </div>
         </Card>
