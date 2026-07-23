@@ -15,14 +15,14 @@ import {
     TableCell,
 } from "@/components/ui/table"; 
 import { useState } from "react";
-import { RoleAndPosition } from "./PostCard";
+import { RoleAndPosition } from "./PostPage";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 interface ApplyModalProps {
     rolesAndPositions: RoleAndPosition[];
-    onApply: () => void;
+    onApply: (selectedRoles: string[], message: string) => void;
     onCancel: () => void;
 }
 
@@ -32,6 +32,7 @@ export default function ApplyModal({
     onCancel,
 } : ApplyModalProps) {
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+    const [message, setMessage] = useState<string>("");
 
     const onCheckChange = (role: string, isChecked: boolean) => {
         setSelectedRoles(prevRoles => 
@@ -74,12 +75,17 @@ export default function ApplyModal({
 
                 {/* Include a Note  */}
                 <span className="font-heading">Message</span>
-                <Textarea placeholder="Say something to your teammates." className="mt-2 mb-3"/>
+                <Textarea 
+                    placeholder="Say something to your teammates." 
+                    className="mt-2 mb-3"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                />
 
                 {/* Apply Button  */}
                 <div className="flex justify-end gap-3">
                     <Button onClick={onCancel} variant="secondary">Cancel</Button>
-                    <Button onClick={onApply}>Apply</Button>
+                    <Button onClick={() => onApply(selectedRoles, message)}>Apply</Button>
                 </div>
             </CardContent>
         </Card>
