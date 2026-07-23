@@ -6,7 +6,6 @@ import { RiSendPlaneFill } from "react-icons/ri";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
 import { Comment } from "./PostPage";
-import { supabase } from "@/utils/supabse";
 
 interface CommentPageProps {
     name: string;
@@ -33,37 +32,18 @@ export default function CommentPage({
         setIsSubmitting(true);
 
         try {
-            const { data: { user }, error: authError } = await supabase.auth.getUser();
-            
-            if (authError || !user) {
-                throw new Error("User not authenticated");
-            }
-
-            const newCommentId = crypto.randomUUID();
-            const timestamp = new Date().toISOString();
-
-            const { error: insertError } = await supabase
-                .from('post_comments')
-                .insert({
-                    id: newCommentId,
-                    post_id: postid,
-                    profile_id: user.id,
-                    content: text
-                });
-
-            if (insertError) throw insertError;
-
             const newComment: Comment = {
-                id: newCommentId, 
+                id: crypto.randomUUID(), 
                 content: text,
-                created_at: timestamp,
+                created_at: new Date().toISOString(),
                 profiles: {
-                    name: name,
+                    name: name, 
                     profile_pic_url: profile_pic_url,
                 }
             };
 
-            onAddComment(newComment); 
+            await onAddComment(newComment); 
+            
             setCommentText("");             
 
         } catch (error) {

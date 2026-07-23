@@ -144,6 +144,18 @@ export default function PostPage({
             });
         
         if (error) throw error;
+
+        setFetchedPosts(prevPosts => 
+            prevPosts.map(post => {
+                if (post.postid === postId) {
+                    return {
+                        ...post,
+                        initialComments: [...post.initialComments, newComment]
+                    };
+                }
+                return post;
+            })
+        );
     }
 
     // Handle Application submission
