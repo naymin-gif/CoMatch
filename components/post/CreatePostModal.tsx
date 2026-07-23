@@ -137,7 +137,11 @@ export default function CreatePostModal({
                         {/* Description */}
                         <Field>
                             <FieldLabel>Description</FieldLabel>
-                            <Textarea placeholder="Give a description of your project and requirements to join your team."/>
+                            <Textarea 
+                                placeholder="Give a description of your project and requirements to join your team."
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
                         </Field>
 
                         {/* Image Upload  */}
@@ -146,6 +150,7 @@ export default function CreatePostModal({
                             <ImageUpload 
                                 size="xl"
                                 initialImage={initialImage}
+                                onImageChange={(file) => setImageFile(file || null)}
                             />
                         </Field>
 

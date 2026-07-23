@@ -15,7 +15,7 @@ import SpaceEdit from "@/components/space/SpaceEdit";
 import Loading from "@/app/loading";
 
 // Static Assets
-import { supabase } from "@/utils/supabse";
+import { createClient } from "@/utils/clients";
 
 // Interfaces
 interface SpacePageProps {
@@ -45,6 +45,7 @@ interface Space {
 export default function SpacePage({ params }: SpacePageProps) {
     const resolvedParams = use(params);
     const spaceId = resolvedParams.id;
+    const supabase = createClient();
 
     // States for edit space
     const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -55,7 +56,7 @@ export default function SpacePage({ params }: SpacePageProps) {
     const [externalLinks, setExternalLinks] = useState<string[]>([]); 
     const [hasJoined, setHasJoined] = useState<boolean>(false);
     const [members, setMembers] = useState<Profile[]>([]);
-    const [currentUser, setCurrentUser] = useState<any | null>(null);
+    const [currentUser, setCurrentUser] = useState<Profile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [space, setSpace] = useState<Space>();
@@ -71,9 +72,25 @@ export default function SpacePage({ params }: SpacePageProps) {
 
                 // Current user
                 const {
-                data: { user },
+                    data: { user },
                 } = await supabase.auth.getUser();
-                setCurrentUser(user);
+
+                // Profile deatils of current user
+                if (user) {
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('id, name, profile_pic_url, bio')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (profileData) {
+                        setCurrentUser(profileData);
+                    }
+                }
+
+                console.log("1. Current Space ID from URL:", spaceId);
+                console.log("2. Is User Logged In?:", user !== null);
+                console.log("3. User Details:", user);
 
                 // Space Details
                 const { data: spaceData, error: spaceError } = await supabase
@@ -340,7 +357,12 @@ export default function SpacePage({ params }: SpacePageProps) {
                 />
             </TabsContent>
             <TabsContent value="posts">
-                <PostPage currentUserName={currentUser.name} postIds={postIds} />
+                <PostPage 
+                    currentUserName={currentUser?.name || "Anonymous User"}
+                    postIds={postIds} 
+                    spaceId={spaceId} 
+                    currentUserAvatar={currentUser?.profile_pic_url}
+                />
             </TabsContent>
             <TabsContent value="settings">
                 {isEditing ? (

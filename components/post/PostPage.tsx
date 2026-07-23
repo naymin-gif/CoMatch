@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import PostCard, { PostCardProps } from "./PostCard";
 import { TbFileSad } from "react-icons/tb";
 import PostPageHeader from "./PostPageHeader";
-import { supabase } from "@/utils/supabse";
+import { createClient } from "@/utils/clients";
 
 interface PostPageProps {
     currentUserName: string;
     postIds: string[]
+    spaceId: string;
+    currentUserAvatar?: string;
 }
 
 export interface Comment {
@@ -37,10 +39,13 @@ export interface NewPostData {
 
 export default function PostPage({
     currentUserName,
-    postIds
+    postIds,
+    spaceId,
+    currentUserAvatar,
 }: PostPageProps) {
     const [fetchedPosts, setFetchedPosts] = useState<PostCardProps[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const supabase = createClient();
 
     // Fetch Post data
     useEffect(() => {
@@ -51,6 +56,7 @@ export default function PostPage({
             }
 
             try {
+                // Inside fetchPostData
                 const { data, error } = await supabase
                     .from('posts')
                     .select(`
@@ -60,7 +66,7 @@ export default function PostPage({
                         commitment_level,
                         image_url,
                         created_at,
-                        profiles (name, profile_pic_url),
+                        profiles!posts_owner_id_fkey (name, profile_pic_url), 
                         roles (role, quantity),
                         post_likes (profile_id)
                     `)
@@ -91,7 +97,7 @@ export default function PostPage({
 
                 setFetchedPosts(formattedPosts);
             } catch (err) {
-                console.error("Failed to fetch posts:", err);
+                console.error("Failed to fetch posts:", JSON.stringify(err, null, 2));
             } finally {
                 setIsLoading(false);
             }
@@ -210,7 +216,8 @@ export default function PostPage({
             const { data: postResult, error: postError } = await supabase
                 .from('posts')
                 .insert({
-                    profile_id: user.id,
+                    owner_id: user.id,  
+                    space_id: spaceId,  
                     title: postData.title,
                     description: postData.description,
                     commitment_level: postData.commitmentLevel,
@@ -262,7 +269,7 @@ export default function PostPage({
             setFetchedPosts(prevPosts => [newPostCardData, ...prevPosts]);
 
         } catch (error) {
-            console.error("Failed to create post:", error);
+            console.error("Failed to create post:", JSON.stringify(error, null, 2));
         }
     }
 
@@ -281,7 +288,11 @@ export default function PostPage({
 
     return (
         <div className="flex flex-col gap-4">
-            <PostPageHeader name={currentUserName} onPost={handlePost} />
+            <PostPageHeader 
+                name={currentUserName} 
+                onPost={handlePost} 
+                profile_pic_url={currentUserAvatar}
+            />
             <div className="flex flex-col gap-4">
                 {fetchedPosts.map((post) => (
                     <PostCard

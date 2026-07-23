@@ -217,7 +217,7 @@ export default function PostCard({
                 )}
 
                 {/* Roles and Positions */}
-                <CardDescription>
+                <div className="text-sm text-muted-foreground">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -236,7 +236,7 @@ export default function PostCard({
                             ))}
                         </TableBody>
                     </Table>
-                </CardDescription>
+                </div>
 
                 {/* View More Roles */}
                 {rolesAndPositions.length > 3 && (
