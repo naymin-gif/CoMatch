@@ -54,9 +54,9 @@ export default function CommentPage({
     };
 
     return (
-        <div className="w-full flex flex-col gap-4">
+        <div className="w-full h-full flex flex-col gap-4">
             {/* Existing Comments */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-1 flex-col gap-4">
                 {comments.map((comment) => (
                     <CommentCard 
                         key={comment.id}
@@ -69,7 +69,7 @@ export default function CommentPage({
             </div>
 
             {/* Write New Comments */}
-            <div className="flex flex-row w-full items-center gap-3 border-t pt-3"> 
+            <div className="flex flex-row w-full items-center gap-3 border-t pt-3 mt-auto"> 
                 <Avatar name={name} className="flex-none">
                     <AvatarImage 
                         src={profile_pic_url}
