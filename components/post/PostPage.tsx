@@ -26,6 +26,15 @@ export interface RoleAndPosition {
     position: number;
 }
 
+export interface NewPostData {
+    title: string;
+    description: string;
+    imageFile: File | null;
+    commitmentLevel: string;
+    roles: string[];
+    quantities: number[];
+}
+
 export default function PostPage({
     currentUserName,
     postIds
@@ -157,6 +166,94 @@ export default function PostPage({
         if (error) throw error;
     }
 
+    // Handle Post Creation
+    const handlePost = async (postData: NewPostData) => {
+        try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (authError || !user) {
+                throw new Error("User not authenticated");
+            }
+
+            let imageUrl: string | undefined = undefined;
+
+            if (postData.imageFile) {
+                const fileExt = postData.imageFile.name.split('.').pop();
+                const fileName = `${crypto.randomUUID()}.${fileExt}`;
+                const filePath = `${user.id}/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('post_images') 
+                    .upload(filePath, postData.imageFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('post_images')
+                    .getPublicUrl(filePath);
+                
+                imageUrl = publicUrlData.publicUrl;
+            }
+
+            const { data: postResult, error: postError } = await supabase
+                .from('posts')
+                .insert({
+                    profile_id: user.id,
+                    title: postData.title,
+                    description: postData.description,
+                    commitment_level: postData.commitmentLevel,
+                    image_url: imageUrl,
+                })
+                .select()
+                .single();
+
+            if (postError) throw postError;
+
+            const validRoles = postData.roles
+                .map((role, index) => ({ role: role.trim(), quantity: postData.quantities[index] }))
+                .filter(r => r.role !== ""); 
+
+            if (validRoles.length > 0) {
+                const rolesToInsert = validRoles.map(r => ({
+                    post_id: postResult.id,
+                    role: r.role,
+                    quantity: r.quantity
+                }));
+
+                const { error: rolesError } = await supabase
+                    .from('roles')
+                    .insert(rolesToInsert);
+                
+                if (rolesError) throw rolesError;
+            }
+
+            const newPostCardData: PostCardProps = {
+                postid: postResult.id,
+                ownerName: currentUserName, 
+                ownerAvatarUrl: undefined, 
+                postDate: new Date().toLocaleDateString(),
+                initialLikeCount: 0,
+                postTitle: postData.title,
+                postDescription: postData.description,
+                postImageUrl: imageUrl ?? undefined,
+                commitmentLevel: postData.commitmentLevel,
+                rolesAndPositions: validRoles.map(r => ({
+                    role: r.role,
+                    position: r.quantity
+                })),
+                initialComments: [],
+                onLike: handleLike,
+                onNewComment: handleNewComment,
+                onApply: handleApply
+            };
+
+            setFetchedPosts(prevPosts => [newPostCardData, ...prevPosts]);
+
+        } catch (error) {
+            console.error("Failed to create post:", error);
+        }
+    }
+
     if (postIds.length === 0) {
         return (
             <div className="flex flex-row gap-3 items-center mt-3">
@@ -172,7 +269,7 @@ export default function PostPage({
 
     return (
         <div className="flex flex-col gap-4">
-            <PostPageHeader name={currentUserName} />
+            <PostPageHeader name={currentUserName} onPost={handlePost} />
             <div className="flex flex-col gap-4">
                 {fetchedPosts.map((post) => (
                     <PostCard

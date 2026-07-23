@@ -32,7 +32,7 @@ import NumberCounter from "@/components/ui/NumberCounter";
 
 interface CreatePostModalProps {
     onCancel: () => void;
-    onPost: () => void;
+    onPost: (postData: NewPostData) => void;
     initialImage?: File | null; 
 }
 

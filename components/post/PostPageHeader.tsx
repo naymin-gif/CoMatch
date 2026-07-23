@@ -14,15 +14,18 @@ import { BsPlusSquareFill } from "react-icons/bs";
 import { MdGroupAdd } from "react-icons/md";
 import CreatePostModal from "./CreatePostModal";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
+import { NewPostData } from "./PostPage";
 
 interface PostPageHeaderProps {
     profile_pic_url ?: string;
     name: string;
+    onPost: (postData: NewPostData) => void;
 }
 
 export default function PostPageHeader({
     profile_pic_url,
     name, 
+    onPost,
 } : PostPageHeaderProps) {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false); 
     const [selectedImage, setSelectedImage] = useState< File | null>(null);
@@ -30,10 +33,6 @@ export default function PostPageHeader({
 
     const onCancel = () => {
         setIsModalOpen(false); 
-    }
-
-    const onPost = () => {
-        // upload the data to database posts and roles tables
     }
 
     const handlePhotoClick = () => {
@@ -102,7 +101,10 @@ export default function PostPageHeader({
                 <AlertDialogContent className="p-0 bg-transparent border-none shadow-none justify-center">
                     <CreatePostModal 
                         onCancel={onCancel} 
-                        onPost={onPost}
+                        onPost={(data: NewPostData) => {
+                            onPost(data); 
+                            setIsModalOpen(false); 
+                        }}
                         initialImage={selectedImage}
                     />
                 </AlertDialogContent>
