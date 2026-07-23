@@ -58,6 +58,8 @@ export default function PostPage({
 
             try {
                 // Inside fetchPostData
+                const { data: { user } } = await supabase.auth.getUser();
+                const currentUserId = user?.id;
                 const { data, error } = await supabase
                     .from('posts')
                     .select(`
@@ -83,7 +85,9 @@ export default function PostPage({
                     postDate: timeAgo(post.created_at),
 
                     initialLikeCount: post.post_likes ? post.post_likes.length : 0,
-
+                    initialIsLiked: post.post_likes 
+                        ? post.post_likes.some((like: any) => like.profile_id === currentUserId) 
+                        : false,
                     postTitle: post.title,
                     postDescription: post.description,
                     postImageUrl: post.image_url,
@@ -254,6 +258,7 @@ export default function PostPage({
                 ownerAvatarUrl: undefined,
                 postDate: timeAgo(postResult.created_at || new Date().toISOString()),
                 initialLikeCount: 0,
+                initialIsLiked: false,
                 postTitle: postData.title,
                 postDescription: postData.description,
                 postImageUrl: imageUrl ?? undefined,
@@ -277,9 +282,16 @@ export default function PostPage({
 
     if (postIds.length === 0) {
         return (
-            <div className="flex flex-row gap-3 items-center mt-3">
-                <TbFileSad />
-                <span> Posts will appear here when members post teammate calls. </span>
+            <div className="flex flex-col gap-4">
+                <PostPageHeader
+                    name={currentUserName}
+                    onPost={handlePost}
+                    profile_pic_url={currentUserAvatar}
+                />
+                <div className="flex flex-row gap-3 items-center mt-3">
+                    <TbFileSad />
+                    <span> Posts will appear here when members post teammate calls. </span>
+                </div>
             </div>
         );
     }
@@ -310,6 +322,7 @@ export default function PostPage({
                         commitmentLevel={post.commitmentLevel}
                         rolesAndPositions={post.rolesAndPositions}
                         initialComments={post.initialComments}
+                        initialIsLiked={post.initialIsLiked}
                         onLike={handleLike}
                         onNewComment={handleNewComment}
                         onApply={handleApply}

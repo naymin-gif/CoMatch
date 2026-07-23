@@ -54,6 +54,7 @@ export interface PostCardProps {
     commitmentLevel?: string;
     rolesAndPositions: RoleAndPosition[];
     initialComments: Comment[];
+    initialIsLiked?: boolean;
     onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
     onNewComment?: (postId: string, newComment: Comment) => Promise<void>;
     onApply?: (postId: string, roles: string[], message: string) => Promise<void>;
@@ -71,6 +72,7 @@ export default function PostCard({
     commitmentLevel,
     rolesAndPositions,
     initialComments,
+    initialIsLiked = false,
     onLike,
     onNewComment,
     onApply,
@@ -81,11 +83,12 @@ export default function PostCard({
     // states
     const [textSeeMore, setTextSeeMore] = useState<boolean>(false); 
     const [rolesSeeMore, setRolesSeeMore] = useState<boolean>(false); 
-    const [liked, setLiked] = useState<boolean>(false); 
+    const [liked, setLiked] = useState<boolean>(initialIsLiked);
     const [isMounted, setIsMounted] = useState<boolean>(false); 
     const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
     const [applied, setApplied] = useState<boolean>(false);
+
 
     // Initializing state with props
     const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
