@@ -5,6 +5,7 @@ import PostCard, { PostCardProps } from "./PostCard";
 import { TbFileSad } from "react-icons/tb";
 import PostPageHeader from "./PostPageHeader";
 import { createClient } from "@/utils/clients";
+import timeAgo from "@/lib/TimeAgo";
 
 interface PostPageProps {
     currentUserName: string;
@@ -70,7 +71,8 @@ export default function PostPage({
                         roles (role, quantity),
                         post_likes (profile_id)
                     `)
-                    .in('id', postIds);
+                    .in('id', postIds)
+                    .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
@@ -78,21 +80,21 @@ export default function PostPage({
                     postid: post.id,
                     ownerName: post.profiles?.name || "Unknown User",
                     ownerAvatarUrl: post.profiles?.profile_pic_url,
-                    postDate: new Date(post.created_at).toLocaleDateString(),
-                    
+                    postDate: timeAgo(post.created_at),
+
                     initialLikeCount: post.post_likes ? post.post_likes.length : 0,
-                    
+
                     postTitle: post.title,
                     postDescription: post.description,
                     postImageUrl: post.image_url,
                     commitmentLevel: post.commitment_level,
-                    
+
                     rolesAndPositions: post.roles ? post.roles.map((r: any) => ({
                         role: r.role,
-                        position: r.quantity 
+                        position: r.quantity
                     })) : [],
-                    
-                    initialComments: [] 
+
+                    initialComments: []
                 }));
 
                 setFetchedPosts(formattedPosts);
@@ -111,7 +113,7 @@ export default function PostPage({
     // Handle like 
     const handleLike = async (postId: string, previousLiked: boolean) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
+
         if (authError || !user) {
             throw new Error("User not authenticated");
         }
@@ -121,13 +123,13 @@ export default function PostPage({
                 .from('post_likes')
                 .delete()
                 .match({ post_id: postId, profile_id: user.id });
-            
+
             if (error) throw error;
         } else {
             const { error } = await supabase
                 .from('post_likes')
                 .insert({ post_id: postId, profile_id: user.id });
-            
+
             if (error) throw error;
         }
     }
@@ -135,7 +137,7 @@ export default function PostPage({
     // Handle New Comment
     const handleNewComment = async (postId: string, newComment: Comment) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
+
         if (authError || !user) {
             throw new Error("User not authenticated");
         }
@@ -143,15 +145,15 @@ export default function PostPage({
         const { error } = await supabase
             .from('post_comments')
             .insert({
-                id: newComment.id, 
+                id: newComment.id,
                 post_id: postId,
                 profile_id: user.id,
                 content: newComment.content
             });
-        
+
         if (error) throw error;
 
-        setFetchedPosts(prevPosts => 
+        setFetchedPosts(prevPosts =>
             prevPosts.map(post => {
                 if (post.postid === postId) {
                     return {
@@ -167,7 +169,7 @@ export default function PostPage({
     // Handle Application submission
     const handleApply = async (postId: string, roles: string[], message: string) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
+
         if (authError || !user) {
             throw new Error("User not authenticated");
         }
@@ -177,10 +179,10 @@ export default function PostPage({
             .insert({
                 post_id: postId,
                 applicant_id: user.id,
-                selected_roles: roles, 
-                intro_message: message      
+                selected_roles: roles,
+                intro_message: message
             });
-        
+
         if (error) throw error;
     }
 
@@ -188,7 +190,7 @@ export default function PostPage({
     const handlePost = async (postData: NewPostData) => {
         try {
             const { data: { user }, error: authError } = await supabase.auth.getUser();
-            
+
             if (authError || !user) {
                 throw new Error("User not authenticated");
             }
@@ -201,7 +203,7 @@ export default function PostPage({
                 const filePath = `${user.id}/${fileName}`;
 
                 const { error: uploadError } = await supabase.storage
-                    .from('post_images') 
+                    .from('post_images')
                     .upload(filePath, postData.imageFile);
 
                 if (uploadError) throw uploadError;
@@ -209,15 +211,15 @@ export default function PostPage({
                 const { data: publicUrlData } = supabase.storage
                     .from('post_images')
                     .getPublicUrl(filePath);
-                
+
                 imageUrl = publicUrlData.publicUrl;
             }
 
             const { data: postResult, error: postError } = await supabase
                 .from('posts')
                 .insert({
-                    owner_id: user.id,  
-                    space_id: spaceId,  
+                    owner_id: user.id,
+                    space_id: spaceId,
                     title: postData.title,
                     description: postData.description,
                     commitment_level: postData.commitmentLevel,
@@ -230,7 +232,7 @@ export default function PostPage({
 
             const validRoles = postData.roles
                 .map((role, index) => ({ role: role.trim(), quantity: postData.quantities[index] }))
-                .filter(r => r.role !== ""); 
+                .filter(r => r.role !== "");
 
             if (validRoles.length > 0) {
                 const rolesToInsert = validRoles.map(r => ({
@@ -242,15 +244,15 @@ export default function PostPage({
                 const { error: rolesError } = await supabase
                     .from('roles')
                     .insert(rolesToInsert);
-                
+
                 if (rolesError) throw rolesError;
             }
 
             const newPostCardData: PostCardProps = {
                 postid: postResult.id,
-                ownerName: currentUserName, 
-                ownerAvatarUrl: undefined, 
-                postDate: new Date().toLocaleDateString(),
+                ownerName: currentUserName,
+                ownerAvatarUrl: undefined,
+                postDate: timeAgo(postResult.created_at || new Date().toISOString()),
                 initialLikeCount: 0,
                 postTitle: postData.title,
                 postDescription: postData.description,
@@ -280,17 +282,17 @@ export default function PostPage({
                 <span> Posts will appear here when members post teammate calls. </span>
             </div>
         );
-    } 
-    
+    }
+
     if (isLoading) {
-        return <div className="mt-3">Loading posts...</div>; 
+        return <div className="mt-3">Loading posts...</div>;
     }
 
     return (
         <div className="flex flex-col gap-4">
-            <PostPageHeader 
-                name={currentUserName} 
-                onPost={handlePost} 
+            <PostPageHeader
+                name={currentUserName}
+                onPost={handlePost}
                 profile_pic_url={currentUserAvatar}
             />
             <div className="flex flex-col gap-4">
