@@ -190,7 +190,7 @@ export default function PostCard({
                 )}
             </div>
 
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="flex flex-col gap-3 min-h-[500px]">
                 {/* Title */}
                 <CardTitle>
                     {postTitle}
@@ -221,24 +221,26 @@ export default function PostCard({
 
                 {/* Roles and Positions */}
                 <div className="text-sm text-muted-foreground">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-50">Role</TableHead>
-                                <TableHead className="text-50">Positions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {displayedRoles.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{item.role}</TableCell>
-                                    <TableCell>
-                                        {item.position}
-                                    </TableCell>
+                    {rolesAndPositions.length > 0 &&
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="text-50">Role</TableHead>
+                                    <TableHead className="text-50">Positions</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {displayedRoles.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.role}</TableCell>
+                                        <TableCell>
+                                            {item.position}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    }
                 </div>
 
                 {/* View More Roles */}
