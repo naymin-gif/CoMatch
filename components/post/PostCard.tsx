@@ -57,6 +57,7 @@ export interface PostCardProps {
     initialComments: Comment[];
     onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
     onNewComment?: (postId: string, newComment: Comment) => Promise<void>;
+    onApply?: (postId: string, roles: string[], message: string) => Promise<void>;
 }
 
 export default function PostCard({
@@ -73,6 +74,7 @@ export default function PostCard({
     initialComments,
     onLike,
     onNewComment,
+    onApply,
 } : PostCardProps) {
     // container reference
     const containerRef = useRef<HTMLDivElement>(null); 
@@ -134,9 +136,18 @@ export default function PostCard({
         setIsApplyModalOpen(false); 
     }
 
-    const onApply = () => {
+    const handleApply = async (selectedRoles: string[], message: string) => {
         setIsApplyModalOpen(false); 
         setApplied(true);
+
+        try {
+            if (onApply) {
+                await onApply(postid, selectedRoles, message);
+            }
+        } catch (error) {
+            console.error("Error submitting application:", error);
+            setApplied(false);
+        }
     }
 
     return (
@@ -310,7 +321,7 @@ export default function PostCard({
                 <AlertDialogContent className="p-0 bg-transparent border-none shadow-none justify-center">
                     <ApplyModal
                         onCancel={onCancel} 
-                        onApply={onApply}
+                        onApply={handleApply}
                         rolesAndPositions={rolesAndPositions}
                     />
                 </AlertDialogContent>

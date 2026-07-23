@@ -92,6 +92,7 @@ export default function PostPage({
     }, [postIds]);
 
     // Functions
+
     // Handle like 
     const handleLike = async (postId: string, previousLiked: boolean) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -136,6 +137,26 @@ export default function PostPage({
         if (error) throw error;
     }
 
+    // Handle Application submission
+    const handleApply = async (postId: string, roles: string[], message: string) => {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+            throw new Error("User not authenticated");
+        }
+
+        const { error } = await supabase
+            .from('applications')
+            .insert({
+                post_id: postId,
+                applicant_id: user.id,
+                selected_roles: roles, 
+                intro_message: message      
+            });
+        
+        if (error) throw error;
+    }
+
     if (postIds.length === 0) {
         return (
             <div className="flex flex-row gap-3 items-center mt-3">
@@ -169,6 +190,7 @@ export default function PostPage({
                         initialComments={post.initialComments}
                         onLike={handleLike}
                         onNewComment={handleNewComment}
+                        onApply={handleApply}
                     />
                 ))}
             </div>
