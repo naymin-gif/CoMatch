@@ -71,7 +71,13 @@ export default function PostPage({
                         created_at,
                         profiles!posts_owner_id_fkey (name, profile_pic_url), 
                         roles (role, quantity),
-                        post_likes (profile_id)
+                        post_likes (profile_id),
+                        post_comments (
+                            id,
+                            content,
+                            created_at,
+                            profiles (name, profile_pic_url)
+                        )
                     `)
                     .in('id', postIds)
                     .order('created_at', { ascending: false });
@@ -98,7 +104,15 @@ export default function PostPage({
                         position: r.quantity
                     })) : [],
 
-                    initialComments: []
+                    initialComments: post.post_comments ? post.post_comments.map((comment: any) => ({
+                        id: comment.id,
+                        content: comment.content,
+                        created_at: comment.created_at,
+                        profiles: {
+                            name: comment.profiles?.name || "Unknown User",
+                            profile_pic_url: comment.profiles?.profile_pic_url
+                        }
+                    })) : []
                 }));
 
                 setFetchedPosts(formattedPosts);

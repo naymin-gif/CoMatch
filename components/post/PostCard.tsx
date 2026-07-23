@@ -271,7 +271,7 @@ export default function PostCard({
                         onOpenChange={setIsDrawerOpen}
                     >
                         <DrawerTrigger asChild>
-                            <Button variant="ghost">
+                            <Button variant="ghost" id={`comment-trigger-${postid}`} >
                                 <VscComment /> {comments.length}
                             </Button>
                         </DrawerTrigger>
@@ -280,8 +280,14 @@ export default function PostCard({
                             <DrawerContent 
                                 container={containerRef.current}
                                 className="h-[60%] absolute bottom-0"
-                                onPointerDownOutside={() => setIsDrawerOpen(false)}
-                            >
+                                onPointerDownOutside={(e) => {
+                                    const target = e.target as HTMLElement;
+                                    if (target.closest(`#comment-trigger-${postid}`)) {
+                                        return; 
+                                    }
+                                    setIsDrawerOpen(false);
+                                }}
+                                                >
                                 <DrawerHeader className="font-heading">
                                     Comments
                                 </DrawerHeader>
