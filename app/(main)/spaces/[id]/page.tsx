@@ -364,27 +364,29 @@ export default function SpacePage({ params }: SpacePageProps) {
                     currentUserAvatar={currentUser?.profile_pic_url}
                 />
             </TabsContent>
-            <TabsContent value="settings">
-                {isEditing ? (
-                    <SpaceEdit 
-                        spaceName={spaceName}
-                        spaceDescription={spaceDesc}
-                        spaceImage={spaceImage}
-                        external_links={externalLinks}
-                        onSubmit={handleSave} 
-                        isSubmitting={isSubmitting}
-                        onCancel={onCancel}
-                    />
-                ) : (
-                    <SpaceSettings 
-                        spaceName={spaceName}
-                        spaceDescription={spaceDesc}
-                        spaceImage={spaceImage}
-                        onEdit={() => setIsEditing(true)} 
-                        external_links={externalLinks}
-                    />
-                )}
-            </TabsContent>
+            {currentUser?.id === ownerProfile.id &&
+                <TabsContent value="settings">
+                    {isEditing ? (
+                        <SpaceEdit 
+                            spaceName={spaceName}
+                            spaceDescription={spaceDesc}
+                            spaceImage={spaceImage}
+                            external_links={externalLinks}
+                            onSubmit={handleSave} 
+                            isSubmitting={isSubmitting}
+                            onCancel={onCancel}
+                        />
+                    ) : (
+                        <SpaceSettings 
+                            spaceName={spaceName}
+                            spaceDescription={spaceDesc}
+                            spaceImage={spaceImage}
+                            onEdit={() => setIsEditing(true)} 
+                            external_links={externalLinks}
+                        />
+                    )}
+                </TabsContent>
+            }
         </Tabs>
     ); 
 }
