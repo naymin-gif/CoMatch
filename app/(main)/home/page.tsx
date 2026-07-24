@@ -6,13 +6,89 @@ import type { PostCardProps } from "@/components/post/PostCard";
 import timeAgo from "@/lib/TimeAgo";
 import { createClient } from "@/utils/clients";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import HomeLeftPanel from "@/components/home/HomeLeftPanel";
+import HomeLeftPanel, {
+  type HomeSidebarSpace,
+} from "@/components/home/HomeLeftPanel";
 import HomePosts from "@/components/home/HomePosts";
 
 export default function HomePage() {
   const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const [ownedSpaces, setOwnedSpaces] = useState<HomeSidebarSpace[]>([]);
+  const [joinedSpaces, setJoinedSpaces] = useState<HomeSidebarSpace[]>([]);
+  const [otherSpaces, setOtherSpaces] = useState<HomeSidebarSpace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    async function fetchAndGroupSpaces() {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) {
+          throw authError;
+        }
+
+        const currentUserId = user?.id;
+        const [{ data: spaces, error: spacesError }, membershipResult] =
+          await Promise.all([
+            supabase
+              .from("spaces")
+              .select("id, name, image, owner_id"),
+            currentUserId
+              ? supabase
+                  .from("space_members")
+                  .select("space_id")
+                  .eq("profile_id", currentUserId)
+              : Promise.resolve({ data: [], error: null }),
+          ]);
+
+        if (spacesError) {
+          throw spacesError;
+        }
+
+        if (membershipResult.error) {
+          throw membershipResult.error;
+        }
+
+        const joinedSpaceIds = new Set(
+          membershipResult.data?.map((membership) => membership.space_id) ?? []
+        );
+        const nextOwnedSpaces: HomeSidebarSpace[] = [];
+        const nextJoinedSpaces: HomeSidebarSpace[] = [];
+        const nextOtherSpaces: HomeSidebarSpace[] = [];
+
+        for (const space of spaces ?? []) {
+          const sidebarSpace: HomeSidebarSpace = {
+            id: space.id,
+            name: space.name,
+            image: space.image,
+          };
+
+          if (space.owner_id === currentUserId) {
+            nextOwnedSpaces.push(sidebarSpace);
+          } else if (joinedSpaceIds.has(space.id)) {
+            nextJoinedSpaces.push(sidebarSpace);
+          } else {
+            nextOtherSpaces.push(sidebarSpace);
+          }
+        }
+
+        setOwnedSpaces(nextOwnedSpaces);
+        setJoinedSpaces(nextJoinedSpaces);
+        setOtherSpaces(nextOtherSpaces);
+      } catch (error) {
+        console.error(
+          "Failed to fetch spaces:",
+          JSON.stringify(error, null, 2)
+        );
+      }
+    }
+
+    void fetchAndGroupSpaces();
+  }, [supabase]);
 
   useEffect(() => {
     async function fetchAllPosts() {
@@ -185,7 +261,11 @@ export default function HomePage() {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <HomeLeftPanel />
+        <HomeLeftPanel
+          ownedSpaces={ownedSpaces}
+          joinedSpaces={joinedSpaces}
+          otherSpaces={otherSpaces}
+        />
         <HomePosts
           posts={posts}
           isLoading={isLoading}

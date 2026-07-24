@@ -20,30 +20,29 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { FaPlus } from "react-icons/fa";
 
 // mock data
-
-const ownedSpaces = [
-  { name: "Engineering Team", url: "#" },
-  { name: "Product Planning", url: "#" },
-];
-
-const joinedSpaces = [
-  { name: "Company General", url: "#" },
-  { name: "Design System", url: "#" },
-];
-
-const otherSpaces = [
-  { name: "Marketing", url: "#" },
-  { name: "Sales", url: "#" },
-];
-
 const userName = "Win"
 const profile_pic_url = ""; 
 
-// #############################################
+export type HomeSidebarSpace = {
+    id: string;
+    name: string;
+    image: string | null;
+};
 
-export default function HomeLeftPanel() {
+type HomeLeftPanelProps = {
+    ownedSpaces: HomeSidebarSpace[];
+    joinedSpaces: HomeSidebarSpace[];
+    otherSpaces: HomeSidebarSpace[];
+};
+
+const spacesBaseUrl = "/spaces/";
+
+export default function HomeLeftPanel({
+    ownedSpaces,
+    joinedSpaces,
+    otherSpaces,
+}: HomeLeftPanelProps) {
     const pathname = usePathname()
-    console.log(pathname)
     return (
         <Sidebar className="top-16 h-[calc(100vh-4rem)] border-r">
             <SidebarHeader />
@@ -74,16 +73,16 @@ export default function HomeLeftPanel() {
                 <SidebarGroupContent>
                     <SidebarMenu>
                     {ownedSpaces.map((space) => (
-                        <SidebarMenuItem key={space.name}>
+                        <SidebarMenuItem key={space.id}>
                             <SidebarMenuButton 
-                                isActive={pathname === space.url} 
+                                isActive={pathname === `${spacesBaseUrl}${space.id}`} 
                                 className="flex flex-row gap-3 h-[40px]" 
                                 asChild
                             >
-                                <a href={space.url}>
+                                <a href={`${spacesBaseUrl}${space.id}`}>
                                     <Avatar name={space.name}>
                                         <AvatarImage
-                                            src=""
+                                            src={space.image ?? ""}
                                             alt="Space Image"
                                             sizes="sm" 
                                         />
@@ -104,16 +103,16 @@ export default function HomeLeftPanel() {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         {joinedSpaces.map((space) => (
-                            <SidebarMenuItem key={space.name}>
+                            <SidebarMenuItem key={space.id}>
                                 <SidebarMenuButton 
-                                    isActive={pathname === space.url} 
+                                    isActive={pathname === `${spacesBaseUrl}${space.id}`} 
                                     className="flex flex-row gap-3 h-[40px]" 
                                     asChild
                                 >
-                                    <a href={space.url}>
+                                    <a href={`${spacesBaseUrl}${space.id}`}>
                                         <Avatar name={space.name}>
                                             <AvatarImage
-                                                src=""
+                                                src={space.image ?? ""}
                                                 alt="Space Image"
                                                 sizes="sm" 
                                             />
@@ -133,17 +132,17 @@ export default function HomeLeftPanel() {
                     <SidebarGroupLabel>Other Spaces</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                        {otherSpaces.map((space, index) => (
-                            <SidebarMenuItem key={index}>
+                        {otherSpaces.map((space) => (
+                            <SidebarMenuItem key={space.id}>
                                 <SidebarMenuButton 
-                                    isActive={pathname === space.url}
+                                    isActive={pathname === `${spacesBaseUrl}${space.id}`}
                                     className="flex flex-row gap-3 h-[40px]"  
                                     asChild
                                 >
-                                    <a href={space.url}>
+                                    <a href={`${spacesBaseUrl}${space.id}`}>
                                         <Avatar name={space.name}>
                                             <AvatarImage
-                                                src=""
+                                                src={space.image ?? ""}
                                                 alt="Space Image"
                                                 sizes="sm" 
                                             />
