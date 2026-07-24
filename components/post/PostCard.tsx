@@ -42,8 +42,11 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
+import { createClient } from "@/utils/clients";
+
 export interface PostCardProps {
     postid: string;
+    ownerId?: string;
     ownerName: string;
     ownerAvatarUrl?: string;
     isOwner?: boolean;
@@ -63,6 +66,7 @@ export interface PostCardProps {
 
 export default function PostCard({
     postid,
+    ownerId,
     ownerName,
     ownerAvatarUrl,
     isOwner = false,
@@ -90,7 +94,7 @@ export default function PostCard({
     const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
     const [applied, setApplied] = useState<boolean>(false);
-
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     // Initializing state with props
     const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
@@ -98,7 +102,15 @@ export default function PostCard({
 
     useEffect(() => {
         setIsMounted(true);
-    }, [])
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data }) => {
+            if (data?.user) {
+                setCurrentUserId(data.user.id);
+            }
+        });
+    }, []);
+
+    const effectiveIsOwner = isOwner || (Boolean(ownerId) && currentUserId === ownerId);
     
     const displayedRoles = rolesSeeMore ? rolesAndPositions : rolesAndPositions.slice(0, 3);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
@@ -321,7 +333,7 @@ export default function PostCard({
                 </div>
 
                 {/* Apply Buttons */}
-                {isOwner ? null : applied ? (
+                {effectiveIsOwner ? null : applied ? (
                     <Button variant="green">
                         <MdOutlineDownloadDone /> Applied
                     </Button>

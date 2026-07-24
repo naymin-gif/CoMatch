@@ -87,6 +87,7 @@ export default function PostPage({
 
                 const formattedPosts: PostCardProps[] = data.map((post: any) => ({
                     postid: post.id,
+                    ownerId: post.owner_id,
                     ownerName: post.profiles?.name || "Unknown User",
                     ownerAvatarUrl: post.profiles?.profile_pic_url,
                     isOwner: post.owner_id === currentUserId,
@@ -328,6 +329,7 @@ export default function PostPage({
                     <PostCard
                         key={post.postid}
                         postid={post.postid}
+                        ownerId={post.ownerId}
                         ownerName={post.ownerName}
                         ownerAvatarUrl={post.ownerAvatarUrl}
                         isOwner={post.isOwner}
