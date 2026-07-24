@@ -1,13 +1,17 @@
 "use client"; 
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useMemo, useState, use, type ReactNode } from "react";
 import { toast } from "sonner";
 import { LuTriangleAlert } from "react-icons/lu";
 
 // Local Components
+import HomeLeftPanel, {
+    type HomeSidebarSpace,
+} from "@/components/home/HomeLeftPanel";
 import SpaceHeader from "@/components/space/SpaceHeader";
 import AboutSpace from "@/components/space/AboutSpace";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import SpaceMembers from "@/components/space/SpaceMembers";
 import PostPage from "@/components/post/PostPage";
 import SpaceSettings from "@/components/space/SpaceSettings";
@@ -45,7 +49,7 @@ interface Space {
 export default function SpacePage({ params }: SpacePageProps) {
     const resolvedParams = use(params);
     const spaceId = resolvedParams.id;
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     // States for edit space
     const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -62,6 +66,9 @@ export default function SpacePage({ params }: SpacePageProps) {
     const [space, setSpace] = useState<Space>();
     const [ownerProfile, setOwnerProfile] = useState<Profile>();
     const [postIds, setPostIds] = useState<string[]>([]);
+    const [ownedSpaces, setOwnedSpaces] = useState<HomeSidebarSpace[]>([]);
+    const [joinedSpaces, setJoinedSpaces] = useState<HomeSidebarSpace[]>([]);
+    const [otherSpaces, setOtherSpaces] = useState<HomeSidebarSpace[]>([]);
 
     // Load Space Data
     useEffect(() => {
@@ -87,6 +94,51 @@ export default function SpacePage({ params }: SpacePageProps) {
                         setCurrentUser(profileData);
                     }
                 }
+
+                const [{ data: sidebarSpaces, error: spacesError }, membershipResult] =
+                    await Promise.all([
+                        supabase
+                            .from("spaces")
+                            .select("id, name, image, owner_id"),
+                        user
+                            ? supabase
+                                .from("space_members")
+                                .select("space_id")
+                                .eq("profile_id", user.id)
+                            : Promise.resolve({ data: [], error: null }),
+                    ]);
+
+                if (spacesError) throw spacesError;
+                if (membershipResult.error) throw membershipResult.error;
+
+                const joinedSpaceIds = new Set(
+                    membershipResult.data?.map(
+                        (membership) => membership.space_id
+                    ) ?? []
+                );
+                const nextOwnedSpaces: HomeSidebarSpace[] = [];
+                const nextJoinedSpaces: HomeSidebarSpace[] = [];
+                const nextOtherSpaces: HomeSidebarSpace[] = [];
+
+                for (const sidebarSpace of sidebarSpaces ?? []) {
+                    const spaceItem: HomeSidebarSpace = {
+                        id: sidebarSpace.id,
+                        name: sidebarSpace.name,
+                        image: sidebarSpace.image,
+                    };
+
+                    if (sidebarSpace.owner_id === user?.id) {
+                        nextOwnedSpaces.push(spaceItem);
+                    } else if (joinedSpaceIds.has(sidebarSpace.id)) {
+                        nextJoinedSpaces.push(spaceItem);
+                    } else {
+                        nextOtherSpaces.push(spaceItem);
+                    }
+                }
+
+                setOwnedSpaces(nextOwnedSpaces);
+                setJoinedSpaces(nextJoinedSpaces);
+                setOtherSpaces(nextOtherSpaces);
 
                 console.log("1. Current Space ID from URL:", spaceId);
                 console.log("2. Is User Logged In?:", user !== null);
@@ -198,7 +250,6 @@ export default function SpacePage({ params }: SpacePageProps) {
             if (isImageRemoved) {
                 finalImageUrl = ""; 
             } else if (imageFile && imageFile.size > 0) {
-                // IMPORTANT: Replace 'space-images' with your actual Supabase storage bucket name
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${spaceId}-${Math.random()}.${fileExt}`;
                 
@@ -223,13 +274,12 @@ export default function SpacePage({ params }: SpacePageProps) {
                     description: newDesc,
                     external_links: filteredLinks,
                     image: finalImageUrl,
-                    last_edited_at: new Date().toISOString() // Update timestamp per schema
+                    last_edited_at: new Date().toISOString() 
                 })
                 .eq('id', spaceId);
 
             if (updateError) throw updateError;
 
-            // 3. Update local UI state only on success
             setSpaceName(newName);
             setSpaceDesc(newDesc);
             setExternalLinks(filteredLinks);
@@ -237,7 +287,6 @@ export default function SpacePage({ params }: SpacePageProps) {
             
             setIsEditing(false);
             
-            // Optional: Show success toast
             toast("Space updated successfully!");
             
         } catch (error) {
@@ -310,85 +359,100 @@ export default function SpacePage({ params }: SpacePageProps) {
         }
     };
 
-    if (isLoading) {
-        return <Loading />;
-    }
+    let spacePageContent: ReactNode;
 
-    if (errorMsg || !space || !ownerProfile) {
-        return (
+    if (isLoading) {
+        spacePageContent = <Loading />;
+    } else if (errorMsg || !space || !ownerProfile) {
+        spacePageContent = (
             <div className="flex flex-col items-center justify-center h-screen text-red-500 gap-2">
                 <LuTriangleAlert size={32} />
                 <p>{errorMsg || "Space or Owner not found."}</p>
             </div>
         );
+    } else {
+        // Space Link Getter
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+        const spaceLink = `${baseUrl}/spaces/${spaceId}`;
+
+        spacePageContent = (
+            <Tabs defaultValue="posts" className="flex flex-col items-center mb-5">
+                <SpaceHeader 
+                    name={spaceName} 
+                    image={spaceImage} 
+                    memberCount={members.length}
+                    spaceLink={spaceLink}  
+                    hasJoined={hasJoined} 
+                    currentUserIsOwner={currentUser?.id === ownerProfile.id}
+                    onJoinToggle={handleJoinToggle} 
+                />
+                <TabsContent value="about">
+                    <AboutSpace 
+                        name={spaceName} 
+                        created_at={space.created_at} 
+                        memberCount={members.length}
+                        owner={ownerProfile.name} 
+                        postCount={postIds.length} 
+                        external_links={externalLinks}
+                        spaceDescription={spaceDesc} 
+                    />
+                </TabsContent>
+                <TabsContent value="members">
+                    <SpaceMembers 
+                        members={members} 
+                        memberCount={members.length}
+                        owner_id={ownerProfile.id}
+                        spaceName={spaceName}
+                        space_id={spaceId}
+                    />
+                </TabsContent>
+                <TabsContent value="posts">
+                    <PostPage 
+                        currentUserName={currentUser?.name || "Anonymous User"}
+                        postIds={postIds} 
+                        spaceId={spaceId} 
+                        currentUserAvatar={currentUser?.profile_pic_url}
+                    />
+                </TabsContent>
+                {currentUser?.id === ownerProfile.id &&
+                    <TabsContent value="settings">
+                        {isEditing ? (
+                            <SpaceEdit 
+                                spaceName={spaceName}
+                                spaceDescription={spaceDesc}
+                                spaceImage={spaceImage}
+                                external_links={externalLinks}
+                                onSubmit={handleSave} 
+                                isSubmitting={isSubmitting}
+                                onCancel={onCancel}
+                            />
+                        ) : (
+                            <SpaceSettings 
+                                spaceName={spaceName}
+                                spaceDescription={spaceDesc}
+                                spaceImage={spaceImage}
+                                onEdit={() => setIsEditing(true)} 
+                                external_links={externalLinks}
+                            />
+                        )}
+                    </TabsContent>
+                }
+            </Tabs>
+        );
     }
 
-    // Space Link Getter
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-    const spaceLink = `${baseUrl}/spaces/${spaceId}`;
-
     return (
-        <Tabs defaultValue="posts" className="flex flex-col items-center mb-5">
-            <SpaceHeader 
-                name={spaceName} 
-                image={spaceImage} 
-                memberCount={members.length}
-                spaceLink={spaceLink}  
-                hasJoined={hasJoined} 
-                currentUserIsOwner={currentUser?.id === ownerProfile.id}
-                onJoinToggle={handleJoinToggle} 
-            />
-            <TabsContent value="about">
-                <AboutSpace 
-                    name={spaceName} 
-                    created_at={space.created_at} 
-                    memberCount={members.length}
-                    owner={ownerProfile.name} 
-                    postCount={postIds.length} 
-                    external_links={externalLinks}
-                    spaceDescription={spaceDesc} 
+        <SidebarProvider>
+            <div className="flex min-h-screen w-full">
+                <HomeLeftPanel
+                    ownedSpaces={ownedSpaces}
+                    joinedSpaces={joinedSpaces}
+                    otherSpaces={otherSpaces}
                 />
-            </TabsContent>
-            <TabsContent value="members">
-                <SpaceMembers 
-                    members={members} 
-                    memberCount={members.length}
-                    owner_id={ownerProfile.id}
-                    spaceName={spaceName}
-                    space_id={spaceId}
-                />
-            </TabsContent>
-            <TabsContent value="posts">
-                <PostPage 
-                    currentUserName={currentUser?.name || "Anonymous User"}
-                    postIds={postIds} 
-                    spaceId={spaceId} 
-                    currentUserAvatar={currentUser?.profile_pic_url}
-                />
-            </TabsContent>
-            {currentUser?.id === ownerProfile.id &&
-                <TabsContent value="settings">
-                    {isEditing ? (
-                        <SpaceEdit 
-                            spaceName={spaceName}
-                            spaceDescription={spaceDesc}
-                            spaceImage={spaceImage}
-                            external_links={externalLinks}
-                            onSubmit={handleSave} 
-                            isSubmitting={isSubmitting}
-                            onCancel={onCancel}
-                        />
-                    ) : (
-                        <SpaceSettings 
-                            spaceName={spaceName}
-                            spaceDescription={spaceDesc}
-                            spaceImage={spaceImage}
-                            onEdit={() => setIsEditing(true)} 
-                            external_links={externalLinks}
-                        />
-                    )}
-                </TabsContent>
-            }
-        </Tabs>
+                <main className="min-w-0 flex-1">
+                    {spacePageContent}
+                </main>
+            </div>
+        </SidebarProvider>
     ); 
 }

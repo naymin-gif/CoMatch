@@ -53,9 +53,11 @@ export default function ApplyModal({
                 <span>Select the roles you want to apply for.</span>
                 <Table className="mb-3">
                     <TableHeader>
-                        <TableHead>Roles</TableHead>
-                        <TableHead>Positions</TableHead>
-                        <TableHead></TableHead>
+                        <TableRow>
+                            <TableHead>Roles</TableHead>
+                            <TableHead>Positions</TableHead>
+                            <TableHead></TableHead>
+                        </TableRow>
                     </TableHeader>
                     <TableBody>
                         {rolesAndPositions.map((item, index) => (
