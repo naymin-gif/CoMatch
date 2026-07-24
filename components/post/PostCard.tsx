@@ -46,6 +46,7 @@ export interface PostCardProps {
     postid: string;
     ownerName: string;
     ownerAvatarUrl?: string;
+    isOwner?: boolean;
     postDate: string;
     initialLikeCount: number;
     postTitle: string;
@@ -64,6 +65,7 @@ export default function PostCard({
     postid,
     ownerName,
     ownerAvatarUrl,
+    isOwner = false,
     postDate,
     initialLikeCount,
     postTitle,
@@ -319,7 +321,7 @@ export default function PostCard({
                 </div>
 
                 {/* Apply Buttons */}
-                {applied ? (
+                {isOwner ? null : applied ? (
                     <Button variant="green">
                         <MdOutlineDownloadDone /> Applied
                     </Button>

@@ -64,6 +64,7 @@ export default function PostPage({
                     .from('posts')
                     .select(`
                         id,
+                        owner_id,
                         title,
                         description,
                         commitment_level,
@@ -88,6 +89,7 @@ export default function PostPage({
                     postid: post.id,
                     ownerName: post.profiles?.name || "Unknown User",
                     ownerAvatarUrl: post.profiles?.profile_pic_url,
+                    isOwner: post.owner_id === currentUserId,
                     postDate: timeAgo(post.created_at),
 
                     initialLikeCount: post.post_likes ? post.post_likes.length : 0,
@@ -328,6 +330,7 @@ export default function PostPage({
                         postid={post.postid}
                         ownerName={post.ownerName}
                         ownerAvatarUrl={post.ownerAvatarUrl}
+                        isOwner={post.isOwner}
                         postDate={post.postDate}
                         initialLikeCount={post.initialLikeCount}
                         postTitle={post.postTitle}
