@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar"; 
 import { Button } from "@/components/ui/button"; 
 import { GoHomeFill } from "react-icons/go";
-import { MdRocketLaunch } from "react-icons/md";
+import { IoCompassSharp } from "react-icons/io5";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
 import { FaPlus } from "react-icons/fa";
@@ -164,10 +164,10 @@ export default function HomeLeftPanel({
                     Create a New Space
                 </Button>
                 <Button variant="default" className="w-full">
-                    <MdRocketLaunch className="mr-3" />
+                    <IoCompassSharp className="mr-3" />
                     Explore All Spaces
                 </Button>
-                <Button variant="blue" className="flex flex-row justify-center gap-3 h-[40px]">
+                <Button variant="blue" className="flex flex-row justify-start pl-5 gap-3 h-[40px]">
                     <Avatar name={userName}>
                         <AvatarImage
                             src={profile_pic_url}
