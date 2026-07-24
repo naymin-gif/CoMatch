@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card"; 
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/Avatar";
 import TimeAgo from "@/lib/TimeAgo";
 
 
