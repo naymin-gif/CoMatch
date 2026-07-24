@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import PostCard, { PostCardProps } from "./PostCard";
 import { TbFileSad } from "react-icons/tb";
 import PostPageHeader from "./PostPageHeader";
@@ -193,6 +194,12 @@ export default function PostPage({
 
         if (authError || !user) {
             throw new Error("User not authenticated");
+        }
+
+        const targetPost = fetchedPosts.find(p => p.postid === postId);
+        if (targetPost && (targetPost.ownerId === user.id || targetPost.isOwner)) {
+            toast.error("You cannot apply to your own recruitment post.");
+            return;
         }
 
         const { error } = await supabase
