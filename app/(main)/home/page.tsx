@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import PostCard, { PostCardProps } from "@/components/post/PostCard";
-import { Comment } from "@/components/post/PostPage";
-import { createClient } from "@/utils/clients";
+import { useEffect, useMemo, useState } from "react";
+import type { Comment } from "@/components/post/PostPage";
+import type { PostCardProps } from "@/components/post/PostCard";
 import timeAgo from "@/lib/TimeAgo";
+import { createClient } from "@/utils/clients";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import HomeLeftPanel from "@/components/home/HomeLeftPanel";
-import { SidebarProvider } from "@/components/ui/sidebar"; 
+import HomePosts from "@/components/home/HomePosts";
 
-export default function HomePostPage() {
-  const [fetchedPosts, setFetchedPosts] = useState<PostCardProps[]>([]);
+export default function HomePage() {
+  const [posts, setPosts] = useState<PostCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function fetchAllPosts() {
@@ -30,67 +31,67 @@ export default function HomePostPage() {
             commitment_level,
             image_url,
             created_at,
-            profiles!posts_owner_id_fkey (name, profile_pic_url), 
+            profiles!posts_owner_id_fkey (name, profile_pic_url),
             roles (role, quantity),
             post_likes (profile_id),
             post_comments (
-                id,
-                content,
-                created_at,
-                profiles (name, profile_pic_url)
+              id,
+              content,
+              created_at,
+              profiles (name, profile_pic_url)
             )
           `)
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         const formattedPosts: PostCardProps[] = data.map((post: any) => ({
           postid: post.id,
           ownerName: post.profiles?.name || "Unknown User",
           ownerAvatarUrl: post.profiles?.profile_pic_url,
           postDate: timeAgo(post.created_at),
-
-          initialLikeCount: post.post_likes ? post.post_likes.length : 0,
-          initialIsLiked: post.post_likes
-            ? post.post_likes.some((like: any) => like.profile_id === currentUserId)
-            : false,
+          initialLikeCount: post.post_likes?.length ?? 0,
+          initialIsLiked:
+            post.post_likes?.some(
+              (like: any) => like.profile_id === currentUserId
+            ) ?? false,
           postTitle: post.title,
           postDescription: post.description,
           postImageUrl: post.image_url,
           commitmentLevel: post.commitment_level,
-
-          rolesAndPositions: post.roles
-            ? post.roles.map((r: any) => ({
-                role: r.role,
-                position: r.quantity,
-              }))
-            : [],
-
-          initialComments: post.post_comments
-            ? post.post_comments.map((comment: any) => ({
-                id: comment.id,
-                content: comment.content,
-                created_at: comment.created_at,
-                profiles: {
-                  name: comment.profiles?.name || "Unknown User",
-                  profile_pic_url: comment.profiles?.profile_pic_url,
-                },
-              }))
-            : [],
+          rolesAndPositions:
+            post.roles?.map((role: any) => ({
+              role: role.role,
+              position: role.quantity,
+            })) ?? [],
+          initialComments:
+            post.post_comments?.map((comment: any) => ({
+              id: comment.id,
+              content: comment.content,
+              created_at: comment.created_at,
+              profiles: {
+                name: comment.profiles?.name || "Unknown User",
+                profile_pic_url: comment.profiles?.profile_pic_url,
+              },
+            })) ?? [],
         }));
 
-        setFetchedPosts(formattedPosts);
-      } catch (err) {
-        console.error("Failed to fetch posts:", JSON.stringify(err, null, 2));
+        setPosts(formattedPosts);
+      } catch (error) {
+        console.error(
+          "Failed to fetch posts:",
+          JSON.stringify(error, null, 2)
+        );
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchAllPosts();
-  }, []);
+    void fetchAllPosts();
+  }, [supabase]);
 
-  // Handle like toggle
   const handleLike = async (postId: string, previousLiked: boolean) => {
     const {
       data: { user },
@@ -107,17 +108,21 @@ export default function HomePostPage() {
         .delete()
         .match({ post_id: postId, profile_id: user.id });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
     } else {
-      const { error } = await supabase
-        .from("post_likes")
-        .insert({ post_id: postId, profile_id: user.id });
+      const { error } = await supabase.from("post_likes").insert({
+        post_id: postId,
+        profile_id: user.id,
+      });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
     }
   };
 
-  // Handle adding new comment
   const handleNewComment = async (postId: string, newComment: Comment) => {
     const {
       data: { user },
@@ -135,22 +140,22 @@ export default function HomePostPage() {
       content: newComment.content,
     });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    setFetchedPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.postid === postId) {
-          return {
-            ...post,
-            initialComments: [...post.initialComments, newComment],
-          };
-        }
-        return post;
-      })
+    setPosts((currentPosts) =>
+      currentPosts.map((post) =>
+        post.postid === postId
+          ? {
+              ...post,
+              initialComments: [...post.initialComments, newComment],
+            }
+          : post
+      )
     );
   };
 
-  // Handle role application submission
   const handleApply = async (
     postId: string,
     roles: string[],
@@ -172,42 +177,22 @@ export default function HomePostPage() {
       intro_message: message,
     });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
   };
-
-  if (isLoading) {
-    return <div className="mt-6 text-center text-muted-foreground">Loading posts...</div>;
-  }
 
   return (
     <SidebarProvider>
-      <div className="flex w-full min-h-screen">
+      <div className="flex min-h-screen w-full">
         <HomeLeftPanel />
-        
-        <main className="flex-1 flex justify-center p-6">
-          <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
-            {fetchedPosts.map((post) => (
-              <PostCard
-                key={post.postid}
-                postid={post.postid}
-                ownerName={post.ownerName}
-                ownerAvatarUrl={post.ownerAvatarUrl}
-                postDate={post.postDate}
-                initialLikeCount={post.initialLikeCount}
-                postTitle={post.postTitle}
-                postDescription={post.postDescription}
-                postImageUrl={post.postImageUrl}
-                commitmentLevel={post.commitmentLevel}
-                rolesAndPositions={post.rolesAndPositions}
-                initialComments={post.initialComments}
-                initialIsLiked={post.initialIsLiked}
-                onLike={handleLike}
-                onNewComment={handleNewComment}
-                onApply={handleApply}
-              />
-            ))}
-          </div>
-        </main>
+        <HomePosts
+          posts={posts}
+          isLoading={isLoading}
+          onLike={handleLike}
+          onNewComment={handleNewComment}
+          onApply={handleApply}
+        />
       </div>
     </SidebarProvider>
   );
