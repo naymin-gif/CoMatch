@@ -22,6 +22,10 @@ const buttonVariants = cva(
         input: "flex items-center justify-start hover:bg-muted hover:text-foreground text-muted-foreground border pl-4 gap-2 border-gray-500/30 h-[46px] rounded-full overflow-hidden max-w-md w-full",
         green: 
           "bg-green-500/10 text-green-800 hover:bg-green-500/20 focus-visible:border-green-500/40 focus-visible:ring-green-500/20 dark:bg-green-500/20 dark:hover:bg-green-500/30 dark:focus-visible:ring-green-500/40",
+        blue:
+          "bg-blue-500/10 text-blue-800 hover:bg-blue-500/20 focus-visible:border-blue-500/40 focus-visible:ring-blue-500/20 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 dark:focus-visible:ring-blue-500/40",
+        black:
+          "bg-black/10 text-black hover:bg-black/20 focus-visible:border-black/40 focus-visible:ring-black/20",
       },
       size: {
         default:
