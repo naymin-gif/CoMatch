@@ -1,39 +1,40 @@
 "use client"
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"; 
-import { Button } from "@/components/ui/button"; 
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { GoHomeFill } from "react-icons/go";
 import { IoCompassSharp } from "react-icons/io5";
 import { usePathname } from "next/navigation";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { FaPlus } from "react-icons/fa";
+import Link from "next/link";
 
-// mock data
-const userName = "Win"
-const profile_pic_url = ""; 
+export interface HomeSidebarSpace {
+    spaceId: string;
+    spaceName: string;
+    spaceImage?: string | null;
+}
 
-export type HomeSidebarSpace = {
-    id: string;
-    name: string;
-    image: string | null;
-};
-
-type HomeLeftPanelProps = {
-    ownedSpaces: HomeSidebarSpace[];
-    joinedSpaces: HomeSidebarSpace[];
-    otherSpaces: HomeSidebarSpace[];
-};
+interface HomeLeftPanelProps {
+    ownedSpaces?: HomeSidebarSpace[];
+    joinedSpaces?: HomeSidebarSpace[];
+    otherSpaces?: HomeSidebarSpace[];
+    currentUserId: string;
+    currentUserName: string;
+    currentUserProfilePic?: string;
+    onExploreSpaces?: () => void;
+}
 
 const spacesBaseUrl = "/spaces/";
 
@@ -41,6 +42,10 @@ export default function HomeLeftPanel({
     ownedSpaces,
     joinedSpaces,
     otherSpaces,
+    currentUserId,
+    currentUserName,
+    currentUserProfilePic,
+    onExploreSpaces,
 }: HomeLeftPanelProps) {
     const pathname = usePathname()
     return (
@@ -49,134 +54,157 @@ export default function HomeLeftPanel({
             <SidebarContent className="p-3">
                 {/* Home */}
                 <SidebarGroup>
-                <SidebarGroupContent>
-                    <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton 
-                            isActive={pathname === "/home"}
-                            className="flex flex-row gap-3 items-center h-[40px]" 
-                            asChild
-                        >
-                            <a href="">
-                                <GoHomeFill /> 
-                                <span> Home </span>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroupContent>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    isActive={pathname === "/home"}
+                                    className="flex flex-row gap-3 items-center h-[40px]"
+                                    asChild
+                                >
+                                    <a href="">
+                                        <GoHomeFill />
+                                        <span> Home </span>
+                                    </a>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
                 </SidebarGroup>
 
                 {/* Owned Spaces */}
                 <SidebarGroup>
-                <SidebarGroupLabel>Owned Spaces</SidebarGroupLabel>
-                <SidebarGroupContent>
-                    <SidebarMenu>
-                    {ownedSpaces.map((space) => (
-                        <SidebarMenuItem key={space.id}>
-                            <SidebarMenuButton 
-                                isActive={pathname === `${spacesBaseUrl}${space.id}`} 
-                                className="flex flex-row gap-3 h-[40px]" 
-                                asChild
-                            >
-                                <a href={`${spacesBaseUrl}${space.id}`}>
-                                    <Avatar name={space.name}>
-                                        <AvatarImage
-                                            src={space.image ?? ""}
-                                            alt="Space Image"
-                                            sizes="sm" 
-                                        />
-                                        <AvatarFallback />
-                                    </Avatar>
-                                    <span>{space.name}</span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                    </SidebarMenu>
-                </SidebarGroupContent>
+                    <SidebarGroupLabel>Owned Spaces</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        {ownedSpaces ? (
+                            <SidebarMenu>
+                                {ownedSpaces.map((space) => (
+                                    <SidebarMenuItem key={space.spaceId}>
+                                        <SidebarMenuButton
+                                            isActive={pathname === `${spacesBaseUrl}${space.spaceId}`}
+                                            className="flex flex-row gap-3 h-[40px]"
+                                            asChild
+                                        >
+                                            <a href={`${spacesBaseUrl}${space.spaceId}`}>
+                                                <Avatar name={space.spaceName}>
+                                                    <AvatarImage
+                                                        src={space.spaceImage ?? ""}
+                                                        alt="Space Image"
+                                                        sizes="sm"
+                                                    />
+                                                    <AvatarFallback />
+                                                </Avatar>
+                                                <span>{space.spaceName}</span>
+                                            </a>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        ) : (
+                            <span>You have not created any spaces.</span>
+                        )}
+                    </SidebarGroupContent>
                 </SidebarGroup>
 
                 {/* Joined Spaces */}
                 <SidebarGroup>
-                <SidebarGroupLabel>Joined Spaces</SidebarGroupLabel>
-                <SidebarGroupContent>
-                    <SidebarMenu>
-                        {joinedSpaces.map((space) => (
-                            <SidebarMenuItem key={space.id}>
-                                <SidebarMenuButton 
-                                    isActive={pathname === `${spacesBaseUrl}${space.id}`} 
-                                    className="flex flex-row gap-3 h-[40px]" 
-                                    asChild
-                                >
-                                    <a href={`${spacesBaseUrl}${space.id}`}>
-                                        <Avatar name={space.name}>
-                                            <AvatarImage
-                                                src={space.image ?? ""}
-                                                alt="Space Image"
-                                                sizes="sm" 
-                                            />
-                                            <AvatarFallback />
-                                        </Avatar>
-                                        <span>{space.name}</span>
-                                    </a>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        ))}
-                    </SidebarMenu>
-                </SidebarGroupContent>
+                    <SidebarGroupLabel>Joined Spaces</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        {joinedSpaces ? (
+                            <SidebarMenu>
+                                {joinedSpaces.map((space) => (
+                                    <SidebarMenuItem key={space.spaceId}>
+                                        <SidebarMenuButton
+                                            isActive={pathname === `${spacesBaseUrl}${space.spaceId}`}
+                                            className="flex flex-row gap-3 h-[40px]"
+                                            asChild
+                                        >
+                                            <a href={`${spacesBaseUrl}${space.spaceId}`}>
+                                                <Avatar name={space.spaceName}>
+                                                    <AvatarImage
+                                                        src={space.spaceImage ?? ""}
+                                                        alt="Space Image"
+                                                        sizes="sm"
+                                                    />
+                                                    <AvatarFallback />
+                                                </Avatar>
+                                                <span>{space.spaceName}</span>
+                                            </a>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        ) : (
+                            <span>You have not joined any spaces.</span>
+                        )}
+                    </SidebarGroupContent>
                 </SidebarGroup>
 
                 {/* Other Spaces */}
                 <SidebarGroup>
                     <SidebarGroupLabel>Other Spaces</SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu>
-                        {otherSpaces.map((space) => (
-                            <SidebarMenuItem key={space.id}>
-                                <SidebarMenuButton 
-                                    isActive={pathname === `${spacesBaseUrl}${space.id}`}
-                                    className="flex flex-row gap-3 h-[40px]"  
-                                    asChild
-                                >
-                                    <a href={`${spacesBaseUrl}${space.id}`}>
-                                        <Avatar name={space.name}>
-                                            <AvatarImage
-                                                src={space.image ?? ""}
-                                                alt="Space Image"
-                                                sizes="sm" 
-                                            />
-                                            <AvatarFallback />
-                                        </Avatar>
-                                        <span>{space.name}</span>
-                                    </a>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        ))}
-                        </SidebarMenu>
+                        {otherSpaces ? (
+                            <SidebarMenu>
+                                {otherSpaces.map((space) => (
+                                    <SidebarMenuItem key={space.spaceId}>
+                                        <SidebarMenuButton
+                                            isActive={pathname === `${spacesBaseUrl}${space.spaceId}`}
+                                            className="flex flex-row gap-3 h-[40px]"
+                                            asChild
+                                        >
+                                            <a href={`${spacesBaseUrl}${space.spaceId}`}>
+                                                <Avatar name={space.spaceName}>
+                                                    <AvatarImage
+                                                        src={space.spaceImage ?? ""}
+                                                        alt="Space Image"
+                                                        sizes="sm"
+                                                    />
+                                                    <AvatarFallback />
+                                                </Avatar>
+                                                <span>{space.spaceName}</span>
+                                            </a>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        ) : (
+                            <span>Be the first to create spaces on the app.</span>
+
+                        )}
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
 
             <SidebarFooter className="p-5 pb-20">
                 <Button variant="blue">
-                    <FaPlus className="mr-3"/>
+                    <FaPlus className="mr-3" />
                     Create a New Space
                 </Button>
-                <Button variant="default" className="w-full">
+                <Button
+                    variant="default"
+                    className="w-full"
+                    onClick={onExploreSpaces}
+                >
                     <IoCompassSharp className="mr-3" />
                     Explore All Spaces
                 </Button>
-                <Button variant="blue" className="flex flex-row justify-start pl-5 gap-3 h-[40px]">
-                    <Avatar name={userName}>
-                        <AvatarImage
-                            src={profile_pic_url}
-                            alt="Profile Picture"
-                            sizes="sm" 
-                        />
-                        <AvatarFallback />
-                    </Avatar>
-                    <span className="font-heading">{userName}</span>
+                <Button
+                    variant="blue"
+                    className="flex flex-row justify-start pl-5 gap-3 h-[40px]"
+                    asChild
+                >
+                    <Link href="/profile">
+                        <Avatar name={currentUserName}>
+                            <AvatarImage
+                                src={currentUserProfilePic ?? ""}
+                                alt="Profile Picture"
+                                sizes="sm"
+                            />
+                            <AvatarFallback />
+                        </Avatar>
+                        <span className="font-heading">{currentUserName}</span>
+                    </Link>
                 </Button>
             </SidebarFooter>
         </Sidebar>

@@ -6,16 +6,22 @@ import type { PostCardProps } from "@/components/post/PostCard";
 import timeAgo from "@/lib/TimeAgo";
 import { createClient } from "@/utils/clients";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import HomeLeftPanel, {
-  type HomeSidebarSpace,
-} from "@/components/home/HomeLeftPanel";
+import HomeLeftPanel from "@/components/home/HomeLeftPanel";
 import HomePosts from "@/components/home/HomePosts";
+import ExploreSpaces from "@/components/space/ExploreSpaces";
+import type { SpacePreviewCardProps } from "@/components/space/SpacePreviewCard";
 
 export default function HomePage() {
   const [posts, setPosts] = useState<PostCardProps[]>([]);
-  const [ownedSpaces, setOwnedSpaces] = useState<HomeSidebarSpace[]>([]);
-  const [joinedSpaces, setJoinedSpaces] = useState<HomeSidebarSpace[]>([]);
-  const [otherSpaces, setOtherSpaces] = useState<HomeSidebarSpace[]>([]);
+  const [ownedSpaces, setOwnedSpaces] = useState<SpacePreviewCardProps[]>([]);
+  const [joinedSpaces, setJoinedSpaces] = useState<SpacePreviewCardProps[]>([]);
+  const [otherSpaces, setOtherSpaces] = useState<SpacePreviewCardProps[]>([]);
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [currentUserName, setCurrentUserName] = useState("Unknown User");
+  const [currentUserProfilePic, setCurrentUserProfilePic] = useState<
+    string | undefined
+  >(undefined);
+  const [showExploreSpaces, setShowExploreSpaces] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -31,19 +37,33 @@ export default function HomePage() {
           throw authError;
         }
 
-        const currentUserId = user?.id;
-        const [{ data: spaces, error: spacesError }, membershipResult] =
-          await Promise.all([
-            supabase
-              .from("spaces")
-              .select("id, name, image, owner_id"),
-            currentUserId
-              ? supabase
-                  .from("space_members")
-                  .select("space_id")
-                  .eq("profile_id", currentUserId)
-              : Promise.resolve({ data: [], error: null }),
-          ]);
+        const userId = user?.id ?? "";
+        setCurrentUserId(userId);
+
+        const [
+          { data: spaces, error: spacesError },
+          membershipResult,
+          currentProfileResult,
+        ] = await Promise.all([
+          supabase
+            .from("spaces")
+            .select(
+              "id, name, description, owner_id, external_links, image"
+            ),
+          userId
+            ? supabase
+                .from("space_members")
+                .select("space_id")
+                .eq("profile_id", userId)
+            : Promise.resolve({ data: [], error: null }),
+          userId
+            ? supabase
+                .from("profiles")
+                .select("name, profile_pic_url")
+                .eq("id", userId)
+                .maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+        ]);
 
         if (spacesError) {
           throw spacesError;
@@ -53,26 +73,81 @@ export default function HomePage() {
           throw membershipResult.error;
         }
 
-        const joinedSpaceIds = new Set(
-          membershipResult.data?.map((membership) => membership.space_id) ?? []
+        if (currentProfileResult.error) {
+          throw currentProfileResult.error;
+        }
+
+        setCurrentUserName(
+          currentProfileResult.data?.name ?? "Unknown User"
         );
-        const nextOwnedSpaces: HomeSidebarSpace[] = [];
-        const nextJoinedSpaces: HomeSidebarSpace[] = [];
-        const nextOtherSpaces: HomeSidebarSpace[] = [];
+        setCurrentUserProfilePic(
+          currentProfileResult.data?.profile_pic_url ?? undefined
+        );
+
+        const ownerIds = Array.from(
+          new Set(
+            (spaces ?? []).flatMap((space) =>
+              space.owner_id ? [space.owner_id] : []
+            )
+          )
+        );
+
+        let ownerProfiles: Array<{
+          id: string;
+          name: string | null;
+          profile_pic_url: string | null;
+        }> = [];
+
+        if (ownerIds.length > 0) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("id, name, profile_pic_url")
+            .in("id", ownerIds);
+
+          if (error) {
+            throw error;
+          }
+
+          ownerProfiles = data ?? [];
+        }
+
+        const ownerProfilesById = new Map(
+          ownerProfiles.map((profile) => [profile.id, profile])
+        );
+
+        const joinedSpaceIds = new Set(
+          membershipResult.data?.map(
+            (membership) => membership.space_id
+          ) ?? []
+        );
+
+        const nextOwnedSpaces: SpacePreviewCardProps[] = [];
+        const nextJoinedSpaces: SpacePreviewCardProps[] = [];
+        const nextOtherSpaces: SpacePreviewCardProps[] = [];
 
         for (const space of spaces ?? []) {
-          const sidebarSpace: HomeSidebarSpace = {
-            id: space.id,
-            name: space.name,
-            image: space.image,
+          const ownerProfile = space.owner_id
+            ? ownerProfilesById.get(space.owner_id)
+            : undefined;
+
+          const previewSpace: SpacePreviewCardProps = {
+            spaceId: space.id,
+            spaceImage: space.image ?? undefined,
+            spaceName: space.name,
+            spaceDesc: space.description ?? undefined,
+            spaceLinks: space.external_links ?? undefined,
+            spaceOwnerName: ownerProfile?.name ?? "Unknown User",
+            spaceOwnerPic: ownerProfile?.profile_pic_url ?? undefined,
+            spaceOwnerId: space.owner_id,
+            currentUserId: userId,
           };
 
-          if (space.owner_id === currentUserId) {
-            nextOwnedSpaces.push(sidebarSpace);
+          if (space.owner_id === userId) {
+            nextOwnedSpaces.push(previewSpace);
           } else if (joinedSpaceIds.has(space.id)) {
-            nextJoinedSpaces.push(sidebarSpace);
+            nextJoinedSpaces.push(previewSpace);
           } else {
-            nextOtherSpaces.push(sidebarSpace);
+            nextOtherSpaces.push(previewSpace);
           }
         }
 
@@ -265,14 +340,27 @@ export default function HomePage() {
           ownedSpaces={ownedSpaces}
           joinedSpaces={joinedSpaces}
           otherSpaces={otherSpaces}
+          currentUserId={currentUserId}
+          currentUserName={currentUserName}
+          currentUserProfilePic={currentUserProfilePic}
+          onExploreSpaces={() => setShowExploreSpaces(true)}
         />
-        <HomePosts
-          posts={posts}
-          isLoading={isLoading}
-          onLike={handleLike}
-          onNewComment={handleNewComment}
-          onApply={handleApply}
-        />
+        {showExploreSpaces ? (
+          <ExploreSpaces
+            currentUserId={currentUserId}
+            ownedSpaces={ownedSpaces}
+            joinedSpaces={joinedSpaces}
+            otherSpaces={otherSpaces}
+          />
+        ) : (
+          <HomePosts
+            posts={posts}
+            isLoading={isLoading}
+            onLike={handleLike}
+            onNewComment={handleNewComment}
+            onApply={handleApply}
+          />
+        )}
       </div>
     </SidebarProvider>
   );

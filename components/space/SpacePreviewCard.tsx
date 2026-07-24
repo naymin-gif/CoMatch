@@ -1,60 +1,96 @@
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    Card,
+    CardHeader,
+    CardContent,
+    CardTitle,
+    CardDescription,
+    CardFooter,
+} from "@/components/ui/card";
+import ImageContainer from "@/components/ui/ImageContainer";
 import { Button } from "@/components/ui/button";
+import { IoIosLink } from "react-icons/io";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
+import { MdOutlineRemoveRedEye } from "react-icons/md";
+import Link from "next/link";
 
-interface ProfilePreviewCardProps {
-    id: string;
+export interface SpacePreviewCardProps {
     spaceId: string;
-    profilePic?: string;
-    name: string;
-    bio?: string;
+    spaceImage?: string;
+    spaceName: string;
+    spaceDesc?: string;
+    spaceLinks?: string[];
+    spaceOwnerName: string;
+    spaceOwnerPic?: string;
+    spaceOwnerId: string | null;
+    currentUserId: string;
 }
+const spacesBaseUrl = "/spaces/";
 
-export default function ProfilePreviewCard({
-    id,
+export default function SpacePreviewCard ({
     spaceId,
-    profilePic,
-    name,
-    bio,
-} : ProfilePreviewCardProps) {
+    spaceImage,
+    spaceName,
+    spaceDesc,
+    spaceLinks,
+    spaceOwnerName,
+    spaceOwnerPic,
+    spaceOwnerId,
+    currentUserId,
+} : SpacePreviewCardProps) {
     return (
-        <Card className="grid grid-cols-4 items-center p-3 w-2xl" variant="ghost">
-            {/* Profile Picture */}
-            <Avatar
-                name={name}
-                size="md"
-                className="col-span-1"
-            >
-                <AvatarImage 
-                    src={profilePic}
-                    alt={`${name}'s Profile Picture`}
-                />
-                <AvatarFallback />
-            </Avatar>
-
-            {/* Name and Bio */}
-            <CardHeader className="col-span-2">
+        <Card className="w-[100px] h-[100px]">
+            <ImageContainer 
+                src={spaceImage}
+                size="lg"
+                shape="rectangle"
+            />
+            <CardHeader>
                 <CardTitle>
-                    {name}
+                    {spaceName}
                 </CardTitle>
                 <CardDescription>
-                    {bio}
+                    {spaceDesc} 
                 </CardDescription>
             </CardHeader>
 
-            {/* Owner Profile and Space Buttons */}
-            <div className="flex flex-row">
-                <a href={`/profile/${id}`} className="col-span-1">
-                    <Button variant="ghost">
-                        Owner
+            {spaceLinks &&
+                <CardContent>
+                    {spaceLinks.map((link, index) => (
+                        <span key={index}><IoIosLink className="mr-3"/> {link}</span>
+                    ))}
+                </CardContent>
+            }
+
+            <CardFooter>
+                {/* Owner  */}
+                <div>
+                    <span>Created by: </span>
+                    {currentUserId === spaceOwnerId ? (
+                        <span className="font-heading">Me</span>
+                    ) : (
+                        <Button variant="ghost">
+                            <Avatar>
+                                <AvatarImage 
+                                    src={spaceOwnerPic}
+                                    alt="Owner Picture"
+                                />
+                                <AvatarFallback />
+                            </Avatar>
+                            {spaceOwnerName}
+                        </Button>
+                    )}
+                </div>
+                {/* Buttons  */}
+                <div>
+                    <Button asChild>
+                        <Link href={`${spacesBaseUrl}${spaceId}`}>
+                            <MdOutlineRemoveRedEye className="mr-3"/>
+                            View Space
+                        </Link>
                     </Button>
-                </a>
-                <a href={`/spaces/${spaceId}`} className="col-span-1">
-                    <Button variant="ghost">
-                        View Space
-                    </Button>
-                </a>
-            </div>
+                </div>
+
+            </CardFooter>
         </Card>
     );
 }

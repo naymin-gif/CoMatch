@@ -122,9 +122,9 @@ export default function SpacePage({ params }: SpacePageProps) {
 
                 for (const sidebarSpace of sidebarSpaces ?? []) {
                     const spaceItem: HomeSidebarSpace = {
-                        id: sidebarSpace.id,
-                        name: sidebarSpace.name,
-                        image: sidebarSpace.image,
+                        spaceId: sidebarSpace.id,
+                        spaceName: sidebarSpace.name,
+                        spaceImage: sidebarSpace.image,
                     };
 
                     if (sidebarSpace.owner_id === user?.id) {
@@ -448,6 +448,9 @@ export default function SpacePage({ params }: SpacePageProps) {
                     ownedSpaces={ownedSpaces}
                     joinedSpaces={joinedSpaces}
                     otherSpaces={otherSpaces}
+                    currentUserId={currentUser?.id ?? ""}
+                    currentUserName={currentUser?.name ?? "Anonymous User"}
+                    currentUserProfilePic={currentUser?.profile_pic_url}
                 />
                 <main className="min-w-0 flex-1">
                     {spacePageContent}
