@@ -7,7 +7,7 @@ import {
     CardContent
 } from "@/components/ui/card";
 import { useState, useRef } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/button";
 import { FcStackOfPhotos } from "react-icons/fc";
 import { BsPlusSquareFill } from "react-icons/bs";
