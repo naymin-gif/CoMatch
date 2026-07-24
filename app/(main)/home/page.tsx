@@ -10,6 +10,9 @@ import HomeLeftPanel from "@/components/home/HomeLeftPanel";
 import HomePosts from "@/components/home/HomePosts";
 import ExploreSpaces from "@/components/space/ExploreSpaces";
 import type { SpacePreviewCardProps } from "@/components/space/SpacePreviewCard";
+import type { CreateSpaceData } from "@/components/space/CreateSpaceModal";
+
+const SPACE_IMAGES_BUCKET = "space-images";
 
 export default function HomePage() {
   const [posts, setPosts] = useState<PostCardProps[]>([]);
@@ -47,9 +50,7 @@ export default function HomePage() {
         ] = await Promise.all([
           supabase
             .from("spaces")
-            .select(
-              "id, name, description, owner_id, external_links, image"
-            ),
+            .select("id, name, description, owner_id, external_links, image"),
           userId
             ? supabase
                 .from("space_members")
@@ -77,19 +78,17 @@ export default function HomePage() {
           throw currentProfileResult.error;
         }
 
-        setCurrentUserName(
-          currentProfileResult.data?.name ?? "Unknown User"
-        );
+        setCurrentUserName(currentProfileResult.data?.name ?? "Unknown User");
         setCurrentUserProfilePic(
-          currentProfileResult.data?.profile_pic_url ?? undefined
+          currentProfileResult.data?.profile_pic_url ?? undefined,
         );
 
         const ownerIds = Array.from(
           new Set(
             (spaces ?? []).flatMap((space) =>
-              space.owner_id ? [space.owner_id] : []
-            )
-          )
+              space.owner_id ? [space.owner_id] : [],
+            ),
+          ),
         );
 
         let ownerProfiles: Array<{
@@ -112,13 +111,11 @@ export default function HomePage() {
         }
 
         const ownerProfilesById = new Map(
-          ownerProfiles.map((profile) => [profile.id, profile])
+          ownerProfiles.map((profile) => [profile.id, profile]),
         );
 
         const joinedSpaceIds = new Set(
-          membershipResult.data?.map(
-            (membership) => membership.space_id
-          ) ?? []
+          membershipResult.data?.map((membership) => membership.space_id) ?? [],
         );
 
         const nextOwnedSpaces: SpacePreviewCardProps[] = [];
@@ -157,7 +154,7 @@ export default function HomePage() {
       } catch (error) {
         console.error(
           "Failed to fetch spaces:",
-          JSON.stringify(error, null, 2)
+          JSON.stringify(error, null, 2),
         );
       }
     }
@@ -175,7 +172,8 @@ export default function HomePage() {
 
         const { data, error } = await supabase
           .from("posts")
-          .select(`
+          .select(
+            `
             id,
             title,
             description,
@@ -191,7 +189,8 @@ export default function HomePage() {
               created_at,
               profiles (name, profile_pic_url)
             )
-          `)
+          `,
+          )
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -206,7 +205,7 @@ export default function HomePage() {
           initialLikeCount: post.post_likes?.length ?? 0,
           initialIsLiked:
             post.post_likes?.some(
-              (like: any) => like.profile_id === currentUserId
+              (like: any) => like.profile_id === currentUserId,
             ) ?? false,
           postTitle: post.title,
           postDescription: post.description,
@@ -231,10 +230,7 @@ export default function HomePage() {
 
         setPosts(formattedPosts);
       } catch (error) {
-        console.error(
-          "Failed to fetch posts:",
-          JSON.stringify(error, null, 2)
-        );
+        console.error("Failed to fetch posts:", JSON.stringify(error, null, 2));
       } finally {
         setIsLoading(false);
       }
@@ -302,15 +298,15 @@ export default function HomePage() {
               ...post,
               initialComments: [...post.initialComments, newComment],
             }
-          : post
-      )
+          : post,
+      ),
     );
   };
 
   const handleApply = async (
     postId: string,
     roles: string[],
-    message: string
+    message: string,
   ) => {
     const {
       data: { user },
@@ -333,6 +329,121 @@ export default function HomePage() {
     }
   };
 
+  const onCreate = async (spaceData: CreateSpaceData): Promise<string> => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error("User not authenticated");
+    }
+
+    let createdSpaceId: string | undefined;
+    let uploadedImagePath: string | undefined;
+
+    try {
+      const { data: createdSpace, error: spaceError } = await supabase
+        .from("spaces")
+        .insert({
+          name: spaceData.name,
+          description: spaceData.description || null,
+          external_links: spaceData.externalLinks,
+          owner_id: user.id,
+          image: null,
+        })
+        .select("id")
+        .single();
+
+      if (spaceError) {
+        throw spaceError;
+      }
+
+      createdSpaceId = createdSpace.id;
+
+      if (spaceData.image) {
+        const imageResponse = await fetch(spaceData.image);
+
+        if (!imageResponse.ok) {
+          throw new Error("Unable to read the selected image");
+        }
+
+        const imageBlob = await imageResponse.blob();
+        const imageExtension =
+          imageBlob.type.split("/")[1]?.split("+")[0] || "jpg";
+        uploadedImagePath = `${createdSpace.id}/${crypto.randomUUID()}.${imageExtension}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(SPACE_IMAGES_BUCKET)
+          .upload(uploadedImagePath, imageBlob, {
+            contentType: imageBlob.type,
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage
+          .from(SPACE_IMAGES_BUCKET)
+          .getPublicUrl(uploadedImagePath);
+
+        const { error: imageUpdateError } = await supabase
+          .from("spaces")
+          .update({ image: publicUrl })
+          .eq("id", createdSpace.id);
+
+        if (imageUpdateError) {
+          throw imageUpdateError;
+        }
+      }
+
+      const { error: membershipError } = await supabase
+        .from("space_members")
+        .insert({
+          space_id: createdSpace.id,
+          profile_id: user.id,
+        });
+
+      if (membershipError) {
+        throw membershipError;
+      }
+
+      return createdSpace.id;
+    } catch (error) {
+      if (uploadedImagePath) {
+        const { error: imageCleanupError } = await supabase.storage
+          .from(SPACE_IMAGES_BUCKET)
+          .remove([uploadedImagePath]);
+
+        if (imageCleanupError) {
+          console.error(
+            "Failed to clean up uploaded space image:",
+            imageCleanupError,
+          );
+        }
+      }
+
+      if (createdSpaceId) {
+        const { error: spaceCleanupError } = await supabase
+          .from("spaces")
+          .delete()
+          .eq("id", createdSpaceId);
+
+        if (spaceCleanupError) {
+          console.error(
+            "Failed to clean up partially created space:",
+            spaceCleanupError,
+          );
+        }
+      }
+
+      throw error;
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -340,10 +451,10 @@ export default function HomePage() {
           ownedSpaces={ownedSpaces}
           joinedSpaces={joinedSpaces}
           otherSpaces={otherSpaces}
-          currentUserId={currentUserId}
           currentUserName={currentUserName}
           currentUserProfilePic={currentUserProfilePic}
           onExploreSpaces={() => setShowExploreSpaces(true)}
+          onCreate={onCreate}
         />
         {showExploreSpaces ? (
           <ExploreSpaces
