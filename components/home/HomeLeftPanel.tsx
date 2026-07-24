@@ -79,15 +79,15 @@ export default function HomeLeftPanel({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={pathname === "/home"}
-                  className="flex flex-row gap-3 items-center h-[40px]"
+                <SidebarMenuButton 
+                  isActive={pathname === "/"} 
                   asChild
+                  className="flex flex-row gap-3 h-[40px]"
                 >
-                  <a href="">
+                  <Link href="/">
                     <GoHomeFill />
-                    <span> Home </span>
-                  </a>
+                    <span>Home</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
