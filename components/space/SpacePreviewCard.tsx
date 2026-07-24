@@ -6,11 +6,11 @@ import {
     CardDescription,
     CardFooter,
 } from "@/components/ui/card";
-import ImageContainer from "@/components/ui/ImageContainer";
 import { Button } from "@/components/ui/button";
 import { IoIosLink } from "react-icons/io";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { BsImageAlt } from "react-icons/bs";
 import Link from "next/link";
 
 export interface SpacePreviewCardProps {
@@ -38,33 +38,55 @@ export default function SpacePreviewCard ({
     currentUserId,
 } : SpacePreviewCardProps) {
     return (
-        <Card className="w-[100px] h-[100px]">
-            <ImageContainer 
-                src={spaceImage}
-                size="lg"
-                shape="rectangle"
-            />
+        <Card className="overflow-hidden p-0 w-[400px] bg-comatch-background">
+            {spaceImage ? (
+                <img
+                    src={spaceImage}
+                    alt={`${spaceName} cover`}
+                    className="block h-48 w-full object-cover"
+                />
+            ) : (
+                <div
+                    className="flex h-48 w-full items-center justify-center bg-muted"
+                    aria-label="No image available"
+                >
+                    <BsImageAlt
+                        className="h-12 w-12 text-muted-foreground"
+                        aria-hidden="true"
+                    />
+                </div>
+            )}
             <CardHeader>
                 <CardTitle>
                     {spaceName}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="line-clamp-3 h-[3.75rem]">
                     {spaceDesc} 
                 </CardDescription>
             </CardHeader>
 
-            {spaceLinks &&
-                <CardContent>
-                    {spaceLinks.map((link, index) => (
-                        <span key={index}><IoIosLink className="mr-3"/> {link}</span>
-                    ))}
-                </CardContent>
-            }
+            <CardContent className="flex h-[5.5rem] flex-col gap-2 overflow-hidden">
+                {spaceLinks?.slice(0, 3).map((link, index) => (
+                    <Button
+                        key={`${link}-${index}`}
+                        variant="link"
+                        className="h-6 w-full shrink-0 justify-start p-0"
+                        asChild
+                    >
+                        <Link href={link}>
+                            <IoIosLink className="shrink-0"/>
+                            <span className="truncate">
+                                {link}
+                            </span>
+                        </Link>
+                    </Button>
+                ))}
+            </CardContent>
 
-            <CardFooter>
+            <CardFooter className="flex flex-row justify-between items-center">
                 {/* Owner  */}
-                <div>
-                    <span>Created by: </span>
+                <div className="flex flex-col gap-3">
+                    <span className="text-xs">Created by: </span>
                     {currentUserId === spaceOwnerId ? (
                         <span className="font-heading">Me</span>
                     ) : (
@@ -82,7 +104,7 @@ export default function SpacePreviewCard ({
                 </div>
                 {/* Buttons  */}
                 <div>
-                    <Button asChild>
+                    <Button variant="blue" asChild>
                         <Link href={`${spacesBaseUrl}${spaceId}`}>
                             <MdOutlineRemoveRedEye className="mr-3"/>
                             View Space
