@@ -193,11 +193,18 @@ export default function PostPage({
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
+            toast.error("You must be logged in to apply.");
             throw new Error("User not authenticated");
         }
 
-        const targetPost = fetchedPosts.find(p => p.postid === postId);
-        if (targetPost && (targetPost.ownerId === user.id || targetPost.isOwner)) {
+        // Direct DB verification: Check if current user is the owner of the post
+        const { data: postCheck } = await supabase
+            .from('posts')
+            .select('owner_id')
+            .eq('id', postId)
+            .maybeSingle();
+
+        if (postCheck && postCheck.owner_id === user.id) {
             toast.error("You cannot apply to your own recruitment post.");
             return;
         }
@@ -212,6 +219,7 @@ export default function PostPage({
             });
 
         if (error) throw error;
+        toast.success("Application submitted successfully!");
     }
 
     // Handle Post Creation
