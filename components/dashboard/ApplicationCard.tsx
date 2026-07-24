@@ -10,6 +10,12 @@ import {
     AvatarImage,
     AvatarFallback,
 } from "@/components/ui/avatar"; 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button";
 import { AiOutlineCheckCircle } from "react-icons/ai";
 import { FaRegCircleXmark } from "react-icons/fa6";
@@ -39,7 +45,7 @@ export default function ApplicationCard({
     onReject,
 } : ApplicationCardProps) {
     return (
-        <Card className="bg-comatch-background p-3">
+        <Card className="bg-comatch-background p-3 w-[500px]">
             <CardHeader>
                 <CardTitle>
                     {postTitle}
@@ -76,7 +82,17 @@ export default function ApplicationCard({
                     <Badge variant="secondary">{appliedRole}</Badge>
                 </div>
 
-
+                {/* Message  */}
+                <Accordion type="single" collapsible>
+                    <AccordionItem value={applicantId}>
+                        <AccordionTrigger className="text-comatch-primary">
+                            View Message
+                        </AccordionTrigger>
+                        <AccordionContent className="border rounded-lg p-3 pb-8">
+                            {message}
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </CardContent>
         </Card>
     );
