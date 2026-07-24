@@ -5,13 +5,14 @@ import PostCard, { PostCardProps } from "@/components/post/PostCard";
 import { Comment } from "@/components/post/PostPage";
 import { createClient } from "@/utils/clients";
 import timeAgo from "@/lib/TimeAgo";
+import HomeLeftPanel from "@/components/home/HomeLeftPanel";
+import { SidebarProvider } from "@/components/ui/sidebar"; 
 
 export default function HomePostPage() {
   const [fetchedPosts, setFetchedPosts] = useState<PostCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
-  // Fetch all posts from newest to oldest
   useEffect(() => {
     async function fetchAllPosts() {
       try {
@@ -179,27 +180,35 @@ export default function HomePostPage() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 p-4">
-      {fetchedPosts.map((post) => (
-        <PostCard
-          key={post.postid}
-          postid={post.postid}
-          ownerName={post.ownerName}
-          ownerAvatarUrl={post.ownerAvatarUrl}
-          postDate={post.postDate}
-          initialLikeCount={post.initialLikeCount}
-          postTitle={post.postTitle}
-          postDescription={post.postDescription}
-          postImageUrl={post.postImageUrl}
-          commitmentLevel={post.commitmentLevel}
-          rolesAndPositions={post.rolesAndPositions}
-          initialComments={post.initialComments}
-          initialIsLiked={post.initialIsLiked}
-          onLike={handleLike}
-          onNewComment={handleNewComment}
-          onApply={handleApply}
-        />
-      ))}
-    </div>
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen">
+        <HomeLeftPanel />
+        
+        <main className="flex-1 flex justify-center p-6">
+          <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
+            {fetchedPosts.map((post) => (
+              <PostCard
+                key={post.postid}
+                postid={post.postid}
+                ownerName={post.ownerName}
+                ownerAvatarUrl={post.ownerAvatarUrl}
+                postDate={post.postDate}
+                initialLikeCount={post.initialLikeCount}
+                postTitle={post.postTitle}
+                postDescription={post.postDescription}
+                postImageUrl={post.postImageUrl}
+                commitmentLevel={post.commitmentLevel}
+                rolesAndPositions={post.rolesAndPositions}
+                initialComments={post.initialComments}
+                initialIsLiked={post.initialIsLiked}
+                onLike={handleLike}
+                onNewComment={handleNewComment}
+                onApply={handleApply}
+              />
+            ))}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
