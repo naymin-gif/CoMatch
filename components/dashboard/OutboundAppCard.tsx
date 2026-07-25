@@ -18,7 +18,7 @@ export interface OutboundAppCardProps {
   ownerId: string;
   ownerPic?: string;
   ownerName: string;
-  appliedRole: string;
+  appliedRole: string[]; 
   message?: string;
   postId: string;
   status: OutboundApplicationStatus;
@@ -83,7 +83,9 @@ export default function OutboundAppCard({
       <CardContent>
         <div className="flex flex-row gap-2">
           <span>Applied Role: </span>
-          <Badge variant="secondary">{appliedRole}</Badge>
+          {appliedRole.map((role, index) => (
+            <Badge variant="secondary" key={index}>{role}</Badge>
+          ))}
         </div>
 
         <Accordion type="single" collapsible>
