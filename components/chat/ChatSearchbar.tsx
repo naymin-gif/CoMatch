@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import SearchBar from "@/components/ui/searchbar";
 
 export interface ChatSearchParticipant {
   id: string;
@@ -113,34 +113,14 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
 
   return (
     <div className={`relative w-full ${className}`}>
-      <div className="flex h-[46px] w-full items-center gap-2 overflow-hidden rounded-full border border-gray-500/30 bg-white px-4 focus-within:border-comatch-primary focus-within:ring-2 focus-within:ring-comatch-primary/15">
-        <Search
-          aria-hidden="true"
-          className="h-[22px] w-[22px] shrink-0 text-gray-500"
-        />
-
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={placeholder}
-          aria-label="Search chat history"
-          aria-controls="chat-search-results"
-          aria-expanded={Boolean(normalizedQuery)}
-          className="h-full min-w-0 flex-1 bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-500"
-        />
-
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            aria-label="Clear chat search"
-            className="rounded-full p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-comatch-primary"
-          >
-            <X aria-hidden="true" className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <SearchBar
+        placeholder={placeholder}
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setQuery("");
+        }}
+      />
 
       {normalizedQuery && (
         <div

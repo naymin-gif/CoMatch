@@ -1,4 +1,5 @@
 import ChatPreviewCard from "@/components/chat/ChatPreviewCard";
+import ChatSearchbar from "@/components/chat/ChatSearchbar";
 
 interface Profile {
   id: string;
