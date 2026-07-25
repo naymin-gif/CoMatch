@@ -11,6 +11,8 @@ import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard"
 import type { OutboundAppCardProps } from "@/components/dashboard/OutboundAppCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
+import { PiAirplaneLandingBold } from "react-icons/pi";
+import { PiAirplaneTakeoffFill } from "react-icons/pi";
 import {
   type ApplicationStatus,
   type Dashboard,
@@ -36,6 +38,7 @@ async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
         selected_roles,
         status,
         created_at,
+        last_edited_at,
         applicant_seen,
         posts!inner (
           id,
@@ -45,6 +48,10 @@ async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
       `,
     )
     .eq("applicant_id", userId)
+    .order("last_edited_at", {
+      ascending: false,
+      nullsFirst: false,
+    })
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -205,7 +212,7 @@ export default function DashboardPage() {
       }
 
       try {
-        await updateApplicationStatus(
+        const updatedApplication = await updateApplicationStatus(
           supabase,
           applicationId,
           status,
@@ -213,11 +220,27 @@ export default function DashboardPage() {
         );
 
         setInbound((current) =>
-          current.map((application) =>
-            application.id === applicationId
-              ? { ...application, status }
-              : application,
-          ),
+          current
+            .map((application) =>
+              application.id === applicationId
+                ? {
+                    ...application,
+                    status: updatedApplication.status,
+                    last_edited_at: updatedApplication.last_edited_at,
+                  }
+                : application,
+            )
+            .sort((a, b) => {
+              const aTime = a.last_edited_at
+                ? new Date(a.last_edited_at).getTime()
+                : 0;
+
+              const bTime = b.last_edited_at
+                ? new Date(b.last_edited_at).getTime()
+                : 0;
+
+              return bTime - aTime;
+            }),
         );
       } catch (error) {
         console.error("Failed to update application:", error);
@@ -305,9 +328,15 @@ export default function DashboardPage() {
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as TabState)}
       >
-        <TabsList className="mb-5">
-          <TabsTrigger value="inbound">Inbound</TabsTrigger>
-          <TabsTrigger value="outbound">Outbound</TabsTrigger>
+        <TabsList className="mb-5 w-md pt-5 pb-5">
+          <TabsTrigger value="inbound" className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+            <PiAirplaneLandingBold className="mr-3"/> 
+            <span className="font-heading">Inbound</span>
+          </TabsTrigger>
+          <TabsTrigger value="outbound" className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+            <PiAirplaneTakeoffFill className="mr-3"/> 
+            <span className="font-heading">Outbound</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="inbound">
