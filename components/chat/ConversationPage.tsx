@@ -6,13 +6,8 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { IoIosSend } from "react-icons/io";
 import ConversationPageHeader from "@/components/chat/ConversationPageHeader";
+import MessageList from "./MessageList";
 
-import {
-  Message as MessageRoot,
-  MessageContent,
-  MessageFooter,
-  MessageGroup,
-} from "@/components/ui/message";
 import { Textarea } from "@/components/ui/textarea";
 
 export interface Message {
@@ -40,22 +35,9 @@ export interface ConversationPageProps {
   onSendMessage: (content: string) => Promise<Message>;
 }
 
-type LocalMessage = Message & {
+export type LocalMessage = Message & {
   isOptimistic?: boolean;
 };
-
-function formatMessageTime(createdAt: string) {
-  const date = new Date(createdAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function createOptimisticId() {
   if (
@@ -215,61 +197,12 @@ export default function ConversationPage({
           profileid={participant.id} 
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/30 px-4 py-5 sm:px-6">
-        {isLoading ? (
-          <div
-            role="status"
-            className="flex h-full items-center justify-center text-xs font-semibold text-gray-400"
-          >
-            Loading messages...
-          </div>
-        ) : localMessages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center text-xs italic text-gray-400">
-            Say hello to start the conversation!
-          </div>
-        ) : (
-          <MessageGroup className="gap-4">
-            {localMessages.map((message) => {
-              const isCurrentUser = message.sender_id === currentUserId;
-
-              return (
-                <MessageRoot
-                  key={message.id}
-                  align={isCurrentUser ? "end" : "start"}
-                >
-                  <MessageContent className="w-auto max-w-[85%] gap-0 sm:max-w-[70%]">
-                    <div
-                      className={
-                        isCurrentUser
-                          ? "rounded-2xl rounded-br-none bg-comatch-primary px-4 py-3 text-white shadow-xs"
-                          : "rounded-2xl rounded-bl-none border border-gray-100 bg-white px-4 py-3 text-gray-800 shadow-xs"
-                      }
-                    >
-                      <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">
-                        {message.content}
-                      </p>
-                      <MessageFooter
-                        className={
-                          isCurrentUser
-                            ? "mt-1.5 justify-end px-0 text-[10px] font-medium text-blue-100"
-                            : "mt-1.5 justify-end px-0 text-[10px] font-medium text-gray-400"
-                        }
-                      >
-                        {formatMessageTime(message.created_at)}
-                        {message.isOptimistic ? (
-                          <span className="sr-only"> Sending</span>
-                        ) : null}
-                      </MessageFooter>
-                    </div>
-                  </MessageContent>
-                </MessageRoot>
-              );
-            })}
-          </MessageGroup>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
+      <MessageList 
+        messages={localMessages}
+        currentUserId={currentUserId}
+        isLoading={isLoading}
+        messagesEndRef={messagesEndRef}
+      />
 
       <form
         onSubmit={handleSubmit}
