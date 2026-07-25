@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { AiOutlineCheckCircle } from "react-icons/ai";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { Badge } from "@/components/ui/badge";
+import { AiOutlineClockCircle } from "react-icons/ai";
 
 export interface InboundAppCardProps {
     postTitle: string;
@@ -41,6 +42,7 @@ export interface InboundAppCardProps {
     appliedRole: string[]; 
     message?: string;
     postId: string;
+    timeAgo: string;
     status: "Pending" | "Approved" | "Rejected";
     onApprove: () => Promise<void>;
     onReject: () => Promise<void>;
@@ -55,6 +57,7 @@ export default function InboundAppCard({
     applicantName,
     appliedRole,
     message,
+    timeAgo,
     status,
     onApprove,
     onReject,
@@ -74,6 +77,13 @@ export default function InboundAppCard({
                 <CardTitle>
                     {postTitle}
                 </CardTitle>
+
+                {/* Time Ago  */}
+                <div className="flex flex-row gap-3 items-center">
+                    <AiOutlineClockCircle />
+                    {timeAgo}
+                </div>
+
                 <div className="mt-3 flex flex-row justify-between">
                     {/* Applicant Pic and Name */}
                     <div className="flex flex-col gap-3">

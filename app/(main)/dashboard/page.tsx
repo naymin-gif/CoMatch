@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
 import Loading from "@/app/loading";
+import formatTimeAgo from "@/lib/TimeAgo";
 import InboundPage from "@/components/dashboard/InboundPage";
 import OutboundPage from "@/components/dashboard/OutboundPage";
 import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard";
@@ -269,6 +270,9 @@ export default function DashboardPage() {
             message: application.intro_message,
             postId: post.id,
             status: application.status,
+            timeAgo: formatTimeAgo(
+              application.last_edited_at ?? application.created_at,
+            ),
             onApprove: () =>
               handleInboundAction(application.id, "Approved"),
             onReject: () =>
@@ -298,6 +302,9 @@ export default function DashboardPage() {
             message: application.intro_message,
             postId: post.id,
             status: application.status,
+            timeAgo: formatTimeAgo(
+              application.last_edited_at ?? application.created_at,
+            ),
           },
         ];
       }),

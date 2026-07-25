@@ -22,6 +22,7 @@ export interface OutboundAppCardProps {
   message?: string;
   postId: string;
   status: OutboundApplicationStatus;
+  timeAgo: string;
 }
 
 export default function OutboundAppCard({
@@ -33,11 +34,20 @@ export default function OutboundAppCard({
   message,
   postId,
   status,
+  timeAgo, 
 }: OutboundAppCardProps) {
   return (
     <Card className="bg-comatch-background w-[500px] p-3">
       <CardHeader>
-        <CardTitle>{postTitle}</CardTitle>
+        <CardTitle>
+          {postTitle}
+        </CardTitle>
+
+        {/* Time Ago  */}
+        <div className="flex flex-row gap-3 items-center">
+            <AiOutlineClockCircle />
+            {timeAgo}
+        </div>
 
         <div className="mt-3 flex flex-row items-center justify-between">
           {/* Owner  */}
