@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import ChatSidebar from "@/components/chat/ChatSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import type { ChatSidebarConversation } from "@/components/chat/ChatSidebar";
 import ConversationPage from "@/components/chat/ConversationPage";
 import type {
@@ -497,16 +498,18 @@ export default function ChatPage() {
   );
 
   return (
-    <main className="flex h-dvh min-h-[500px] w-full overflow-hidden bg-slate-50">
-      <ChatSidebar
-        conversations={sidebarConversations}
-        selectedConversationId={selectedConversationId}
-        onSelectConversation={setSelectedConversationId}
-      />
+    <main className="flex h-dvh w-full overflow-hidden bg-slate-50">
+        <SidebarProvider className="h-full min-h-0 w-auto shrink-0">
+            <ChatSidebar
+                conversations={sidebarConversations}
+                selectedConversationId={selectedConversationId}
+                onSelectConversation={setSelectedConversationId}
+            />
+        </SidebarProvider>
 
-      <div className="min-w-0 flex-1 p-4 sm:p-6">
+        <div className="min-h-0 min-w-0 flex-1">
         {selectedConversation ? (
-          <ConversationPage
+            <ConversationPage
             conversationId={selectedConversation.id}
             currentUserId={currentUserId}
             participant={selectedConversation.participant}
@@ -514,13 +517,13 @@ export default function ChatPage() {
             isLoading={isLoadingMessages}
             isSending={isSendingMessage}
             onSendMessage={handleSendMessage}
-          />
+            />
         ) : (
-          <div className="flex h-full items-center justify-center text-center text-sm font-medium text-gray-400">
+            <div className="flex h-full items-center justify-center text-center text-sm font-medium text-gray-400">
             Open a chat to start a conversation
-          </div>
+            </div>
         )}
-      </div>
+        </div>
     </main>
   );
 }

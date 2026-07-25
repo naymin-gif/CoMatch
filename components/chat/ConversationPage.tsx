@@ -204,8 +204,8 @@ export default function ConversationPage({
 
   return (
     <section
-      aria-label={`Conversation with ${participant.name}`}
-      className="flex h-full min-h-[500px] w-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+        aria-label={`Conversation with ${participant.name}`}
+        className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white"
     >
       <header className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 py-4 shadow-xs sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
