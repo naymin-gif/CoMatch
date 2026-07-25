@@ -40,15 +40,19 @@ export default function OutboundAppCard({
         <CardTitle>{postTitle}</CardTitle>
 
         <div className="mt-3 flex flex-row items-center justify-between">
-          <div className="flex flex-row items-center gap-3">
-            <Avatar name={ownerName}>
-              <AvatarImage
-                src={ownerPic}
-                alt={`${ownerName}'s profile picture`}
-              />
-              <AvatarFallback />
-            </Avatar>
-            <span>{ownerName}</span>
+          {/* Owner  */}
+          <div className="flex flex-col gap-3">
+            <span className="text-xs">Owner: </span>
+            <div className="flex flex-row items-center gap-3">
+              <Avatar name={ownerName}>
+                <AvatarImage
+                  src={ownerPic}
+                  alt={`${ownerName}'s profile picture`}
+                />
+                <AvatarFallback />
+              </Avatar>
+              <span>{ownerName}</span>
+            </div>
           </div>
 
           <Button

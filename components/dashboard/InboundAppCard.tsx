@@ -76,15 +76,18 @@ export default function InboundAppCard({
                 </CardTitle>
                 <div className="mt-3 flex flex-row justify-between">
                     {/* Applicant Pic and Name */}
-                    <div className="flex flex-row gap-3 items-center">
-                        <Avatar name={applicantName}>
-                            <AvatarImage 
-                                src={applicantPic}
-                                alt="Applicant Picture"
-                            />
-                            <AvatarFallback />
-                        </Avatar>
-                        <span>{applicantName}</span>
+                    <div className="flex flex-col gap-3">
+                        <span className="text-xs">Applicant: </span>
+                        <div className="flex flex-row gap-3 items-center">
+                            <Avatar name={applicantName}>
+                                <AvatarImage 
+                                    src={applicantPic}
+                                    alt="Applicant Picture"
+                                />
+                                <AvatarFallback />
+                            </Avatar>
+                            <span>{applicantName}</span>
+                        </div>
                     </div>
 
                     {/* Buttons  */}

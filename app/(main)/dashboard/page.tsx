@@ -10,6 +10,7 @@ import OutboundPage from "@/components/dashboard/OutboundPage";
 import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard";
 import type { OutboundAppCardProps } from "@/components/dashboard/OutboundAppCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TbLayoutDashboardFilled } from "react-icons/tb";
 import {
   type ApplicationStatus,
   type Dashboard,
@@ -296,11 +297,15 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5 p-10">
+      <div className="flex flex-row gap-3 items-center text-heading text-comatch-primary font-heading">
+        <TbLayoutDashboardFilled />
+        <span>Dashboard</span>
+      </div>
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as TabState)}
       >
-        <TabsList>
+        <TabsList className="mb-5">
           <TabsTrigger value="inbound">Inbound</TabsTrigger>
           <TabsTrigger value="outbound">Outbound</TabsTrigger>
         </TabsList>
