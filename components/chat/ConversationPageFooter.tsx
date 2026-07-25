@@ -33,7 +33,7 @@ export default function ConversationPageFooter({
   return (
     <form
       onSubmit={onSubmit}
-      className="shrink-0 border-t border-gray-100 bg-white p-3"
+      className="shrink-0 bg-transparent p-3"
     >
       <div className="flex items-end gap-2">
         <Textarea

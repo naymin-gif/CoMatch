@@ -187,12 +187,12 @@ export default function ConversationPage({
       />
 
       {/* Body */}
-      <MessageList 
-        messages={localMessages}
-        currentUserId={currentUserId}
-        isLoading={isLoading}
-        messagesEndRef={messagesEndRef}
-      />
+        <MessageList 
+          messages={localMessages}
+          currentUserId={currentUserId}
+          isLoading={isLoading}
+          messagesEndRef={messagesEndRef}
+        />
 
       {/* Footer */}
       <ConversationPageFooter 

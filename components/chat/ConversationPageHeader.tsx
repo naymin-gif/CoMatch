@@ -24,7 +24,7 @@ export default function ConversationPageHeader({
     profileid,
 } : ConversationPageHeaderProps) {
     return (
-        <Card className="flex flex-row justify-between p-5 rounded-none shadow-md bg-comatch-light bg-muted">
+        <Card className="shrink-0 flex flex-row justify-between p-5 rounded-none shadow-md bg-comatch-light bg-muted">
             <div className="flex flex-row items-center">
                 <Avatar name={name}>
                     <AvatarImage 

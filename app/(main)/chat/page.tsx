@@ -498,7 +498,7 @@ export default function ChatPage() {
   );
 
   return (
-    <main className="flex h-dvh w-full overflow-hidden bg-slate-50">
+    <main className="flex h-[calc(100dvh-65px)] w-full overflow-hidden bg-slate-50">
         <SidebarProvider className="h-full min-h-0 w-auto shrink-0">
             <ChatSidebar
                 conversations={sidebarConversations}
