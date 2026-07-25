@@ -10,7 +10,6 @@ import OutboundPage from "@/components/dashboard/OutboundPage";
 import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard";
 import type { OutboundAppCardProps } from "@/components/dashboard/OutboundAppCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FiBell } from 'react-icons/fi';
 import {
   type ApplicationStatus,
   type Dashboard,
@@ -204,25 +203,27 @@ export default function DashboardPage() {
         return;
       }
 
-      const previousInbound = inbound;
-
-      setInbound((current) =>
-        current.map((application) =>
-          application.id === applicationId
-            ? { ...application, status }
-            : application,
-        ),
-      );
-
       try {
-        await updateApplicationStatus(supabase, applicationId, status, userId);
+        await updateApplicationStatus(
+          supabase,
+          applicationId,
+          status,
+          userId,
+        );
+
+        setInbound((current) =>
+          current.map((application) =>
+            application.id === applicationId
+              ? { ...application, status }
+              : application,
+          ),
+        );
       } catch (error) {
         console.error("Failed to update application:", error);
-        setInbound(previousInbound);
         window.alert("Failed to update the application. Please try again.");
       }
     },
-    [inbound, userId],
+    [userId],
   );
 
   const inboundCardProps = useMemo<InboundAppCardProps[]>(
@@ -243,10 +244,11 @@ export default function DashboardPage() {
             appliedRole: application.selected_roles?.join(", ") ?? "",
             message: application.intro_message,
             postId: post.id,
+            status: application.status,
             onApprove: () =>
-              void handleInboundAction(application.id, "Approved"),
+              handleInboundAction(application.id, "Approved"),
             onReject: () =>
-              void handleInboundAction(application.id, "Rejected"),
+              handleInboundAction(application.id, "Rejected"),
           },
         ];
       }),
@@ -294,17 +296,11 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5 p-10">
-      {/* Header  */}
-      <div className="text-heading font-heading text-comatch-primary flex flex-row gap-3 items-center">
-        <FiBell />
-        <span>Dashboard</span>
-      </div>
-    
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as TabState)}
       >
-        <TabsList className="mb-3">
+        <TabsList>
           <TabsTrigger value="inbound">Inbound</TabsTrigger>
           <TabsTrigger value="outbound">Outbound</TabsTrigger>
         </TabsList>

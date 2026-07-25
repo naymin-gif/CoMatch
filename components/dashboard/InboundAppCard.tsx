@@ -1,6 +1,5 @@
 "use client"; 
 
-import { useState } from "react";
 import {
     Card,
     CardHeader,
@@ -42,8 +41,9 @@ export interface InboundAppCardProps {
     appliedRole: string;
     message?: string;
     postId: string;
-    onApprove: () => void;
-    onReject: () => void;
+    status: "Pending" | "Approved" | "Rejected";
+    onApprove: () => Promise<void>;
+    onReject: () => Promise<void>;
 }
 
 type ApplicationDecision = "approved" | "rejected" | null;
@@ -55,20 +55,16 @@ export default function InboundAppCard({
     applicantName,
     appliedRole,
     message,
+    status,
     onApprove,
     onReject,
 } : InboundAppCardProps) {
-    const [decision, setDecision] = useState<ApplicationDecision>(null);
-
-    const handleApprove = () => {
-        onApprove();
-        setDecision("approved");
-    };
-
-    const handleReject = () => {
-        onReject();
-        setDecision("rejected");
-    };
+    const decision: ApplicationDecision =
+        status === "Approved"
+            ? "approved"
+            : status === "Rejected"
+                ? "rejected"
+                : null;
 
     const hasDecision = decision !== null;
 
@@ -120,7 +116,7 @@ export default function InboundAppCard({
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                         <AlertDialogAction
                                             variant="green"
-                                            onClick={handleApprove}
+                                            onClick={() => void onApprove()}
                                         >
                                             Confirm
                                         </AlertDialogAction>
@@ -155,7 +151,7 @@ export default function InboundAppCard({
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                         <AlertDialogAction
                                             variant="destructive"
-                                            onClick={handleReject}
+                                            onClick={() => void onReject()}
                                         >
                                             Confirm
                                         </AlertDialogAction>
