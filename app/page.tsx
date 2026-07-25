@@ -1,311 +1,478 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '../utils/clients';
-import Loading from './loading';
-import {
-  Plus,
-  LayoutGrid,
-  Users,
-  ChevronRight,
-  PlusCircle,
-} from 'lucide-react';
-import PageWrapper from '@/components/old-ui/PageWrapper';
-import Card from '@/components/old-ui/Card';
-import Button from '@/components/old-ui/Button';
-import SearchBar from '@/components/old-ui/SearchBar';
-import Avatar from '@/components/old-ui/Avatar';
-import toast from 'react-hot-toast';
+import { useEffect, useMemo, useState } from "react";
+import type { Comment } from "@/components/post/PostPage";
+import type { PostCardProps } from "@/components/post/PostCard";
+import timeAgo from "@/lib/TimeAgo";
+import { createClient } from "@/utils/clients";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import HomeLeftPanel from "@/components/home/HomeLeftPanel";
+import HomePosts from "@/components/home/HomePosts";
+import ExploreSpaces from "@/components/space/ExploreSpaces";
+import type { SpacePreviewCardProps } from "@/components/space/SpacePreviewCard";
+import type { CreateSpaceData } from "@/components/space/CreateSpaceModal";
 
-interface Space {
-  id: string;
-  name: string;
-  description: string;
-  icon_url: string | null;
-  owner_id: string;
-  created_at: string;
-}
+const SPACE_IMAGES_BUCKET = "space-images";
 
-interface SpaceWithMemberCount extends Space {
-  memberCount: number;
-  isJoined: boolean;
-  isOwner: boolean;
-}
-
-export default function Home() {
-  const router = useRouter();
-  const supabase = createClient();
-
-  const [spaces, setSpaces] = useState<SpaceWithMemberCount[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
+export default function HomePage() {
+  const [posts, setPosts] = useState<PostCardProps[]>([]);
+  const [ownedSpaces, setOwnedSpaces] = useState<SpacePreviewCardProps[]>([]);
+  const [joinedSpaces, setJoinedSpaces] = useState<SpacePreviewCardProps[]>([]);
+  const [otherSpaces, setOtherSpaces] = useState<SpacePreviewCardProps[]>([]);
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [currentUserName, setCurrentUserName] = useState("Unknown User");
+  const [currentUserProfilePic, setCurrentUserProfilePic] = useState<
+    string | undefined
+  >(undefined);
+  const [showExploreSpaces, setShowExploreSpaces] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    const checkSessionAndLoadData = async () => {
+    async function fetchAndGroupSpaces() {
       try {
-        setLoading(true);
-        // 1. Get logged in user
         const {
           data: { user },
           error: authError,
         } = await supabase.auth.getUser();
-        if (authError || !user) {
-          router.push('/login');
-          return;
-        }
-        setCurrentUser(user);
 
-        // 2. Fetch all spaces
-        const { data: spacesData, error: spacesError } = await supabase
-          .from('spaces')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (spacesError) throw spacesError;
-
-        // 3. Fetch all space members
-        const { data: membersData, error: membersError } = await supabase
-          .from('space_members')
-          .select('space_id, profile_id');
-
-        if (membersError) throw membersError;
-
-        // 4. Map space memberships
-        const spaceMembersMap: Record<string, Set<string>> = {};
-        if (membersData) {
-          membersData.forEach(member => {
-            if (!spaceMembersMap[member.space_id]) {
-              spaceMembersMap[member.space_id] = new Set();
-            }
-            spaceMembersMap[member.space_id].add(member.profile_id);
-          });
+        if (authError) {
+          throw authError;
         }
 
-        // 5. Build spaces listing with member counts
-        const processedSpaces = (spacesData || []).map((space: Space) => {
-          const membersSet = spaceMembersMap[space.id] || new Set();
-          const isJoined = membersSet.has(user.id);
-          const isOwner = space.owner_id === user.id;
+        const userId = user?.id ?? "";
+        setCurrentUserId(userId);
 
-          return {
-            ...space,
-            memberCount: Math.max(membersSet.size, 1), // Fallback to 1 (creator) if membership table doesn't have rows
-            isJoined: isJoined || isOwner, // Owner is always joined
-            isOwner
+        const [
+          { data: spaces, error: spacesError },
+          membershipResult,
+          currentProfileResult,
+        ] = await Promise.all([
+          supabase
+            .from("spaces")
+            .select("id, name, description, owner_id, external_links, image"),
+          userId
+            ? supabase
+                .from("space_members")
+                .select("space_id")
+                .eq("profile_id", userId)
+            : Promise.resolve({ data: [], error: null }),
+          userId
+            ? supabase
+                .from("profiles")
+                .select("name, profile_pic_url")
+                .eq("id", userId)
+                .maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+        ]);
+
+        if (spacesError) {
+          throw spacesError;
+        }
+
+        if (membershipResult.error) {
+          throw membershipResult.error;
+        }
+
+        if (currentProfileResult.error) {
+          throw currentProfileResult.error;
+        }
+
+        setCurrentUserName(currentProfileResult.data?.name ?? "Unknown User");
+        setCurrentUserProfilePic(
+          currentProfileResult.data?.profile_pic_url ?? undefined,
+        );
+
+        const ownerIds = Array.from(
+          new Set(
+            (spaces ?? []).flatMap((space) =>
+              space.owner_id ? [space.owner_id] : [],
+            ),
+          ),
+        );
+
+        let ownerProfiles: Array<{
+          id: string;
+          name: string | null;
+          profile_pic_url: string | null;
+        }> = [];
+
+        if (ownerIds.length > 0) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("id, name, profile_pic_url")
+            .in("id", ownerIds);
+
+          if (error) {
+            throw error;
+          }
+
+          ownerProfiles = data ?? [];
+        }
+
+        const ownerProfilesById = new Map(
+          ownerProfiles.map((profile) => [profile.id, profile]),
+        );
+
+        const joinedSpaceIds = new Set(
+          membershipResult.data?.map((membership) => membership.space_id) ?? [],
+        );
+
+        const nextOwnedSpaces: SpacePreviewCardProps[] = [];
+        const nextJoinedSpaces: SpacePreviewCardProps[] = [];
+        const nextOtherSpaces: SpacePreviewCardProps[] = [];
+
+        for (const space of spaces ?? []) {
+          const ownerProfile = space.owner_id
+            ? ownerProfilesById.get(space.owner_id)
+            : undefined;
+
+          const previewSpace: SpacePreviewCardProps = {
+            spaceId: space.id,
+            spaceImage: space.image ?? undefined,
+            spaceName: space.name,
+            spaceDesc: space.description ?? undefined,
+            spaceLinks: space.external_links ?? undefined,
+            spaceOwnerName: ownerProfile?.name ?? "Unknown User",
+            spaceOwnerPic: ownerProfile?.profile_pic_url ?? undefined,
+            spaceOwnerId: space.owner_id,
+            currentUserId: userId,
           };
-        });
 
-        setSpaces(processedSpaces);
-      } catch (err) {
-        console.error('Error loading dashboard data:', err);
-      } finally {
-        setLoading(false);
+          if (space.owner_id === userId) {
+            nextOwnedSpaces.push(previewSpace);
+          } else if (joinedSpaceIds.has(space.id)) {
+            nextJoinedSpaces.push(previewSpace);
+          } else {
+            nextOtherSpaces.push(previewSpace);
+          }
+        }
+
+        setOwnedSpaces(nextOwnedSpaces);
+        setJoinedSpaces(nextJoinedSpaces);
+        setOtherSpaces(nextOtherSpaces);
+      } catch (error) {
+        console.error(
+          "Failed to fetch spaces:",
+          JSON.stringify(error, null, 2),
+        );
       }
-    };
+    }
 
-    checkSessionAndLoadData();
-  }, [router, supabase]);
+    void fetchAndGroupSpaces();
+  }, [supabase]);
 
-  const handleJoinSpace = async (spaceId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!currentUser) return;
+  useEffect(() => {
+    async function fetchAllPosts() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const currentUserId = user?.id;
 
-    const spaceName = spaces.find(s => s.id === spaceId)?.name || 'space';
+        const { data, error } = await supabase
+          .from("posts")
+          .select(
+            `
+            id,
+            title,
+            description,
+            commitment_level,
+            image_url,
+            created_at,
+            profiles!posts_owner_id_fkey (name, profile_pic_url),
+            roles (role, quantity),
+            post_likes (profile_id),
+            post_comments (
+              id,
+              content,
+              created_at,
+              profiles (name, profile_pic_url)
+            )
+          `,
+          )
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        const formattedPosts: PostCardProps[] = data.map((post: any) => ({
+          postid: post.id,
+          ownerName: post.profiles?.name || "Unknown User",
+          ownerAvatarUrl: post.profiles?.profile_pic_url,
+          postDate: timeAgo(post.created_at),
+          initialLikeCount: post.post_likes?.length ?? 0,
+          initialIsLiked:
+            post.post_likes?.some(
+              (like: any) => like.profile_id === currentUserId,
+            ) ?? false,
+          postTitle: post.title,
+          postDescription: post.description,
+          postImageUrl: post.image_url,
+          commitmentLevel: post.commitment_level,
+          rolesAndPositions:
+            post.roles?.map((role: any) => ({
+              role: role.role,
+              position: role.quantity,
+            })) ?? [],
+          initialComments:
+            post.post_comments?.map((comment: any) => ({
+              id: comment.id,
+              content: comment.content,
+              created_at: comment.created_at,
+              profiles: {
+                name: comment.profiles?.name || "Unknown User",
+                profile_pic_url: comment.profiles?.profile_pic_url,
+              },
+            })) ?? [],
+        }));
+
+        setPosts(formattedPosts);
+      } catch (error) {
+        console.error("Failed to fetch posts:", JSON.stringify(error, null, 2));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void fetchAllPosts();
+  }, [supabase]);
+
+  const handleLike = async (postId: string, previousLiked: boolean) => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error("User not authenticated");
+    }
+
+    if (previousLiked) {
+      const { error } = await supabase
+        .from("post_likes")
+        .delete()
+        .match({ post_id: postId, profile_id: user.id });
+
+      if (error) {
+        throw error;
+      }
+    } else {
+      const { error } = await supabase.from("post_likes").insert({
+        post_id: postId,
+        profile_id: user.id,
+      });
+
+      if (error) {
+        throw error;
+      }
+    }
+  };
+
+  const handleNewComment = async (postId: string, newComment: Comment) => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { error } = await supabase.from("post_comments").insert({
+      id: newComment.id,
+      post_id: postId,
+      profile_id: user.id,
+      content: newComment.content,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    setPosts((currentPosts) =>
+      currentPosts.map((post) =>
+        post.postid === postId
+          ? {
+              ...post,
+              initialComments: [...post.initialComments, newComment],
+            }
+          : post,
+      ),
+    );
+  };
+
+  const handleApply = async (
+    postId: string,
+    roles: string[],
+    message: string,
+  ) => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { error } = await supabase.from("applications").insert({
+      post_id: postId,
+      applicant_id: user.id,
+      selected_roles: roles,
+      intro_message: message,
+    });
+
+    if (error) {
+      throw error;
+    }
+  };
+
+  const onCreate = async (spaceData: CreateSpaceData): Promise<string> => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error("User not authenticated");
+    }
+
+    let createdSpaceId: string | undefined;
+    let uploadedImagePath: string | undefined;
 
     try {
-      const { error } = await supabase
-        .from('space_members')
+      const { data: createdSpace, error: spaceError } = await supabase
+        .from("spaces")
         .insert({
-          space_id: spaceId,
-          profile_id: currentUser.id
+          name: spaceData.name,
+          description: spaceData.description || null,
+          external_links: spaceData.externalLinks,
+          owner_id: user.id,
+          image: null,
+        })
+        .select("id")
+        .single();
+
+      if (spaceError) {
+        throw spaceError;
+      }
+
+      createdSpaceId = createdSpace.id;
+
+      if (spaceData.image) {
+        const imageResponse = await fetch(spaceData.image);
+
+        if (!imageResponse.ok) {
+          throw new Error("Unable to read the selected image");
+        }
+
+        const imageBlob = await imageResponse.blob();
+        const imageExtension =
+          imageBlob.type.split("/")[1]?.split("+")[0] || "jpg";
+        uploadedImagePath = `${createdSpace.id}/${crypto.randomUUID()}.${imageExtension}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(SPACE_IMAGES_BUCKET)
+          .upload(uploadedImagePath, imageBlob, {
+            contentType: imageBlob.type,
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage
+          .from(SPACE_IMAGES_BUCKET)
+          .getPublicUrl(uploadedImagePath);
+
+        const { error: imageUpdateError } = await supabase
+          .from("spaces")
+          .update({ image: publicUrl })
+          .eq("id", createdSpace.id);
+
+        if (imageUpdateError) {
+          throw imageUpdateError;
+        }
+      }
+
+      const { error: membershipError } = await supabase
+        .from("space_members")
+        .insert({
+          space_id: createdSpace.id,
+          profile_id: user.id,
         });
 
-      if (error) throw error;
+      if (membershipError) {
+        throw membershipError;
+      }
 
-      toast.success(`Joined ${spaceName} successfully!`);
+      return createdSpace.id;
+    } catch (error) {
+      if (uploadedImagePath) {
+        const { error: imageCleanupError } = await supabase.storage
+          .from(SPACE_IMAGES_BUCKET)
+          .remove([uploadedImagePath]);
 
-      // Update state locally
-      setSpaces(prevSpaces => 
-        prevSpaces.map(space => 
-          space.id === spaceId 
-            ? { ...space, isJoined: true, memberCount: space.memberCount + 1 }
-            : space
-        )
-      );
-    } catch (err: any) {
-      console.error('Error joining space:', err);
-      toast.error('Could not join space: ' + err.message);
+        if (imageCleanupError) {
+          console.error(
+            "Failed to clean up uploaded space image:",
+            imageCleanupError,
+          );
+        }
+      }
+
+      if (createdSpaceId) {
+        const { error: spaceCleanupError } = await supabase
+          .from("spaces")
+          .delete()
+          .eq("id", createdSpaceId);
+
+        if (spaceCleanupError) {
+          console.error(
+            "Failed to clean up partially created space:",
+            spaceCleanupError,
+          );
+        }
+      }
+
+      throw error;
     }
   };
-
-  const handleLeaveSpace = async (spaceId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!currentUser) return;
-
-    const spaceName = spaces.find(s => s.id === spaceId)?.name || 'space';
-
-    try {
-      const { error } = await supabase
-        .from('space_members')
-        .delete()
-        .eq('space_id', spaceId)
-        .eq('profile_id', currentUser.id);
-
-      if (error) throw error;
-
-      toast.success(`Left ${spaceName}.`);
-
-      // Update state locally
-      setSpaces(prevSpaces => 
-        prevSpaces.map(space => 
-          space.id === spaceId 
-            ? { ...space, isJoined: false, memberCount: Math.max(space.memberCount - 1, 1) }
-            : space
-        )
-      );
-    } catch (err: any) {
-      console.error('Error leaving space:', err);
-      toast.error('Could not leave space: ' + err.message);
-    }
-  };
-
-  // Filter spaces based on search query AND membership mode
-  const displayedSpaces = spaces.filter(space => {
-    const matchesSearch = 
-      space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      space.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (!matchesSearch) return false;
-
-    // Mode A: Empty search => show only joined/owned spaces
-    if (!searchQuery) {
-      return space.isJoined;
-    }
-
-    // Mode B: Active search => show all matches
-    return true;
-  });
-
-  if (loading) {
-    return <Loading />;
-  }
 
   return (
-    <PageWrapper
-      title="My Spaces"
-      subtitle="Select a workspace hub to find your dream team."
-      headerAction={
-        <Button
-          onClick={() => router.push('/spaces/new')}
-          className="flex items-center gap-2 justify-center shadow-md"
-        >
-          <Plus size={18} />
-          New Space
-        </Button>
-      }
-    >
-      {/* Search Bar */}
-      <div className="mb-6 w-full md:max-w-sm md:ml-auto">
-        <SearchBar
-          placeholder="Search all spaces..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <HomeLeftPanel
+          ownedSpaces={ownedSpaces}
+          joinedSpaces={joinedSpaces}
+          otherSpaces={otherSpaces}
+          currentUserName={currentUserName}
+          currentUserProfilePic={currentUserProfilePic}
+          onExploreSpaces={() => setShowExploreSpaces(true)}
+          onCreate={onCreate}
         />
+        {showExploreSpaces ? (
+          <ExploreSpaces
+            currentUserId={currentUserId}
+            ownedSpaces={ownedSpaces}
+            joinedSpaces={joinedSpaces}
+            otherSpaces={otherSpaces}
+          />
+        ) : (
+          <HomePosts
+            posts={posts}
+            isLoading={isLoading}
+            onLike={handleLike}
+            onNewComment={handleNewComment}
+            onApply={handleApply}
+          />
+        )}
       </div>
-
-      {/* Directory Title */}
-      <h3 className="text-mini font-bold text-gray-400 uppercase tracking-widest mb-4">
-        {searchQuery ? "All Spaces Search Results" : "My Joined & Owned Spaces"}
-      </h3>
-
-      {/* Spaces Directory */}
-      {displayedSpaces.length === 0 ? (
-        <Card className="text-center py-20 bg-white border border-gray-100 p-8 shadow-sm">
-          <LayoutGrid className="w-16 h-16 mx-auto text-gray-300 mb-4 animate-pulse" />
-          <h3 className="text-heading font-heading font-extrabold text-gray-800">
-            No spaces found
-          </h3>
-          <p className="text-primary font-primary text-gray-400 max-w-sm mx-auto mt-1 mb-6">
-            {searchQuery 
-              ? "Try searching for a different keyword or explore other spaces." 
-              : "You haven't joined or created any spaces yet. Try searching to explore!"}
-          </p>
-
-          <Button
-            onClick={() => router.push('/spaces/new')}
-            className="inline-flex items-center gap-2"
-          >
-            <PlusCircle size={14} />
-            Create Space
-          </Button>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {displayedSpaces.map((space) => (
-            <Card 
-              key={space.id} 
-              onClick={() => router.push(`/spaces/${space.id}`)}
-              className="hover:shadow-md hover:border-comatch-light transition duration-300 flex items-center justify-between cursor-pointer group p-5 border border-gray-100"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                {/* Space Icon */}
-                <Avatar
-                  src={space.icon_url || undefined}
-                  alt={space.name}
-                  size="lg"
-                  className="group-hover:scale-105 transition duration-300"
-                />
-                <div className="min-w-0">
-                  <h2 className="text-heading font-heading font-extrabold text-gray-900 group-hover:text-comatch-primary transition truncate">
-                    {space.name}
-                  </h2>
-                  <p className="text-mini font-primary text-gray-400 mt-1 flex items-center gap-1.5 font-medium">
-                    <Users size={12} />
-                    {space.memberCount}{' '}
-                    {space.memberCount === 1 ? 'member' : 'members'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {/* Membership Actions */}
-                {currentUser && (
-                  <div className="relative z-20">
-                    {space.isOwner ? (
-                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full select-none">
-                        Owner
-                      </span>
-                    ) : space.isJoined ? (
-                      <Button 
-                        variant="outline" 
-                        className="px-4! py-1! text-xs font-bold border-red-200! text-red-500! hover:bg-red-50! hover:border-red-300!"
-                        onClick={(e) => handleLeaveSpace(space.id, e)}
-                      >
-                        Leave
-                      </Button>
-                    ) : (
-                      <Button 
-                        variant="primary" 
-                        className="px-4! py-1! text-xs font-bold"
-                        onClick={(e) => handleJoinSpace(space.id, e)}
-                      >
-                        Join
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* Chevron Link indicator */}
-                <div className="p-2 bg-slate-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-comatch-primary rounded-xl border border-gray-100 group-hover:border-comatch-light transition shadow-inner">
-                  <ChevronRight size={18} className="group-hover:translate-x-0.5 transition duration-300" />
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-    </PageWrapper>
+    </SidebarProvider>
   );
 }

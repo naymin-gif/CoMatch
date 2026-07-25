@@ -1,40 +1,109 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
-import Loading from '@/app/loading';
-import PageWrapper from '@/components/old-ui/PageWrapper';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
+import Loading from "@/app/loading";
+import formatTimeAgo from "@/lib/TimeAgo";
+import InboundPage from "@/components/dashboard/InboundPage";
+import OutboundPage from "@/components/dashboard/OutboundPage";
+import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard";
+import type { OutboundAppCardProps } from "@/components/dashboard/OutboundAppCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TbLayoutDashboardFilled } from "react-icons/tb";
+import { PiAirplaneLandingBold } from "react-icons/pi";
+import { PiAirplaneTakeoffFill } from "react-icons/pi";
 import {
-  Dashboard,
-  getMyApplications,
+  type ApplicationStatus,
+  type Dashboard,
   getRequestsReceived,
   updateApplicationStatus,
-} from '@/utils/DashboardActions';
-
-// UI Components
-import StatusBadge, { ApplicationStatus } from '@/components/old-ui/StatusBadge';
-import Button from '@/components/old-ui/Button';
-import Card from '@/components/old-ui/Card';
-import Avatar from '@/components/old-ui/Avatar';
-import SearchBar from '@/components/old-ui/SearchBar';
+} from "@/utils/DashboardActions";
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-type TabState = 'inbound' | 'outbound';
+type TabState = "inbound" | "outbound";
+type OwnerNames = Record<string, string>;
+
+async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
+  const { data, error } = await supabase
+    .from("applications")
+    .select(
+      `
+        id,
+        intro_message,
+        selected_roles,
+        status,
+        created_at,
+        last_edited_at,
+        applicant_seen,
+        posts!inner (
+          id,
+          title,
+          owner_id
+        )
+      `,
+    )
+    .eq("applicant_id", userId)
+    .order("last_edited_at", {
+      ascending: false,
+      nullsFirst: false,
+    })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching outbound applications:", error);
+    throw new Error("Could not load outbound applications.");
+  }
+
+  const applications = data as unknown as Dashboard[];
+
+  return applications.filter(
+    (application) => application.posts?.owner_id !== userId,
+  );
+}
+
+async function getOwnerNames(applications: Dashboard[]): Promise<OwnerNames> {
+  const ownerIds = Array.from(
+    new Set(
+      applications
+        .map((application) => application.posts?.owner_id)
+        .filter((ownerId): ownerId is string => Boolean(ownerId)),
+    ),
+  );
+
+  if (ownerIds.length === 0) {
+    return {};
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, name")
+    .in("id", ownerIds);
+
+  if (error) {
+    console.error("Error fetching post owners:", error);
+    throw new Error("Could not load post owners.");
+  }
+
+  return Object.fromEntries(
+    (data ?? []).map((profile) => [profile.id, profile.name]),
+  );
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const [outbound, setOutbound] = useState<Dashboard[]>([]);
   const [inbound, setInbound] = useState<Dashboard[]>([]);
+  const [outbound, setOutbound] = useState<Dashboard[]>([]);
+  const [ownerNames, setOwnerNames] = useState<OwnerNames>({});
+  const [activeTab, setActiveTab] = useState<TabState>("inbound");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabState>('inbound');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -43,287 +112,248 @@ export default function DashboardPage() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        // Redirect if not authenticated instead of crashing
         if (!user) {
-          router.push('/login');
+          router.replace("/login");
           return;
         }
 
         setUserId(user.id);
 
-        const [outboundData, inboundData] = await Promise.all([
-          getMyApplications(supabase, user.id),
+        const [inboundData, outboundData] = await Promise.all([
           getRequestsReceived(supabase, user.id),
+          getOutboundApplications(user.id),
         ]);
+        const fetchedOwnerNames = await getOwnerNames(outboundData);
 
-        setOutbound(outboundData);
         setInbound(inboundData);
+        setOutbound(outboundData);
+        setOwnerNames(fetchedOwnerNames);
       } catch (error) {
-        console.error('Failed to load dashboard:', error);
+        console.error("Failed to load dashboard:", error);
+        setLoadError("Failed to load applications. Please try again.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadDashboard();
+    void loadDashboard();
   }, [router]);
 
-  // Mark received applications as seen
-  const markInboundAsSeen = async (unseenIds: string[]) => {
-    if (unseenIds.length === 0) return;
-    const { data: updatedData, error } = await supabase
-      .from('applications')
-      .update({ owner_seen: true })
-      .in('id', unseenIds)
-      .select();
-      
-    if (!error && updatedData && updatedData.length > 0) {
-      setInbound((prev) =>
-        prev.map((app) =>
-          unseenIds.includes(app.id) ? { ...app, owner_seen: true } : app
+  const unseenInboundIds = useMemo(
+    () =>
+      inbound
+        .filter(
+          (application) =>
+            application.status === "Pending" && !application.owner_seen,
         )
-      );
-    }
-  };
+        .map((application) => application.id),
+    [inbound],
+  );
 
-  // Mark my applications as seen
-  const markOutboundAsSeen = async (unseenIds: string[]) => {
-    if (unseenIds.length === 0) return;
-    const { data: updatedData, error } = await supabase
-      .from('applications')
-      .update({ applicant_seen: true })
-      .in('id', unseenIds)
-      .select();
-
-    if (!error && updatedData && updatedData.length > 0) {
-      setOutbound((prev) =>
-        prev.map((app) =>
-          unseenIds.includes(app.id) ? { ...app, applicant_seen: true } : app
+  const unseenOutboundIds = useMemo(
+    () =>
+      outbound
+        .filter(
+          (application) =>
+            application.status !== "Pending" && !application.applicant_seen,
         )
-      );
-    }
-  };
-
-  // Find unseen IDs
-  const unseenInboundIds = inbound
-    .filter((app) => app.status === 'Pending' && !app.owner_seen)
-    .map((app) => app.id);
-
-  const unseenOutboundIds = outbound
-    .filter((app) => app.status !== 'Pending' && !app.applicant_seen)
-    .map((app) => app.id);
+        .map((application) => application.id),
+    [outbound],
+  );
 
   useEffect(() => {
-    if (activeTab === 'inbound') {
-      if (unseenInboundIds.length > 0) {
-        markInboundAsSeen(unseenInboundIds);
+    async function markApplicationsAsSeen() {
+      const isInbound = activeTab === "inbound";
+      const unseenIds = isInbound ? unseenInboundIds : unseenOutboundIds;
+
+      if (unseenIds.length === 0) {
+        return;
       }
-    } else {
-      if (unseenOutboundIds.length > 0) {
-        markOutboundAsSeen(unseenOutboundIds);
+
+      const seenColumn = isInbound ? "owner_seen" : "applicant_seen";
+      const { error } = await supabase
+        .from("applications")
+        .update({ [seenColumn]: true })
+        .in("id", unseenIds);
+
+      if (error) {
+        console.error(`Failed to update ${seenColumn}:`, error);
+        return;
+      }
+
+      if (isInbound) {
+        setInbound((current) =>
+          current.map((application) =>
+            unseenIds.includes(application.id)
+              ? { ...application, owner_seen: true }
+              : application,
+          ),
+        );
+      } else {
+        setOutbound((current) =>
+          current.map((application) =>
+            unseenIds.includes(application.id)
+              ? { ...application, applicant_seen: true }
+              : application,
+          ),
+        );
       }
     }
-  }, [activeTab, unseenInboundIds.length, unseenOutboundIds.length]);
 
-  const handleAction = async (
-    appId: string,
-    newStatus: 'Approved' | 'Rejected'
-  ) => {
-    if (!userId) return;
+    void markApplicationsAsSeen();
+  }, [activeTab, unseenInboundIds, unseenOutboundIds]);
 
-    // Optimistic UI update
-    setInbound((prev) =>
-      prev.map((app) =>
-        app.id === appId ? { ...app, status: newStatus } : app
-      )
-    );
+  const handleInboundAction = useCallback(
+    async (
+      applicationId: string,
+      status: Exclude<ApplicationStatus, "Pending">,
+    ) => {
+      if (!userId) {
+        return;
+      }
 
-    try {
-      await updateApplicationStatus(supabase, appId, newStatus, userId);
-    } catch (error) {
-      console.error(error);
-      alert('Failed to update status. Please try again.');
-      const refresh = await getRequestsReceived(supabase, userId);
-      setInbound(refresh);
-    }
-  };
+      try {
+        const updatedApplication = await updateApplicationStatus(
+          supabase,
+          applicationId,
+          status,
+          userId,
+        );
+
+        setInbound((current) =>
+          current
+            .map((application) =>
+              application.id === applicationId
+                ? {
+                    ...application,
+                    status: updatedApplication.status,
+                    last_edited_at: updatedApplication.last_edited_at,
+                  }
+                : application,
+            )
+            .sort((a, b) => {
+              const aTime = a.last_edited_at
+                ? new Date(a.last_edited_at).getTime()
+                : 0;
+
+              const bTime = b.last_edited_at
+                ? new Date(b.last_edited_at).getTime()
+                : 0;
+
+              return bTime - aTime;
+            }),
+        );
+      } catch (error) {
+        console.error("Failed to update application:", error);
+        window.alert("Failed to update the application. Please try again.");
+      }
+    },
+    [userId],
+  );
+
+  const inboundCardProps = useMemo<InboundAppCardProps[]>(
+    () =>
+      inbound.flatMap((application) => {
+        const post = application.posts;
+        const applicant = application.profiles;
+
+        if (!post || !applicant) {
+          return [];
+        }
+
+        return [
+          {
+            postTitle: post.title,
+            applicantId: applicant.id,
+            applicantName: applicant.name,
+            appliedRole: application.selected_roles ?? [],
+            message: application.intro_message,
+            postId: post.id,
+            status: application.status,
+            timeAgo: formatTimeAgo(
+              application.last_edited_at ?? application.created_at,
+            ),
+            onApprove: () =>
+              handleInboundAction(application.id, "Approved"),
+            onReject: () =>
+              handleInboundAction(application.id, "Rejected"),
+          },
+        ];
+      }),
+    [handleInboundAction, inbound],
+  );
+
+  const outboundApplications = useMemo<OutboundAppCardProps[]>(
+    () =>
+      outbound.flatMap((application) => {
+        const post = application.posts;
+        const ownerId = post?.owner_id;
+
+        if (!post || !ownerId) {
+          return [];
+        }
+
+        return [
+          {
+            postTitle: post.title,
+            ownerId,
+            ownerName: ownerNames[ownerId] ?? ownerId,
+            appliedRole: application.selected_roles ?? [],
+            message: application.intro_message,
+            postId: post.id,
+            status: application.status,
+            timeAgo: formatTimeAgo(
+              application.last_edited_at ?? application.created_at,
+            ),
+          },
+        ];
+      }),
+    [outbound, ownerNames],
+  );
 
   if (loading) {
     return <Loading />;
   }
 
-  // render list items based on the active tab
-  const renderListItems = (data: Dashboard[], isOutbound: boolean) => {
-    if (data.length === 0) {
-      return (
-        <Card className="flex justify-center items-center py-12 px-4 !shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-mini">
-            {isOutbound
-              ? "You haven't submitted any applications."
-              : 'No requests received yet.'}
-          </p>
-        </Card>
-      );
-    }
-
-    return data.map((app) => (
-      <Card
-        key={app.id}
-        className="flex flex-col sm:flex-row sm:items-center justify-between !p-4 border border-gray-100 hover:shadow-lg transition-all cursor-pointer"
-      >
-        <div className="flex items-center gap-4 mb-3 sm:mb-0">
-          <Avatar alt={app.id} className="w-12 h-12" />
-
-          <div>
-            <h3 className="font-bold text-gray-900 text-heading">
-              Application: {app.id.substring(0, 8)}
-            </h3>
-            <div className="flex items-center text-gray-500 text-primary mt-0.5 gap-1.5">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-              <span>
-                {isOutbound
-                  ? 'Tracking project request'
-                  : 'Review applicant details'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <StatusBadge status={app.status as ApplicationStatus} />
-
-          {/* Action Buttons for Pending Inbound */}
-          {!isOutbound && app.status === 'Pending' && (
-            <div className="flex gap-2 mr-2">
-              <Button
-                variant="success"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAction(app.id, 'Approved');
-                }}
-              >
-                Approve
-              </Button>
-              <Button
-                variant="danger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAction(app.id, 'Rejected');
-                }}
-              >
-                Reject
-              </Button>
-            </div>
-          )}
-
-          {/* Chevron Right Indicator */}
-          <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100 flex-shrink-0">
-            <svg
-              className="w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-        </div>
-      </Card>
-    ));
-  };
-
-  const filteredInbound = inbound.filter((app) => {
-    const query = searchQuery.toLowerCase();
-    const appId = app.id.toLowerCase();
-    const postTitle = app.posts?.title?.toLowerCase() || '';
-    const profileName = app.profiles?.name?.toLowerCase() || '';
-    const introMsg = app.intro_message?.toLowerCase() || '';
-    const roles = app.selected_roles?.join(' ').toLowerCase() || '';
+  if (loadError) {
     return (
-      appId.includes(query) ||
-      postTitle.includes(query) ||
-      profileName.includes(query) ||
-      introMsg.includes(query) ||
-      roles.includes(query)
+      <div className="p-10">
+        <p role="alert" className="text-destructive">
+          {loadError}
+        </p>
+      </div>
     );
-  });
-
-  const filteredOutbound = outbound.filter((app) => {
-    const query = searchQuery.toLowerCase();
-    const appId = app.id.toLowerCase();
-    const postTitle = app.posts?.title?.toLowerCase() || '';
-    const spaceName = app.posts?.spaces?.name?.toLowerCase() || '';
-    return (
-      appId.includes(query) ||
-      postTitle.includes(query) ||
-      spaceName.includes(query)
-    );
-  });
+  }
 
   return (
-    <PageWrapper
-      title="Dashboard"
-      subtitle="Manage your team applications and incoming requests."
-    >
-      {/* Search Bar */}
-      <div className="mb-6 w-full md:max-w-sm md:ml-auto">
-        <SearchBar
-          placeholder="Search applications..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+    <div className="flex flex-col gap-5 p-10">
+      <div className="flex flex-row gap-3 items-center text-heading text-comatch-primary font-heading">
+        <TbLayoutDashboardFilled />
+        <span>Dashboard</span>
       </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as TabState)}
+      >
+        <TabsList className="mb-5 w-md pt-5 pb-5">
+          <TabsTrigger value="inbound" className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+            <PiAirplaneLandingBold className="mr-3"/> 
+            <span className="font-heading">Inbound</span>
+          </TabsTrigger>
+          <TabsTrigger value="outbound" className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+            <PiAirplaneTakeoffFill className="mr-3"/> 
+            <span className="font-heading">Outbound</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Custom Pill Tabs */}
-      <div className="flex space-x-2 mb-6">
-        <Button
-          variant={activeTab === 'inbound' ? 'tab-active' : 'tab-inactive'}
-          onClick={() => setActiveTab('inbound')}
-        >
-          <span className="flex items-center gap-1.5">
-            Requests Received
-            {unseenInboundIds.length > 0 && (
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-xs inline-block"></span>
-            )}
-          </span>
-        </Button>
+        <TabsContent value="inbound">
+          <InboundPage inboundCardProps={inboundCardProps} />
+        </TabsContent>
 
-        <Button
-          variant={activeTab === 'outbound' ? 'tab-active' : 'tab-inactive'}
-          onClick={() => setActiveTab('outbound')}
-        >
-          <span className="flex items-center gap-1.5">
-            My Applications
-            {unseenOutboundIds.length > 0 && (
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-xs inline-block"></span>
-            )}
-          </span>
-        </Button>
-      </div>
-
-      {/* LIST CONTENT */}
-      <div className="flex flex-col gap-3">
-        {activeTab === 'inbound'
-          ? renderListItems(filteredInbound, false)
-          : renderListItems(filteredOutbound, true)}
-      </div>
-    </PageWrapper>
+        <TabsContent value="outbound">
+          <OutboundPage applications={outboundApplications} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

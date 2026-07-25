@@ -6,6 +6,7 @@ export interface Dashboard {
   id: string;
   status: ApplicationStatus;
   created_at: string;
+  last_edited_at: string | null;
   intro_message?: string;
   selected_roles?: string[];
   owner_seen?: boolean;
@@ -71,6 +72,7 @@ export async function getRequestsReceived(
       selected_roles,
       status,
       created_at,
+      last_edited_at,
       owner_seen,
       profiles (
         id,
@@ -84,6 +86,10 @@ export async function getRequestsReceived(
     `
     )
     .eq('posts.owner_id', userId)
+    .order('last_edited_at', {
+      ascending: false,
+      nullsFirst: false,
+    })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -124,7 +130,11 @@ export async function updateApplicationStatus(
   // 1. Update the application status and reset applicant_seen to false
   const { data, error } = await supabase
     .from('applications')
-    .update({ status: newStatus, applicant_seen: false })
+    .update({
+      status: newStatus,
+      applicant_seen: false,
+      last_edited_at: new Date().toISOString(),
+    })
     .eq('id', applicationId)
     .select()
     .single();
