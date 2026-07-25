@@ -5,6 +5,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { IoIosSend } from "react-icons/io";
+import ConversationPageHeader from "@/components/chat/ConversationPageHeader";
 
 import {
   Message as MessageRoot,
@@ -207,38 +208,12 @@ export default function ConversationPage({
         aria-label={`Conversation with ${participant.name}`}
         className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white"
     >
-      <header className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 py-4 shadow-xs sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-50 text-sm font-bold text-comatch-primary">
-            {participant.profile_pic_url ? (
-              <img
-                src={participant.profile_pic_url}
-                alt={`${participant.name}'s profile`}
-                className="size-full object-cover"
-              />
-            ) : (
-              <span aria-hidden="true">{participantInitial}</span>
-            )}
-          </div>
-
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-bold text-gray-950">
-              {participant.name}
-            </h1>
-            <p className="mt-0.5 text-xs font-medium text-gray-400">
-              Direct Message
-            </p>
-          </div>
-        </div>
-
-        <Link
-          href={`/profile/${participant.id}`}
-          className="ml-4 flex shrink-0 items-center gap-1.5 text-xs font-bold text-comatch-primary transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-comatch-primary/40"
-        >
-          <span className="hidden sm:inline">View Profile</span>
-          <ExternalLink className="size-3.5" aria-hidden="true" />
-        </Link>
-      </header>
+      {/* Header  */}
+      <ConversationPageHeader 
+          profile_pic_url={participant.profile_pic_url || undefined} 
+          name={participant.name} 
+          profileid={participant.id} 
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/30 px-4 py-5 sm:px-6">
         {isLoading ? (
