@@ -5,9 +5,10 @@ import Image from "next/image";
 import Logo from "@/public/pics/logo.png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { FiBell, FiSearch, FiMessageSquare, FiX } from "react-icons/fi";
+import { FiSearch, FiMessageSquare, FiX } from "react-icons/fi";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/clients";
+import { TbLayoutDashboard } from "react-icons/tb";
 import GlobalSearch from "./GlobalSearch";
 
 const APPLICATION_NOTIFICATIONS_UPDATED = "applicationNotificationsUpdated";
@@ -242,10 +243,10 @@ export default function NavBar() {
             </button>
           </a>
 
-          {/* Notification Bell Icon */}
+          {/* Dashboard Icon */}
           <a href="/dashboard">
             <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors relative text-foreground">
-              <FiBell className="w-[17px] h-[17px]" />
+              <TbLayoutDashboard className="w-[20px] h-[20px]" />
               {hasNotifications && (
                 <span
                   className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full animate-pulse"
