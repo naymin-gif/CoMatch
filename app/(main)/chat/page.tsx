@@ -1,3 +1,5 @@
+import ChatPreviewCard from "@/components/chat/ChatPreviewCard";
+
 interface Profile {
   id: string;
   name: string;
@@ -12,4 +14,23 @@ export interface Conversation {
   otherParticipant: Profile;
   lastMessage?: string;
   lastMessageTime?: string;
+}
+
+// MOCK DATA
+const name: string = "Win"
+const msg: string = "I love you"
+const time: string = "Tue"
+const hasUnread: boolean = true;
+
+export default function ChatPage() {
+    return (
+        <div className="p-20">
+            <ChatPreviewCard 
+                name={name}
+                message={msg}
+                time={time}
+                hasUnread={hasUnread}
+            />
+        </div>
+    ); 
 }
