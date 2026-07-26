@@ -175,6 +175,7 @@ export default function HomePage() {
           .select(
             `
             id,
+            owner_id,
             title,
             description,
             commitment_level,
@@ -183,6 +184,7 @@ export default function HomePage() {
             profiles!posts_owner_id_fkey (name, profile_pic_url),
             roles (role, quantity),
             post_likes (profile_id),
+            applications (applicant_id),
             post_comments (
               id,
               content,
@@ -199,8 +201,14 @@ export default function HomePage() {
 
         const formattedPosts: PostCardProps[] = data.map((post: any) => ({
           postid: post.id,
+          ownerId: post.owner_id,
           ownerName: post.profiles?.name || "Unknown User",
           ownerAvatarUrl: post.profiles?.profile_pic_url,
+          isOwner: Boolean(currentUserId && post.owner_id === currentUserId),
+          initialHasApplied: Boolean(
+            currentUserId &&
+              post.applications?.some((app: any) => app.applicant_id === currentUserId)
+          ),
           postDate: timeAgo(post.created_at),
           initialLikeCount: post.post_likes?.length ?? 0,
           initialIsLiked:

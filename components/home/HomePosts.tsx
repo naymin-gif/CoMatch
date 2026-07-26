@@ -38,8 +38,11 @@ export default function HomePosts({
           <PostCard
             key={post.postid}
             postid={post.postid}
+            ownerId={post.ownerId}
             ownerName={post.ownerName}
             ownerAvatarUrl={post.ownerAvatarUrl}
+            isOwner={post.isOwner}
+            initialHasApplied={post.initialHasApplied}
             postDate={post.postDate}
             initialLikeCount={post.initialLikeCount}
             postTitle={post.postTitle}
