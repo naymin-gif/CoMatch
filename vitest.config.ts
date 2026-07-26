@@ -23,6 +23,11 @@ const env = loadEnvLocal();
 
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './'),
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

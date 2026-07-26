@@ -49,7 +49,7 @@ export default function ProfilePreviewCard({
                         <CgProfile />
                     </Button>
                 </a>
-                <a href={`/chat/${id}`}className="col-span-1">
+                <a href={`/chat?user=${id}`} className="col-span-1">
                     <Button variant="ghost">
                         <FiMessageSquare />
                     </Button>
