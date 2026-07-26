@@ -270,6 +270,7 @@ export default function DashboardPage() {
             message: application.intro_message,
             postId: post.id,
             status: application.status,
+            isNew: !application.owner_seen && application.status === "Pending",
             timeAgo: formatTimeAgo(
               application.last_edited_at ?? application.created_at,
             ),
@@ -302,6 +303,7 @@ export default function DashboardPage() {
             message: application.intro_message,
             postId: post.id,
             status: application.status,
+            isUpdated: !application.applicant_seen && application.status !== "Pending",
             timeAgo: formatTimeAgo(
               application.last_edited_at ?? application.created_at,
             ),
@@ -310,6 +312,9 @@ export default function DashboardPage() {
       }),
     [outbound, ownerNames],
   );
+
+  const hasUnseenInbound = unseenInboundIds.length > 0;
+  const hasUnseenOutbound = unseenOutboundIds.length > 0;
 
   if (loading) {
     return <Loading />;
@@ -336,13 +341,19 @@ export default function DashboardPage() {
         onValueChange={(value) => setActiveTab(value as TabState)}
       >
         <TabsList className="mb-5 w-md pt-5 pb-5">
-          <TabsTrigger value="inbound" className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+          <TabsTrigger value="inbound" className="relative pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
             <PiAirplaneLandingBold className="mr-3"/> 
             <span className="font-heading">Inbound</span>
+            {hasUnseenInbound && (
+              <span className="ml-2 flex h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+            )}
           </TabsTrigger>
-          <TabsTrigger value="outbound" className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+          <TabsTrigger value="outbound" className="relative pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
             <PiAirplaneTakeoffFill className="mr-3"/> 
             <span className="font-heading">Outbound</span>
+            {hasUnseenOutbound && (
+              <span className="ml-2 flex h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+            )}
           </TabsTrigger>
         </TabsList>
 

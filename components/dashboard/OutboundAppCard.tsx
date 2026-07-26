@@ -23,6 +23,7 @@ export interface OutboundAppCardProps {
   postId: string;
   status: OutboundApplicationStatus;
   timeAgo: string;
+  isUpdated?: boolean;
 }
 
 export default function OutboundAppCard({
@@ -35,16 +36,24 @@ export default function OutboundAppCard({
   postId,
   status,
   timeAgo, 
+  isUpdated = false,
 }: OutboundAppCardProps) {
   return (
     <Card className="bg-comatch-background w-[500px] p-3">
       <CardHeader>
-        <CardTitle>
-          {postTitle}
-        </CardTitle>
+        <div className="flex flex-row justify-between items-center">
+          <CardTitle>
+            {postTitle}
+          </CardTitle>
+          {isUpdated && (
+            <Badge className="bg-blue-600 hover:bg-blue-700 text-white animate-pulse font-bold text-[10px]">
+              UPDATED
+            </Badge>
+          )}
+        </div>
 
         {/* Time Ago  */}
-        <div className="flex flex-row gap-3 items-center">
+        <div className="flex flex-row gap-3 items-center text-xs text-muted-foreground mt-1">
             <AiOutlineClockCircle />
             {timeAgo}
         </div>

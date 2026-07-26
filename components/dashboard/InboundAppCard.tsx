@@ -44,6 +44,7 @@ export interface InboundAppCardProps {
     postId: string;
     timeAgo: string;
     status: "Pending" | "Approved" | "Rejected";
+    isNew?: boolean;
     onApprove: () => Promise<void>;
     onReject: () => Promise<void>;
 }
@@ -59,6 +60,7 @@ export default function InboundAppCard({
     message,
     timeAgo,
     status,
+    isNew = false,
     onApprove,
     onReject,
 } : InboundAppCardProps) {
@@ -74,12 +76,19 @@ export default function InboundAppCard({
     return (
         <Card className="bg-comatch-background p-3 w-[500px]">
             <CardHeader>
-                <CardTitle>
-                    {postTitle}
-                </CardTitle>
+                <div className="flex flex-row justify-between items-center">
+                    <CardTitle>
+                        {postTitle}
+                    </CardTitle>
+                    {isNew && (
+                        <Badge variant="destructive" className="animate-pulse font-bold text-[10px]">
+                            NEW REQUEST
+                        </Badge>
+                    )}
+                </div>
 
                 {/* Time Ago  */}
-                <div className="flex flex-row gap-3 items-center">
+                <div className="flex flex-row gap-3 items-center text-xs text-muted-foreground mt-1">
                     <AiOutlineClockCircle />
                     {timeAgo}
                 </div>
