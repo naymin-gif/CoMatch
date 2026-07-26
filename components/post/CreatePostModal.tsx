@@ -111,8 +111,8 @@ export default function CreatePostModal({
     }
 
     return (
-        <Card className="w-2xl bg-comatch-background p-6">
-            <CardHeader className="border-b text-center justify-center">
+        <Card className="w-2xl max-h-[85vh] flex flex-col bg-comatch-background p-6 overflow-hidden">
+            <CardHeader className="border-b text-center justify-center shrink-0 pb-4">
                 <CardTitle className="text-heading">
                     Create Post
                 </CardTitle>
@@ -120,7 +120,7 @@ export default function CreatePostModal({
                     Share your work and get the best teammates!
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-y-auto max-h-[calc(85vh-120px)] pt-4">
                 <form onSubmit={handleFormSubmit}>
                     <FieldGroup>
                         {/* Title */}
