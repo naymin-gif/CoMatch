@@ -192,3 +192,8 @@
     @apply font-heading text-foreground text-heading;
   }
 }
+
+.font-heading {
+  font-family: var(--font-feather-bold), sans-serif !important;
+  font-weight: 700;
+}
