@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import PostCard, { PostCardProps } from "./PostCard";
+import PostCard, { type PostCardProps } from "./PostCard";
 import { TbFileSad } from "react-icons/tb";
 import PostPageHeader from "./PostPageHeader";
 import { createClient } from "@/utils/clients";

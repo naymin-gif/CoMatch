@@ -14,7 +14,7 @@ import { BsPlusSquareFill } from "react-icons/bs";
 import { MdGroupAdd } from "react-icons/md";
 import CreatePostModal from "./CreatePostModal";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
-import { NewPostData } from "./PostPage";
+import { type NewPostData } from "./PostPage";
 
 interface PostPageHeaderProps {
     profile_pic_url ?: string;

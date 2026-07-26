@@ -5,9 +5,7 @@ import {
   ItemActions,
   ItemContent,
   ItemDescription,
-  ItemMedia,
   ItemTitle,
-  ItemHeader
 } from "@/components/ui/item"; 
 import { Button } from "@/components/ui/button";
 import { IoCopyOutline } from "react-icons/io5";

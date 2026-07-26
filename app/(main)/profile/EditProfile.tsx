@@ -1,6 +1,6 @@
 "use client"
 
-import Image, { StaticImageData } from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { RiUploadLine } from "react-icons/ri";
 import { Button } from "@/components/ui/button"; 
 import { IoMdRemoveCircleOutline } from "react-icons/io";

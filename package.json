@@ -8,11 +8,12 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
+    "format": "prettier --write",
+    "format:check": "prettier . --check",
     "test": "vitest",
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm lint && pnpm typecheck"
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run format:check"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -51,7 +52,9 @@
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "16.2.6",
+    "eslint-config-prettier": "^10.1.8",
     "jsdom": "^29.1.1",
+    "prettier": "3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",

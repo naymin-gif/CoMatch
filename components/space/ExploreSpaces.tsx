@@ -1,4 +1,4 @@
-import SpacePreviewCard, { SpacePreviewCardProps } from "./SpacePreviewCard";
+import SpacePreviewCard, { type SpacePreviewCardProps } from "./SpacePreviewCard";
 import { IoCompassOutline } from "react-icons/io5";
 
 interface ExpoloreSpacesProps {

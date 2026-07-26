@@ -15,7 +15,7 @@ import {
     TableCell,
 } from "@/components/ui/table"; 
 import { useState } from "react";
-import { RoleAndPosition } from "./PostPage";
+import { type RoleAndPosition } from "./PostPage";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";

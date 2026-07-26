@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import Image, { StaticImageData } from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { IoLocation } from "react-icons/io5";
 import { Badge } from "@/components/ui/badge";

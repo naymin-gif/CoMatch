@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import CreateSpaceModal, {
-  CreateSpaceData,
+  type CreateSpaceData,
 } from "@/components/space/CreateSpaceModal";
 
 export interface HomeSidebarSpace {

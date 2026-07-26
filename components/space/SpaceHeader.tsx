@@ -1,7 +1,7 @@
 "use client"; 
 
 import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import Image, { StaticImageData } from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"; 
 import { FaShare } from "react-icons/fa";

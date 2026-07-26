@@ -12,7 +12,7 @@ import { IoMdSettings } from "react-icons/io";
 import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input";
 import { useState, useRef } from "react"; 
-import { StaticImageData } from "next/image";
+import { type StaticImageData } from "next/image";
 import Image  from "next/image";
 import { RiUploadLine } from "react-icons/ri";
 import { IoMdRemoveCircleOutline } from "react-icons/io";

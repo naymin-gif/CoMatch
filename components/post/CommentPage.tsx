@@ -5,7 +5,7 @@ import CommentCard from "./CommentCard";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
-import { Comment } from "./PostPage";
+import { type Comment } from "./PostPage";
 
 interface CommentPageProps {
     name: string;

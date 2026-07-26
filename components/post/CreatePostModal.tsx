@@ -29,7 +29,7 @@ import { useState } from "react";
 import { IoRemoveCircle } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import NumberCounter from "@/components/ui/NumberCounter";
-import { NewPostData } from "./PostPage";
+import { type NewPostData } from "./PostPage";
 
 interface CreatePostModalProps {
     onCancel: () => void;

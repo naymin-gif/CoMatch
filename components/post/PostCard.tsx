@@ -13,11 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"; 
 import ShareLink from "@/components/ui/ShareLink";
 import CommentPage from "./CommentPage";
-import { Comment } from "./PostPage";
+import { type Comment } from "./PostPage";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import ApplyModal from "./ApplyModal";
 import { MdOutlineDownloadDone } from "react-icons/md";
-import { RoleAndPosition } from "./PostPage";
+import { type RoleAndPosition } from "./PostPage";
 
 import { 
     Card,

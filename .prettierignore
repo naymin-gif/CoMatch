@@ -1,6 +1,14 @@
-```text
+# Dependencies
 node_modules
+
+# Next.js generated files
 .next
+out
+next-env.d.ts
+
+# Test and build output
+coverage
 build
-dist
-public
+
+# Package manager cache
+.pnpm-store
