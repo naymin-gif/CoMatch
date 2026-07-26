@@ -97,7 +97,7 @@ export default function PostCard({
     const [rolesSeeMore, setRolesSeeMore] = useState<boolean>(false); 
     const [liked, setLiked] = useState<boolean>(initialIsLiked);
     const [isMounted, setIsMounted] = useState<boolean>(false); 
-    const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+    const [isCommentsOpen, setIsCommentsOpen] = useState<boolean>(false);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
     const [applied, setApplied] = useState<boolean>(initialHasApplied);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -312,47 +312,14 @@ export default function PostCard({
                         {likeCount}
                     </Button>
 
-                    {/* Comments */}
-                    <Drawer 
-                        modal={false} 
-                        handleOnly={true}
-                        open={isDrawerOpen}
-                        direction="bottom"
-                        onOpenChange={setIsDrawerOpen}
+                    {/* Comments Button */}
+                    <Button 
+                        variant="ghost" 
+                        id={`comment-trigger-${postid}`}
+                        onClick={() => setIsCommentsOpen(prev => !prev)}
                     >
-                        <DrawerTrigger asChild>
-                            <Button variant="ghost" id={`comment-trigger-${postid}`} >
-                                <VscComment /> {comments.length}
-                            </Button>
-                        </DrawerTrigger>
-
-                        {isMounted && (
-                            <DrawerContent 
-                                container={containerRef.current}
-                                className="h-[60%] absolute bottom-0"
-                                onPointerDownOutside={(e) => {
-                                    const target = e.target as HTMLElement;
-                                    if (target.closest(`#comment-trigger-${postid}`)) {
-                                        return; 
-                                    }
-                                    setIsDrawerOpen(false);
-                                }}
-                                                >
-                                <DrawerHeader className="font-heading">
-                                    Comments
-                                </DrawerHeader>
-                                <div className="flex-1 p-4 overflow-y-auto">
-                                    <CommentPage 
-                                        profile_pic_url={currentUserAvatar || currentUserProfile.avatarUrl || ""}
-                                        name={currentUserName || currentUserProfile.name || "Anonymous User"}
-                                        comments={comments}
-                                        postid={postid}
-                                        onAddComment={handleNewComment}
-                                    />
-                                </div>
-                            </DrawerContent>
-                        )}
-                    </Drawer>
+                        <VscComment /> {comments.length}
+                    </Button>
 
                     <Popover>
                         <PopoverTrigger asChild>
@@ -376,8 +343,23 @@ export default function PostCard({
                         Apply <MdArrowOutward />
                     </Button>
                 )}
-                
             </CardFooter>
+
+            {/* Inline Expandable Comments Section */}
+            {isCommentsOpen && (
+                <div className="border-t p-4 bg-slate-50/50 rounded-b-xl dynamic-fade-in flex flex-col gap-3">
+                    <div className="font-heading font-semibold text-sm text-gray-700">
+                        Comments ({comments.length})
+                    </div>
+                    <CommentPage 
+                        profile_pic_url={currentUserAvatar || currentUserProfile.avatarUrl || ""}
+                        name={currentUserName || currentUserProfile.name || "Anonymous User"}
+                        comments={comments}
+                        postid={postid}
+                        onAddComment={handleNewComment}
+                    />
+                </div>
+            )}
 
              <AlertDialog open={isApplyModalOpen} onOpenChange={setIsApplyModalOpen}>
                 <AlertDialogContent className="p-0 bg-transparent border-none shadow-none justify-center">
