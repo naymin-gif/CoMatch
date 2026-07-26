@@ -74,6 +74,7 @@ export default function PostPage({
                         profiles!posts_owner_id_fkey (name, profile_pic_url), 
                         roles (role, quantity),
                         post_likes (profile_id),
+                        applications (applicant_id),
                         post_comments (
                             id,
                             content,
@@ -91,7 +92,11 @@ export default function PostPage({
                     ownerId: post.owner_id,
                     ownerName: post.profiles?.name || "Unknown User",
                     ownerAvatarUrl: post.profiles?.profile_pic_url,
-                    isOwner: post.owner_id === currentUserId,
+                    isOwner: Boolean(currentUserId && post.owner_id === currentUserId),
+                    initialHasApplied: Boolean(
+                        currentUserId && 
+                        post.applications?.some((app: any) => app.applicant_id === currentUserId)
+                    ),
                     postDate: timeAgo(post.created_at),
 
                     initialLikeCount: post.post_likes ? post.post_likes.length : 0,
@@ -348,6 +353,7 @@ export default function PostPage({
                         ownerName={post.ownerName}
                         ownerAvatarUrl={post.ownerAvatarUrl}
                         isOwner={post.isOwner}
+                        initialHasApplied={post.initialHasApplied}
                         postDate={post.postDate}
                         initialLikeCount={post.initialLikeCount}
                         postTitle={post.postTitle}

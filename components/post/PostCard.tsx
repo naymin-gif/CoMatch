@@ -50,6 +50,7 @@ export interface PostCardProps {
     ownerName: string;
     ownerAvatarUrl?: string;
     isOwner?: boolean;
+    initialHasApplied?: boolean;
     postDate: string;
     initialLikeCount: number;
     postTitle: string;
@@ -70,6 +71,7 @@ export default function PostCard({
     ownerName,
     ownerAvatarUrl,
     isOwner = false,
+    initialHasApplied = false,
     postDate,
     initialLikeCount,
     postTitle,
@@ -93,12 +95,16 @@ export default function PostCard({
     const [isMounted, setIsMounted] = useState<boolean>(false); 
     const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
-    const [applied, setApplied] = useState<boolean>(false);
+    const [applied, setApplied] = useState<boolean>(initialHasApplied);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     // Initializing state with props
     const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
     const [comments, setComments] = useState<Comment[]>(initialComments); 
+
+    useEffect(() => {
+        setApplied(initialHasApplied);
+    }, [initialHasApplied]);
 
     useEffect(() => {
         setIsMounted(true);
@@ -334,7 +340,7 @@ export default function PostCard({
 
                 {/* Apply Buttons */}
                 {effectiveIsOwner ? null : applied ? (
-                    <Button variant="green">
+                    <Button variant="green" disabled>
                         <MdOutlineDownloadDone /> Applied
                     </Button>
                 ) : (
