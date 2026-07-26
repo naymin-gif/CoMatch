@@ -37,27 +37,45 @@ export default function RegisterPage() {
         setErrorMsg('');
 
         if (password !== confirmPassword) {
-        setErrorMsg('Passwords do not match.');
-        setIsLoading(false);
-        return;
+            setErrorMsg('Passwords do not match.');
+            setIsLoading(false);
+            return;
         }
 
-        const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            data: {
-            full_name: name, 
-            },
-        },
-        });
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email: email.trim(),
+                password,
+                options: {
+                    data: {
+                        full_name: name.trim(),
+                    },
+                },
+            });
 
-        if (error) {
-        setErrorMsg(error.message);
-        setIsLoading(false);
-        } else {
-        router.push('/');
-        router.refresh();
+            if (error) {
+                throw error;
+            }
+
+            // A session means Supabase has logged the new user in.
+            if (!data.session) {
+                setErrorMsg(
+                    'Account created, but email confirmation is required before signing in.'
+                );
+                return;
+            }
+
+            // "/" is app/page.tsx
+            router.replace('/');
+            router.refresh();
+        } catch (error) {
+            setErrorMsg(
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to create your account.'
+            );
+        } finally {
+            setIsLoading(false);
         }
     };
 
