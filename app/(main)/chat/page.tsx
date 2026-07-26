@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import type { ChatSidebarConversation } from "@/components/chat/ChatSidebar";
@@ -75,7 +77,10 @@ function sortConversations(conversations: ConversationItem[]) {
   );
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
+  const searchParams = useSearchParams();
+  const targetUserId = searchParams.get("user");
+
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | undefined
@@ -130,7 +135,34 @@ export default function ChatPage() {
           throw conversationsError;
         }
 
-        const conversationRows = (data ?? []) as ConversationRow[];
+        let conversationRows = (data ?? []) as ConversationRow[];
+        let autoSelectId: string | undefined = undefined;
+
+        if (targetUserId && targetUserId !== user.id) {
+          const existingRow = conversationRows.find(
+            (row) =>
+              (row.user1_id === user.id && row.user2_id === targetUserId) ||
+              (row.user1_id === targetUserId && row.user2_id === user.id)
+          );
+
+          if (existingRow) {
+            autoSelectId = existingRow.id;
+          } else {
+            const { data: newConv, error: newConvError } = await supabase
+              .from("conversations")
+              .insert({
+                user1_id: user.id,
+                user2_id: targetUserId,
+              })
+              .select("id, user1_id, user2_id, created_at")
+              .single();
+
+            if (!newConvError && newConv) {
+              conversationRows = [newConv, ...conversationRows];
+              autoSelectId = newConv.id;
+            }
+          }
+        }
 
         if (conversationRows.length === 0) {
           if (!cancelled) {
@@ -220,6 +252,9 @@ export default function ChatPage() {
         if (!cancelled) {
           conversationIdsRef.current = new Set(conversationIds);
           setConversations(nextConversations);
+          if (autoSelectId) {
+            setSelectedConversationId(autoSelectId);
+          }
         }
       } catch (error) {
         console.error(
@@ -525,5 +560,13 @@ export default function ChatPage() {
         )}
         </div>
     </main>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center p-6 text-sm text-gray-500">Loading chat...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }
