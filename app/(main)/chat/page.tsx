@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import ChatSidebar from '@/components/chat/ChatSidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import type { ChatSidebarConversation } from '@/components/chat/ChatSidebar';
-import ConversationPage from '@/components/chat/ConversationPage';
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import ChatSidebar from "@/components/chat/ChatSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import type { ChatSidebarConversation } from "@/components/chat/ChatSidebar";
+import ConversationPage from "@/components/chat/ConversationPage";
 import type {
   ConversationParticipant,
   Message,
-} from '@/components/chat/ConversationPage';
-import timeAgo from '@/lib/TimeAgo';
-import { createClient } from '@/utils/clients';
+} from "@/components/chat/ConversationPage";
+import timeAgo from "@/lib/TimeAgo";
+import { createClient } from "@/utils/clients";
 
 interface ConversationRow {
   id: string;
@@ -43,13 +45,13 @@ function sortMessages(messages: Message[]) {
   return [...messages].sort(
     (firstMessage, secondMessage) =>
       getTimestamp(firstMessage.created_at) -
-      getTimestamp(secondMessage.created_at)
+      getTimestamp(secondMessage.created_at),
   );
 }
 
 function upsertMessage(messages: Message[], nextMessage: Message) {
   const existingMessageIndex = messages.findIndex(
-    (message) => message.id === nextMessage.id
+    (message) => message.id === nextMessage.id,
   );
 
   if (existingMessageIndex === -1) {
@@ -63,7 +65,7 @@ function upsertMessage(messages: Message[], nextMessage: Message) {
 
 function getConversationActivityTime(conversation: ConversationItem) {
   return getTimestamp(
-    conversation.lastMessage?.created_at ?? conversation.createdAt
+    conversation.lastMessage?.created_at ?? conversation.createdAt,
   );
 }
 
@@ -71,16 +73,19 @@ function sortConversations(conversations: ConversationItem[]) {
   return [...conversations].sort(
     (firstConversation, secondConversation) =>
       getConversationActivityTime(secondConversation) -
-      getConversationActivityTime(firstConversation)
+      getConversationActivityTime(firstConversation),
   );
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
+  const searchParams = useSearchParams();
+  const targetUserId = searchParams.get("user");
+
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | undefined
   >(undefined);
-  const [currentUserId, setCurrentUserId] = useState('');
+  const [currentUserId, setCurrentUserId] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -95,7 +100,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     conversationIdsRef.current = new Set(
-      conversations.map((conversation) => conversation.id)
+      conversations.map((conversation) => conversation.id),
     );
   }, [conversations]);
 
@@ -114,7 +119,7 @@ export default function ChatPage() {
         }
 
         if (!user) {
-          throw new Error('User not authenticated');
+          throw new Error("User not authenticated");
         }
 
         if (!cancelled) {
@@ -122,15 +127,42 @@ export default function ChatPage() {
         }
 
         const { data, error: conversationsError } = await supabase
-          .from('conversations')
-          .select('id, user1_id, user2_id, created_at')
+          .from("conversations")
+          .select("id, user1_id, user2_id, created_at")
           .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
         if (conversationsError) {
           throw conversationsError;
         }
 
-        const conversationRows = (data ?? []) as ConversationRow[];
+        let conversationRows = (data ?? []) as ConversationRow[];
+        let autoSelectId: string | undefined = undefined;
+
+        if (targetUserId && targetUserId !== user.id) {
+          const existingRow = conversationRows.find(
+            (row) =>
+              (row.user1_id === user.id && row.user2_id === targetUserId) ||
+              (row.user1_id === targetUserId && row.user2_id === user.id)
+          );
+
+          if (existingRow) {
+            autoSelectId = existingRow.id;
+          } else {
+            const { data: newConv, error: newConvError } = await supabase
+              .from("conversations")
+              .insert({
+                user1_id: user.id,
+                user2_id: targetUserId,
+              })
+              .select("id, user1_id, user2_id, created_at")
+              .single();
+
+            if (!newConvError && newConv) {
+              conversationRows = [newConv, ...conversationRows];
+              autoSelectId = newConv.id;
+            }
+          }
+        }
 
         if (conversationRows.length === 0) {
           if (!cancelled) {
@@ -145,26 +177,26 @@ export default function ChatPage() {
             conversationRows.map((conversation) =>
               conversation.user1_id === user.id
                 ? conversation.user2_id
-                : conversation.user1_id
-            )
-          )
+                : conversation.user1_id,
+            ),
+          ),
         );
         const conversationIds = conversationRows.map(
-          (conversation) => conversation.id
+          (conversation) => conversation.id,
         );
 
         const [profilesResult, messagesResult] = await Promise.all([
           supabase
-            .from('profiles')
-            .select('id, name, profile_pic_url')
-            .in('id', participantIds),
+            .from("profiles")
+            .select("id, name, profile_pic_url")
+            .in("id", participantIds),
           supabase
-            .from('messages')
+            .from("messages")
             .select(
-              'id, conversation_id, sender_id, content, created_at, is_read'
+              "id, conversation_id, sender_id, content, created_at, is_read",
             )
-            .in('conversation_id', conversationIds)
-            .order('created_at', { ascending: false }),
+            .in("conversation_id", conversationIds)
+            .order("created_at", { ascending: false }),
         ]);
 
         if (profilesResult.error) {
@@ -179,7 +211,7 @@ export default function ChatPage() {
           ((profilesResult.data ?? []) as ProfileRow[]).map((profile) => [
             profile.id,
             profile,
-          ])
+          ]),
         );
         const latestMessageByConversationId = new Map<string, Message>();
         const conversationsWithUnreadMessages = new Set<string>();
@@ -207,24 +239,27 @@ export default function ChatPage() {
               createdAt: conversation.created_at,
               participant: {
                 id: participantId,
-                name: profile?.name ?? 'Unknown User',
+                name: profile?.name ?? "Unknown User",
                 profile_pic_url: profile?.profile_pic_url ?? null,
               },
               lastMessage:
                 latestMessageByConversationId.get(conversation.id) ?? null,
               hasUnread: conversationsWithUnreadMessages.has(conversation.id),
             };
-          })
+          }),
         );
 
         if (!cancelled) {
           conversationIdsRef.current = new Set(conversationIds);
           setConversations(nextConversations);
+          if (autoSelectId) {
+            setSelectedConversationId(autoSelectId);
+          }
         }
       } catch (error) {
         console.error(
-          'Failed to fetch conversations:',
-          JSON.stringify(error, null, 2)
+          "Failed to fetch conversations:",
+          JSON.stringify(error, null, 2),
         );
       }
     }
@@ -252,12 +287,12 @@ export default function ChatPage() {
 
       try {
         const { data, error } = await supabase
-          .from('messages')
+          .from("messages")
           .select(
-            'id, conversation_id, sender_id, content, created_at, is_read'
+            "id, conversation_id, sender_id, content, created_at, is_read",
           )
-          .eq('conversation_id', conversationId)
-          .order('created_at', { ascending: true });
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true });
 
         if (error) {
           throw error;
@@ -268,10 +303,10 @@ export default function ChatPage() {
 
           setMessages((currentMessages) => {
             const realtimeMessages = currentMessages.filter(
-              (message) => message.conversation_id === conversationId
+              (message) => message.conversation_id === conversationId,
             );
             const mergedMessages = new Map(
-              fetchedMessages.map((message) => [message.id, message])
+              fetchedMessages.map((message) => [message.id, message]),
             );
 
             for (const message of realtimeMessages) {
@@ -283,11 +318,11 @@ export default function ChatPage() {
         }
 
         const { error: readError } = await supabase
-          .from('messages')
+          .from("messages")
           .update({ is_read: true })
-          .eq('conversation_id', conversationId)
-          .neq('sender_id', currentUserId)
-          .eq('is_read', false);
+          .eq("conversation_id", conversationId)
+          .neq("sender_id", currentUserId)
+          .eq("is_read", false);
 
         if (readError) {
           throw readError;
@@ -299,21 +334,21 @@ export default function ChatPage() {
               message.conversation_id === conversationId &&
               message.sender_id !== currentUserId
                 ? { ...message, is_read: true }
-                : message
-            )
+                : message,
+            ),
           );
           setConversations((currentConversations) =>
             currentConversations.map((conversation) =>
               conversation.id === conversationId
                 ? { ...conversation, hasUnread: false }
-                : conversation
-            )
+                : conversation,
+            ),
           );
         }
       } catch (error) {
         console.error(
-          'Failed to fetch messages:',
-          JSON.stringify(error, null, 2)
+          "Failed to fetch messages:",
+          JSON.stringify(error, null, 2),
         );
       } finally {
         if (!cancelled) {
@@ -340,7 +375,7 @@ export default function ChatPage() {
 
       if (isSelectedConversation) {
         setMessages((currentMessages) =>
-          upsertMessage(currentMessages, message)
+          upsertMessage(currentMessages, message),
         );
       }
 
@@ -371,11 +406,11 @@ export default function ChatPage() {
                 : conversation.lastMessage,
               hasUnread,
             };
-          })
-        )
+          }),
+        ),
       );
     },
-    [currentUserId]
+    [currentUserId],
   );
 
   useEffect(() => {
@@ -386,11 +421,11 @@ export default function ChatPage() {
     const channel = supabase
       .channel(`chat-messages-${currentUserId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
         },
         (payload) => {
           const message = payload.new as Message;
@@ -403,30 +438,30 @@ export default function ChatPage() {
             !message.is_read
           ) {
             void supabase
-              .from('messages')
+              .from("messages")
               .update({ is_read: true })
-              .eq('id', message.id)
+              .eq("id", message.id)
               .then(({ error }) => {
                 if (error) {
                   console.error(
-                    'Failed to mark message as read:',
-                    JSON.stringify(error, null, 2)
+                    "Failed to mark message as read:",
+                    JSON.stringify(error, null, 2),
                   );
                 }
               });
           }
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
         },
         (payload) => {
           applyRealtimeMessage(payload.new as Message);
-        }
+        },
       )
       .subscribe();
 
@@ -443,35 +478,35 @@ export default function ChatPage() {
           name: conversation.participant.name,
           profile_pic_url:
             conversation.participant.profile_pic_url ?? undefined,
-          message: conversation.lastMessage?.content ?? 'No messages yet',
+          message: conversation.lastMessage?.content ?? "No messages yet",
           time: conversation.lastMessage
             ? timeAgo(conversation.lastMessage.created_at)
-            : '',
+            : "",
           hasUnread: conversation.hasUnread,
         },
       })),
-    [conversations]
+    [conversations],
   );
 
   const selectedConversation = useMemo(
     () =>
       conversations.find(
-        (conversation) => conversation.id === selectedConversationId
+        (conversation) => conversation.id === selectedConversationId,
       ),
-    [conversations, selectedConversationId]
+    [conversations, selectedConversationId],
   );
 
   const handleSendMessage = useCallback(
     async (content: string): Promise<Message> => {
       if (!currentUserId || !selectedConversationId) {
-        throw new Error('No conversation selected');
+        throw new Error("No conversation selected");
       }
 
       setIsSendingMessage(true);
 
       try {
         const { data, error } = await supabase
-          .from('messages')
+          .from("messages")
           .insert({
             conversation_id: selectedConversationId,
             sender_id: currentUserId,
@@ -479,7 +514,7 @@ export default function ChatPage() {
             is_read: false,
           })
           .select(
-            'id, conversation_id, sender_id, content, created_at, is_read'
+            "id, conversation_id, sender_id, content, created_at, is_read",
           )
           .single();
 
@@ -494,22 +529,22 @@ export default function ChatPage() {
         setIsSendingMessage(false);
       }
     },
-    [applyRealtimeMessage, currentUserId, selectedConversationId, supabase]
+    [applyRealtimeMessage, currentUserId, selectedConversationId, supabase],
   );
 
   return (
     <main className="flex h-[calc(100dvh-65px)] w-full overflow-hidden bg-slate-50">
-      <SidebarProvider className="h-full min-h-0 w-auto shrink-0">
-        <ChatSidebar
-          conversations={sidebarConversations}
-          selectedConversationId={selectedConversationId}
-          onSelectConversation={setSelectedConversationId}
-        />
-      </SidebarProvider>
+        <SidebarProvider className="h-full min-h-0 w-auto shrink-0">
+            <ChatSidebar
+                conversations={sidebarConversations}
+                selectedConversationId={selectedConversationId}
+                onSelectConversation={setSelectedConversationId}
+            />
+        </SidebarProvider>
 
-      <div className="min-h-0 min-w-0 flex-1">
+        <div className="min-h-0 min-w-0 flex-1">
         {selectedConversation ? (
-          <ConversationPage
+            <ConversationPage
             conversationId={selectedConversation.id}
             currentUserId={currentUserId}
             participant={selectedConversation.participant}
@@ -517,13 +552,21 @@ export default function ChatPage() {
             isLoading={isLoadingMessages}
             isSending={isSendingMessage}
             onSendMessage={handleSendMessage}
-          />
+            />
         ) : (
-          <div className="flex h-full items-center justify-center text-center text-sm font-medium text-gray-400">
+            <div className="flex h-full items-center justify-center text-center text-sm font-medium text-gray-400">
             Open a chat to start a conversation
-          </div>
+            </div>
         )}
-      </div>
+        </div>
     </main>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center p-6 text-sm text-gray-500">Loading chat...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

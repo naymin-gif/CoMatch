@@ -1,37 +1,37 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
-import Loading from '@/app/loading';
-import formatTimeAgo from '@/lib/TimeAgo';
-import InboundPage from '@/components/dashboard/InboundPage';
-import OutboundPage from '@/components/dashboard/OutboundPage';
-import type { InboundAppCardProps } from '@/components/dashboard/InboundAppCard';
-import type { OutboundAppCardProps } from '@/components/dashboard/OutboundAppCard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TbLayoutDashboardFilled } from 'react-icons/tb';
-import { PiAirplaneLandingBold } from 'react-icons/pi';
-import { PiAirplaneTakeoffFill } from 'react-icons/pi';
+import Loading from "@/app/loading";
+import formatTimeAgo from "@/lib/TimeAgo";
+import InboundPage from "@/components/dashboard/InboundPage";
+import OutboundPage from "@/components/dashboard/OutboundPage";
+import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard";
+import type { OutboundAppCardProps } from "@/components/dashboard/OutboundAppCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TbLayoutDashboardFilled } from "react-icons/tb";
+import { PiAirplaneLandingBold } from "react-icons/pi";
+import { PiAirplaneTakeoffFill } from "react-icons/pi";
 import {
   type ApplicationStatus,
   type Dashboard,
   getRequestsReceived,
   updateApplicationStatus,
-} from '@/utils/DashboardActions';
+} from "@/utils/DashboardActions";
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-type TabState = 'inbound' | 'outbound';
+type TabState = "inbound" | "outbound";
 type OwnerNames = Record<string, string>;
 
 async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
   const { data, error } = await supabase
-    .from('applications')
+    .from("applications")
     .select(
       `
         id,
@@ -46,24 +46,24 @@ async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
           title,
           owner_id
         )
-      `
+      `,
     )
-    .eq('applicant_id', userId)
-    .order('last_edited_at', {
+    .eq("applicant_id", userId)
+    .order("last_edited_at", {
       ascending: false,
       nullsFirst: false,
     })
-    .order('created_at', { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching outbound applications:', error);
-    throw new Error('Could not load outbound applications.');
+    console.error("Error fetching outbound applications:", error);
+    throw new Error("Could not load outbound applications.");
   }
 
   const applications = data as unknown as Dashboard[];
 
   return applications.filter(
-    (application) => application.posts?.owner_id !== userId
+    (application) => application.posts?.owner_id !== userId,
   );
 }
 
@@ -72,8 +72,8 @@ async function getOwnerNames(applications: Dashboard[]): Promise<OwnerNames> {
     new Set(
       applications
         .map((application) => application.posts?.owner_id)
-        .filter((ownerId): ownerId is string => Boolean(ownerId))
-    )
+        .filter((ownerId): ownerId is string => Boolean(ownerId)),
+    ),
   );
 
   if (ownerIds.length === 0) {
@@ -81,17 +81,17 @@ async function getOwnerNames(applications: Dashboard[]): Promise<OwnerNames> {
   }
 
   const { data, error } = await supabase
-    .from('profiles')
-    .select('id, name')
-    .in('id', ownerIds);
+    .from("profiles")
+    .select("id, name")
+    .in("id", ownerIds);
 
   if (error) {
-    console.error('Error fetching post owners:', error);
-    throw new Error('Could not load post owners.');
+    console.error("Error fetching post owners:", error);
+    throw new Error("Could not load post owners.");
   }
 
   return Object.fromEntries(
-    (data ?? []).map((profile) => [profile.id, profile.name])
+    (data ?? []).map((profile) => [profile.id, profile.name]),
   );
 }
 
@@ -101,7 +101,7 @@ export default function DashboardPage() {
   const [inbound, setInbound] = useState<Dashboard[]>([]);
   const [outbound, setOutbound] = useState<Dashboard[]>([]);
   const [ownerNames, setOwnerNames] = useState<OwnerNames>({});
-  const [activeTab, setActiveTab] = useState<TabState>('inbound');
+  const [activeTab, setActiveTab] = useState<TabState>("inbound");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-          router.replace('/login');
+          router.replace("/login");
           return;
         }
 
@@ -129,8 +129,8 @@ export default function DashboardPage() {
         setOutbound(outboundData);
         setOwnerNames(fetchedOwnerNames);
       } catch (error) {
-        console.error('Failed to load dashboard:', error);
-        setLoadError('Failed to load applications. Please try again.');
+        console.error("Failed to load dashboard:", error);
+        setLoadError("Failed to load applications. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -144,10 +144,10 @@ export default function DashboardPage() {
       inbound
         .filter(
           (application) =>
-            application.status === 'Pending' && !application.owner_seen
+            application.status === "Pending" && !application.owner_seen,
         )
         .map((application) => application.id),
-    [inbound]
+    [inbound],
   );
 
   const unseenOutboundIds = useMemo(
@@ -155,26 +155,26 @@ export default function DashboardPage() {
       outbound
         .filter(
           (application) =>
-            application.status !== 'Pending' && !application.applicant_seen
+            application.status !== "Pending" && !application.applicant_seen,
         )
         .map((application) => application.id),
-    [outbound]
+    [outbound],
   );
 
   useEffect(() => {
     async function markApplicationsAsSeen() {
-      const isInbound = activeTab === 'inbound';
+      const isInbound = activeTab === "inbound";
       const unseenIds = isInbound ? unseenInboundIds : unseenOutboundIds;
 
       if (unseenIds.length === 0) {
         return;
       }
 
-      const seenColumn = isInbound ? 'owner_seen' : 'applicant_seen';
+      const seenColumn = isInbound ? "owner_seen" : "applicant_seen";
       const { error } = await supabase
-        .from('applications')
+        .from("applications")
         .update({ [seenColumn]: true })
-        .in('id', unseenIds);
+        .in("id", unseenIds);
 
       if (error) {
         console.error(`Failed to update ${seenColumn}:`, error);
@@ -186,16 +186,16 @@ export default function DashboardPage() {
           current.map((application) =>
             unseenIds.includes(application.id)
               ? { ...application, owner_seen: true }
-              : application
-          )
+              : application,
+          ),
         );
       } else {
         setOutbound((current) =>
           current.map((application) =>
             unseenIds.includes(application.id)
               ? { ...application, applicant_seen: true }
-              : application
-          )
+              : application,
+          ),
         );
       }
     }
@@ -206,7 +206,7 @@ export default function DashboardPage() {
   const handleInboundAction = useCallback(
     async (
       applicationId: string,
-      status: Exclude<ApplicationStatus, 'Pending'>
+      status: Exclude<ApplicationStatus, "Pending">,
     ) => {
       if (!userId) {
         return;
@@ -217,7 +217,7 @@ export default function DashboardPage() {
           supabase,
           applicationId,
           status,
-          userId
+          userId,
         );
 
         setInbound((current) =>
@@ -229,7 +229,7 @@ export default function DashboardPage() {
                     status: updatedApplication.status,
                     last_edited_at: updatedApplication.last_edited_at,
                   }
-                : application
+                : application,
             )
             .sort((a, b) => {
               const aTime = a.last_edited_at
@@ -241,14 +241,14 @@ export default function DashboardPage() {
                 : 0;
 
               return bTime - aTime;
-            })
+            }),
         );
       } catch (error) {
-        console.error('Failed to update application:', error);
-        window.alert('Failed to update the application. Please try again.');
+        console.error("Failed to update application:", error);
+        window.alert("Failed to update the application. Please try again.");
       }
     },
-    [userId]
+    [userId],
   );
 
   const inboundCardProps = useMemo<InboundAppCardProps[]>(
@@ -270,15 +270,18 @@ export default function DashboardPage() {
             message: application.intro_message,
             postId: post.id,
             status: application.status,
+            isNew: !application.owner_seen && application.status === "Pending",
             timeAgo: formatTimeAgo(
-              application.last_edited_at ?? application.created_at
+              application.last_edited_at ?? application.created_at,
             ),
-            onApprove: () => handleInboundAction(application.id, 'Approved'),
-            onReject: () => handleInboundAction(application.id, 'Rejected'),
+            onApprove: () =>
+              handleInboundAction(application.id, "Approved"),
+            onReject: () =>
+              handleInboundAction(application.id, "Rejected"),
           },
         ];
       }),
-    [handleInboundAction, inbound]
+    [handleInboundAction, inbound],
   );
 
   const outboundApplications = useMemo<OutboundAppCardProps[]>(
@@ -300,14 +303,18 @@ export default function DashboardPage() {
             message: application.intro_message,
             postId: post.id,
             status: application.status,
+            isUpdated: !application.applicant_seen && application.status !== "Pending",
             timeAgo: formatTimeAgo(
-              application.last_edited_at ?? application.created_at
+              application.last_edited_at ?? application.created_at,
             ),
           },
         ];
       }),
-    [outbound, ownerNames]
+    [outbound, ownerNames],
   );
+
+  const hasUnseenInbound = unseenInboundIds.length > 0;
+  const hasUnseenOutbound = unseenOutboundIds.length > 0;
 
   if (loading) {
     return <Loading />;
@@ -334,19 +341,19 @@ export default function DashboardPage() {
         onValueChange={(value) => setActiveTab(value as TabState)}
       >
         <TabsList className="mb-5 w-md pt-5 pb-5">
-          <TabsTrigger
-            value="inbound"
-            className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"
-          >
-            <PiAirplaneLandingBold className="mr-3" />
+          <TabsTrigger value="inbound" className="relative pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+            <PiAirplaneLandingBold className="mr-3"/> 
             <span className="font-heading">Inbound</span>
+            {hasUnseenInbound && (
+              <span className="ml-2 flex h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+            )}
           </TabsTrigger>
-          <TabsTrigger
-            value="outbound"
-            className="pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"
-          >
-            <PiAirplaneTakeoffFill className="mr-3" />
+          <TabsTrigger value="outbound" className="relative pt-4 pb-4 data-[state=active]:bg-blue-500/30 data-[state=active]:text-blue-900"> 
+            <PiAirplaneTakeoffFill className="mr-3"/> 
             <span className="font-heading">Outbound</span>
+            {hasUnseenOutbound && (
+              <span className="ml-2 flex h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+            )}
           </TabsTrigger>
         </TabsList>
 

@@ -1,28 +1,29 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AiOutlineCheckCircle, AiOutlineClockCircle } from 'react-icons/ai';
-import { FaRegCircleXmark } from 'react-icons/fa6';
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AiOutlineCheckCircle, AiOutlineClockCircle } from "react-icons/ai";
+import { FaRegCircleXmark } from "react-icons/fa6";
 
-export type OutboundApplicationStatus = 'Pending' | 'Approved' | 'Rejected';
+export type OutboundApplicationStatus = "Pending" | "Approved" | "Rejected";
 
 export interface OutboundAppCardProps {
   postTitle: string;
   ownerId: string;
   ownerPic?: string;
   ownerName: string;
-  appliedRole: string[];
+  appliedRole: string[]; 
   message?: string;
   postId: string;
   status: OutboundApplicationStatus;
   timeAgo: string;
+  isUpdated?: boolean;
 }
 
 export default function OutboundAppCard({
@@ -34,17 +35,27 @@ export default function OutboundAppCard({
   message,
   postId,
   status,
-  timeAgo,
+  timeAgo, 
+  isUpdated = false,
 }: OutboundAppCardProps) {
   return (
     <Card className="bg-comatch-background w-[500px] p-3">
       <CardHeader>
-        <CardTitle>{postTitle}</CardTitle>
+        <div className="flex flex-row justify-between items-center">
+          <CardTitle>
+            {postTitle}
+          </CardTitle>
+          {isUpdated && (
+            <Badge className="bg-blue-600 hover:bg-blue-700 text-white animate-pulse font-bold text-[10px]">
+              UPDATED
+            </Badge>
+          )}
+        </div>
 
         {/* Time Ago  */}
-        <div className="flex flex-row gap-3 items-center">
-          <AiOutlineClockCircle />
-          {timeAgo}
+        <div className="flex flex-row gap-3 items-center text-xs text-muted-foreground mt-1">
+            <AiOutlineClockCircle />
+            {timeAgo}
         </div>
 
         <div className="mt-3 flex flex-row items-center justify-between">
@@ -65,19 +76,19 @@ export default function OutboundAppCard({
 
           <Button
             variant={
-              status === 'Approved'
-                ? 'green'
-                : status === 'Rejected'
-                  ? 'destructive'
-                  : 'outline'
+              status === "Approved"
+                ? "green"
+                : status === "Rejected"
+                  ? "destructive"
+                  : "outline"
             }
           >
-            {status === 'Approved' ? (
+            {status === "Approved" ? (
               <span className="flex flex-row items-center gap-3">
                 <AiOutlineCheckCircle />
                 Approved
               </span>
-            ) : status === 'Rejected' ? (
+            ) : status === "Rejected" ? (
               <span className="flex flex-row items-center gap-3">
                 <FaRegCircleXmark />
                 Rejected
@@ -96,9 +107,7 @@ export default function OutboundAppCard({
         <div className="flex flex-row gap-2">
           <span>Applied Role: </span>
           {appliedRole.map((role, index) => (
-            <Badge variant="secondary" key={index}>
-              {role}
-            </Badge>
+            <Badge variant="secondary" key={index}>{role}</Badge>
           ))}
         </div>
 
