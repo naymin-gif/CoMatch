@@ -6,7 +6,6 @@ import {
     CardTitle,
     CardDescription,
     CardContent,
-    CardFooter,
 } from "@/components/ui/card";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
+import Link from 'next/link';
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { IoEyeOffOutline } from "react-icons/io5";
 
@@ -62,7 +62,8 @@ export default function LoginPage() {
     };
 
     return (
-            <div className="min-h-[calc(100dvh-61px)] flex items-center justify-center bg-gray-50 p-4 font-sans">            <Card className="max-w-md w-full flex flex-col justify-center p-5">
+        <div className="min-h-[calc(100dvh-61px)] flex items-center justify-center bg-gray-50 p-4 font-sans">            
+            <Card className="max-w-md w-full flex flex-col justify-center p-5">
                 {/* Header  */}
                 <CardHeader className="flex flex-col items-center text-center">
                     <div className="flex flex-row gap-3 items-center">
@@ -89,6 +90,7 @@ export default function LoginPage() {
                             </div>
                         )}
 
+                        {/* Email  */}
                         <div className="flex flex-col gap-2">
                             <span>Email</span>
                             <Input id="email"
@@ -101,6 +103,7 @@ export default function LoginPage() {
                             />
                         </div>
 
+                        {/* Password  */}
                         <div className="flex flex-col gap-2">
                             <span>Password</span>
                             <div className="relative">
@@ -204,15 +207,15 @@ export default function LoginPage() {
                     </Button>
 
                     {/* Sign Up */}
-                    <div className="flex flex-row gap-1 items-center">
+                    <div className="flex flex-row items-center">
                         <span>Don't have an account? </span>
-                        <a href="/register">
+                        <Link href="/register">
                             <Button 
                                 type="button"
                                 variant="link" >
                                 Sign up for free
                             </Button>
-                        </a>
+                        </Link>
                     </div>
                 </CardContent>
             </Card>
