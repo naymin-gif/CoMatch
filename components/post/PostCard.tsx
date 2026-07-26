@@ -315,6 +315,7 @@ export default function PostCard({
                     {/* Comments */}
                     <Drawer 
                         modal={false} 
+                        handleOnly={true}
                         open={isDrawerOpen}
                         direction="bottom"
                         onOpenChange={setIsDrawerOpen}
