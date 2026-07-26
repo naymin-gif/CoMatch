@@ -211,7 +211,7 @@ export default function PostPage({
 
         if (postCheck && postCheck.owner_id === user.id) {
             toast.error("You cannot apply to your own recruitment post.");
-            return;
+            throw new Error("You cannot apply to your own recruitment post.");
         }
 
         const { error } = await supabase

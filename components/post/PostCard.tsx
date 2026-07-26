@@ -103,18 +103,27 @@ export default function PostCard({
     const [comments, setComments] = useState<Comment[]>(initialComments); 
 
     useEffect(() => {
-        setApplied(initialHasApplied);
-    }, [initialHasApplied]);
-
-    useEffect(() => {
         setIsMounted(true);
         const supabase = createClient();
-        supabase.auth.getUser().then(({ data }) => {
+        supabase.auth.getUser().then(async ({ data }) => {
             if (data?.user) {
-                setCurrentUserId(data.user.id);
+                const uid = data.user.id;
+                setCurrentUserId(uid);
+
+                // Direct DB check: Has current user applied to this post?
+                const { data: appData } = await supabase
+                    .from('applications')
+                    .select('id')
+                    .eq('post_id', postid)
+                    .eq('applicant_id', uid)
+                    .maybeSingle();
+
+                if (appData) {
+                    setApplied(true);
+                }
             }
         });
-    }, []);
+    }, [postid, initialHasApplied]);
 
     const effectiveIsOwner = isOwner || (Boolean(ownerId) && currentUserId === ownerId);
     
