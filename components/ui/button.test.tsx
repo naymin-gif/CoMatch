@@ -4,11 +4,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { Button } from './button';
 
 describe('Button Component (components/ui/button)', () => {
-  
   // Test 1: Rendering Text Label
   it('renders button text correctly', () => {
     render(<Button>Click Me</Button>);
-    expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /click me/i })
+    ).toBeInTheDocument();
   });
 
   // Test 2: User Click Event Interaction

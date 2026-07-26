@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Card,
@@ -6,14 +6,14 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card";
-import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import ImageUpload from "@/components/ui/ImageUpload";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { IoRemoveCircle } from "react-icons/io5";
+} from '@/components/ui/card';
+import { Field, FieldLabel, FieldGroup } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import ImageUpload from '@/components/ui/ImageUpload';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { IoRemoveCircle } from 'react-icons/io5';
 
 export interface CreateSpaceData {
   name: string;
@@ -31,20 +31,20 @@ export default function CreateSpaceModal({
   onCancel,
   onCreate,
 }: CreateSpaceModalProps) {
-  const [name, setName] = useState<string>("");
-  const [image, setImage] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [externalLinks, setExternalLinks] = useState<string[]>([""]);
+  const [name, setName] = useState<string>('');
+  const [image, setImage] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [externalLinks, setExternalLinks] = useState<string[]>(['']);
 
   const handleImageChange = (file?: File | null) => {
     if (!file) {
-      setImage("");
+      setImage('');
       return;
     }
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImage(typeof reader.result === "string" ? reader.result : "");
+      setImage(typeof reader.result === 'string' ? reader.result : '');
     };
     reader.readAsDataURL(file);
   };
@@ -55,14 +55,14 @@ export default function CreateSpaceModal({
 
     while (
       newLinks.length > 1 &&
-      newLinks[newLinks.length - 1] === "" &&
-      newLinks[newLinks.length - 2] === ""
+      newLinks[newLinks.length - 1] === '' &&
+      newLinks[newLinks.length - 2] === ''
     ) {
       newLinks.pop();
     }
 
-    if (newLinks[newLinks.length - 1] !== "") {
-      newLinks.push("");
+    if (newLinks[newLinks.length - 1] !== '') {
+      newLinks.push('');
     }
 
     setExternalLinks(newLinks);
@@ -70,11 +70,11 @@ export default function CreateSpaceModal({
 
   const handleRemoveLink = (indexToRemove: number) => {
     const newLinks = externalLinks.filter(
-      (_, index) => index !== indexToRemove,
+      (_, index) => index !== indexToRemove
     );
 
-    if (newLinks.length === 0 || newLinks[newLinks.length - 1] !== "") {
-      newLinks.push("");
+    if (newLinks.length === 0 || newLinks[newLinks.length - 1] !== '') {
+      newLinks.push('');
     }
 
     setExternalLinks(newLinks);
@@ -87,7 +87,7 @@ export default function CreateSpaceModal({
       name,
       image,
       description,
-      externalLinks: externalLinks.filter((link) => link.trim() !== ""),
+      externalLinks: externalLinks.filter((link) => link.trim() !== ''),
     });
   };
 

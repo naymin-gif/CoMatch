@@ -2,12 +2,7 @@ import React from 'react';
 
 // exact strings allowed for the variant
 type ButtonVariant =
-  | 'primary'
-  | 'success'
-  | 'danger'
-  | 'outline'
-  | 'tab-active'
-  | 'tab-inactive';
+  'primary' | 'success' | 'danger' | 'outline' | 'tab-active' | 'tab-inactive';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;

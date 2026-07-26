@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import type { ComponentProps } from "react";
-import { MdChatBubble } from "react-icons/md";
+import { useMemo } from 'react';
+import type { ComponentProps } from 'react';
+import { MdChatBubble } from 'react-icons/md';
 
-import ChatPreviewCard from "./ChatPreviewCard";
-import ChatSearchbar from "./ChatSearchbar";
+import ChatPreviewCard from './ChatPreviewCard';
+import ChatSearchbar from './ChatSearchbar';
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +15,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
 
 export interface ChatSidebarConversation {
   conversationId: string;
@@ -92,13 +92,9 @@ export default function ChatSidebar({
                       <SidebarMenuButton
                         type="button"
                         size="lg"
-                        isActive={
-                          selectedConversationId === conversationId
-                        }
+                        isActive={selectedConversationId === conversationId}
                         aria-label={`Open conversation with ${chatPreviewCardProps.name}`}
-                        onClick={() =>
-                          onSelectConversation(conversationId)
-                        }
+                        onClick={() => onSelectConversation(conversationId)}
                         className="h-auto w-full p-0 [&>*]:w-full"
                       >
                         <ChatPreviewCard {...chatPreviewCardProps} />

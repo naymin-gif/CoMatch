@@ -115,12 +115,10 @@ export default function CreateSpacePage() {
       }
 
       // 3b. Auto-join the creator to the space memberships
-      const { error: joinError } = await supabase
-        .from('space_members')
-        .insert({
-          space_id: newSpace.id,
-          profile_id: userId,
-        });
+      const { error: joinError } = await supabase.from('space_members').insert({
+        space_id: newSpace.id,
+        profile_id: userId,
+      });
 
       if (joinError) {
         throw joinError;

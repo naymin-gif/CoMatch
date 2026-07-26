@@ -1,19 +1,15 @@
-"use client";
+'use client';
 
-import PostCard from "@/components/post/PostCard";
-import type { PostCardProps } from "@/components/post/PostCard";
-import type { Comment } from "@/components/post/PostPage";
+import PostCard from '@/components/post/PostCard';
+import type { PostCardProps } from '@/components/post/PostCard';
+import type { Comment } from '@/components/post/PostPage';
 
 type HomePostsProps = {
   posts: PostCardProps[];
   isLoading: boolean;
   onLike: (postId: string, previousLiked: boolean) => Promise<void>;
   onNewComment: (postId: string, newComment: Comment) => Promise<void>;
-  onApply: (
-    postId: string,
-    roles: string[],
-    message: string
-  ) => Promise<void>;
+  onApply: (postId: string, roles: string[], message: string) => Promise<void>;
 };
 
 export default function HomePosts({

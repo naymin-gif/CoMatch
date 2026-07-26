@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest';
 import { Badge } from './badge';
 
 describe('Badge Component (components/ui/badge)', () => {
-
   it('renders badge text content correctly', () => {
     render(<Badge>React.js</Badge>);
 

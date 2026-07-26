@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest';
 import { Avatar, AvatarFallback } from './avatar';
 
 describe('Avatar Component (components/ui/Avatar)', () => {
-
   // Test 1: Multi-word name initials fallback
   it('renders initials fallback for multi-word name correctly', () => {
     render(

@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
-import ConversationPageHeader from "@/components/chat/ConversationPageHeader";
-import MessageList from "./MessageList";
-import ConversationPageFooter from "./ConversationPageFooter";
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
+import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
+import ConversationPageHeader from '@/components/chat/ConversationPageHeader';
+import MessageList from './MessageList';
+import ConversationPageFooter from './ConversationPageFooter';
 
 export interface Message {
   id: string;
@@ -39,8 +39,8 @@ export type LocalMessage = Message & {
 
 function createOptimisticId() {
   if (
-    typeof globalThis.crypto !== "undefined" &&
-    "randomUUID" in globalThis.crypto
+    typeof globalThis.crypto !== 'undefined' &&
+    'randomUUID' in globalThis.crypto
   ) {
     return `optimistic-${globalThis.crypto.randomUUID()}`;
   }
@@ -57,9 +57,8 @@ export default function ConversationPage({
   isSending = false,
   onSendMessage,
 }: ConversationPageProps) {
-  const [localMessages, setLocalMessages] =
-    useState<LocalMessage[]>(messages);
-  const [messageInput, setMessageInput] = useState("");
+  const [localMessages, setLocalMessages] = useState<LocalMessage[]>(messages);
+  const [messageInput, setMessageInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
@@ -75,7 +74,7 @@ export default function ConversationPage({
 
     if (conversationChanged) {
       setLocalMessages(messages);
-      setMessageInput("");
+      setMessageInput('');
       setIsSubmitting(false);
       setSendError(null);
       activeSubmissionRef.current = null;
@@ -100,7 +99,7 @@ export default function ConversationPage({
   }, [conversationId, messages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [localMessages]);
 
   const sendMessage = async () => {
@@ -122,7 +121,7 @@ export default function ConversationPage({
       isOptimistic: true,
     };
 
-    setMessageInput("");
+    setMessageInput('');
     setSendError(null);
     setIsSubmitting(true);
     activeSubmissionRef.current = optimisticId;
@@ -157,7 +156,7 @@ export default function ConversationPage({
         currentMessages.filter((message) => message.id !== optimisticId)
       );
       setMessageInput(content);
-      setSendError("Message failed to send. Please try again.");
+      setSendError('Message failed to send. Please try again.');
     } finally {
       if (activeSubmissionRef.current === optimisticId) {
         activeSubmissionRef.current = null;
@@ -176,26 +175,26 @@ export default function ConversationPage({
 
   return (
     <section
-        aria-label={`Conversation with ${participant.name}`}
-        className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white"
+      aria-label={`Conversation with ${participant.name}`}
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white"
     >
       {/* Header  */}
-      <ConversationPageHeader 
-          profile_pic_url={participant.profile_pic_url || undefined} 
-          name={participant.name} 
-          profileid={participant.id} 
+      <ConversationPageHeader
+        profile_pic_url={participant.profile_pic_url || undefined}
+        name={participant.name}
+        profileid={participant.id}
       />
 
       {/* Body */}
-        <MessageList 
-          messages={localMessages}
-          currentUserId={currentUserId}
-          isLoading={isLoading}
-          messagesEndRef={messagesEndRef}
-        />
+      <MessageList
+        messages={localMessages}
+        currentUserId={currentUserId}
+        isLoading={isLoading}
+        messagesEndRef={messagesEndRef}
+      />
 
       {/* Footer */}
-      <ConversationPageFooter 
+      <ConversationPageFooter
         messageInput={messageInput}
         setMessageInput={setMessageInput}
         onSubmit={handleSubmit}

@@ -1,31 +1,31 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import Logo from "@/public/pics/logo.png";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { FiSearch, FiMessageSquare, FiX } from "react-icons/fi";
-import { usePathname } from "next/navigation";
-import { createClient } from "@/utils/clients";
-import { TbLayoutDashboard } from "react-icons/tb";
-import GlobalSearch from "./GlobalSearch";
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Logo from '@/public/pics/logo.png';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { FiSearch, FiMessageSquare, FiX } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
+import { createClient } from '@/utils/clients';
+import { TbLayoutDashboard } from 'react-icons/tb';
+import GlobalSearch from './GlobalSearch';
 
-const APPLICATION_NOTIFICATIONS_UPDATED = "applicationNotificationsUpdated";
+const APPLICATION_NOTIFICATIONS_UPDATED = 'applicationNotificationsUpdated';
 
 export default function NavBar() {
   const [showSearch, setShowSearch] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>("User");
+  const [userName, setUserName] = useState<string>('User');
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [hasNotifications, setHasNotifications] = useState<boolean>(false);
   const pageTitles: Record<string, string> = {
-    "/profile": "My Profile",
-    "/dashboard": "Dashboard",
-    "/chat": "Chats",
+    '/profile': 'My Profile',
+    '/dashboard': 'Dashboard',
+    '/chat': 'Chats',
   };
   const pathname = usePathname();
-  const currentTitle = pageTitles[pathname] || "Spaces";
+  const currentTitle = pageTitles[pathname] || 'Spaces';
 
   useEffect(() => {
     const supabase = createClient();
@@ -36,9 +36,9 @@ export default function NavBar() {
 
       if (user) {
         const { data, error } = await supabase
-          .from("profiles")
-          .select("profile_pic_url, name")
-          .eq("id", user.id)
+          .from('profiles')
+          .select('profile_pic_url, name')
+          .eq('id', user.id)
           .maybeSingle();
 
         if (data) {
@@ -55,15 +55,15 @@ export default function NavBar() {
 
     const fetchUnreadCount = async (userId: string) => {
       const { count, error } = await supabase
-        .from("messages")
-        .select("id, conversations!inner(user1_id, user2_id)", {
-          count: "exact",
+        .from('messages')
+        .select('id, conversations!inner(user1_id, user2_id)', {
+          count: 'exact',
           head: true,
         })
-        .eq("is_read", false)
-        .neq("sender_id", userId)
+        .eq('is_read', false)
+        .neq('sender_id', userId)
         .or(`user1_id.eq.${userId},user2_id.eq.${userId}`, {
-          foreignTable: "conversations",
+          foreignTable: 'conversations',
         });
 
       if (!error && count !== null) {
@@ -79,13 +79,13 @@ export default function NavBar() {
         await fetchUnreadCount(user.id);
 
         messagesChannel = supabase
-          .channel("global_inbox")
+          .channel('global_inbox')
           .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "messages" },
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'messages' },
             () => {
               fetchUnreadCount(user.id);
-            },
+            }
           )
           .subscribe();
       }
@@ -99,20 +99,20 @@ export default function NavBar() {
     const fetchNotificationStatus = async (userId: string) => {
       // 1. Check inbound applications (where we are the post owner, status is Pending, and not seen)
       const { count: inboundCount, error: inboundError } = await supabase
-        .from("applications")
-        .select("id, posts!inner(owner_id)", { count: "exact", head: true })
-        .eq("status", "Pending")
-        .eq("owner_seen", false)
-        .eq("posts.owner_id", userId);
+        .from('applications')
+        .select('id, posts!inner(owner_id)', { count: 'exact', head: true })
+        .eq('status', 'Pending')
+        .eq('owner_seen', false)
+        .eq('posts.owner_id', userId);
 
       // 2. Check outbound applications (where we are the applicant, status is Approved/Rejected, and not seen)
       const { count: outboundCount, error: outboundError } = await supabase
-        .from("applications")
-        .select("id, posts!inner(owner_id)", { count: "exact", head: true })
-        .eq("applicant_id", userId)
-        .in("status", ["Approved", "Rejected"])
-        .eq("applicant_seen", false)
-        .neq("posts.owner_id", userId);
+        .from('applications')
+        .select('id, posts!inner(owner_id)', { count: 'exact', head: true })
+        .eq('applicant_id', userId)
+        .in('status', ['Approved', 'Rejected'])
+        .eq('applicant_seen', false)
+        .neq('posts.owner_id', userId);
 
       if (!inboundError && !outboundError) {
         const totalNotifications = (inboundCount || 0) + (outboundCount || 0);
@@ -128,13 +128,13 @@ export default function NavBar() {
         await fetchNotificationStatus(user.id);
 
         appsChannel = supabase
-          .channel("global_applications_notifications")
+          .channel('global_applications_notifications')
           .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "applications" },
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'applications' },
             () => {
               fetchNotificationStatus(user.id);
-            },
+            }
           )
           .subscribe();
       }
@@ -156,17 +156,17 @@ export default function NavBar() {
       }
     };
 
-    window.addEventListener("profileUpdated", handleProfileUpdate);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener(
       APPLICATION_NOTIFICATIONS_UPDATED,
-      handleApplicationNotificationsUpdated,
+      handleApplicationNotificationsUpdated
     );
 
     return () => {
-      window.removeEventListener("profileUpdated", handleProfileUpdate);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
       window.removeEventListener(
         APPLICATION_NOTIFICATIONS_UPDATED,
-        handleApplicationNotificationsUpdated,
+        handleApplicationNotificationsUpdated
       );
       if (messagesChannel) supabase.removeChannel(messagesChannel);
       if (appsChannel) supabase.removeChannel(appsChannel);
@@ -202,8 +202,8 @@ export default function NavBar() {
           <div
             className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${
               showSearch
-                ? "max-w-md opacity-100 overflow-visible"
-                : "max-w-0 opacity-0 pointer-events-none overflow-hidden"
+                ? 'max-w-md opacity-100 overflow-visible'
+                : 'max-w-0 opacity-0 pointer-events-none overflow-hidden'
             }`}
           >
             <div className="w-[280px] sm:w-[320px]">

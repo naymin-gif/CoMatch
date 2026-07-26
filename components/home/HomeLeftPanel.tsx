@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Sidebar,
@@ -11,23 +11,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { GoHomeFill } from "react-icons/go";
-import { IoCompassSharp } from "react-icons/io5";
-import { usePathname, useRouter } from "next/navigation";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { FaPlus } from "react-icons/fa";
-import Link from "next/link";
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { GoHomeFill } from 'react-icons/go';
+import { IoCompassSharp } from 'react-icons/io5';
+import { usePathname, useRouter } from 'next/navigation';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { FaPlus } from 'react-icons/fa';
+import Link from 'next/link';
 import {
   AlertDialog,
   AlertDialogTrigger,
   AlertDialogContent,
-} from "@/components/ui/alert-dialog";
-import { useState } from "react";
+} from '@/components/ui/alert-dialog';
+import { useState } from 'react';
 import CreateSpaceModal, {
   type CreateSpaceData,
-} from "@/components/space/CreateSpaceModal";
+} from '@/components/space/CreateSpaceModal';
 
 export interface HomeSidebarSpace {
   spaceId: string;
@@ -45,7 +45,7 @@ interface HomeLeftPanelProps {
   onCreate: (spaceData: CreateSpaceData) => Promise<string>;
 }
 
-const spacesBaseUrl = "/spaces/";
+const spacesBaseUrl = '/spaces/';
 
 export default function HomeLeftPanel({
   ownedSpaces,
@@ -79,8 +79,8 @@ export default function HomeLeftPanel({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton 
-                  isActive={pathname === "/"} 
+                <SidebarMenuButton
+                  isActive={pathname === '/'}
                   asChild
                   className="flex flex-row gap-3 h-[40px]"
                 >
@@ -110,7 +110,7 @@ export default function HomeLeftPanel({
                       <a href={`${spacesBaseUrl}${space.spaceId}`}>
                         <Avatar name={space.spaceName}>
                           <AvatarImage
-                            src={space.spaceImage ?? ""}
+                            src={space.spaceImage ?? ''}
                             alt="Space Image"
                             sizes="sm"
                           />
@@ -144,7 +144,7 @@ export default function HomeLeftPanel({
                       <a href={`${spacesBaseUrl}${space.spaceId}`}>
                         <Avatar name={space.spaceName}>
                           <AvatarImage
-                            src={space.spaceImage ?? ""}
+                            src={space.spaceImage ?? ''}
                             alt="Space Image"
                             sizes="sm"
                           />
@@ -178,7 +178,7 @@ export default function HomeLeftPanel({
                       <a href={`${spacesBaseUrl}${space.spaceId}`}>
                         <Avatar name={space.spaceName}>
                           <AvatarImage
-                            src={space.spaceImage ?? ""}
+                            src={space.spaceImage ?? ''}
                             alt="Space Image"
                             sizes="sm"
                           />
@@ -219,7 +219,7 @@ export default function HomeLeftPanel({
           <Link href="/profile">
             <Avatar name={currentUserName}>
               <AvatarImage
-                src={currentUserProfilePic ?? ""}
+                src={currentUserProfilePic ?? ''}
                 alt="Profile Picture"
                 sizes="sm"
               />

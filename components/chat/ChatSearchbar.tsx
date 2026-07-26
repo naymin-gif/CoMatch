@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import SearchBar from "@/components/ui/searchbar";
+import { useMemo, useState } from 'react';
+import SearchBar from '@/components/ui/searchbar';
 
 export interface ChatSearchParticipant {
   id: string;
@@ -30,21 +30,13 @@ interface ChatSearchbarProps<T extends ChatSearchConversation> {
 }
 
 function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function HighlightedText({
-  text,
-  query,
-}: {
-  text: string;
-  query: string;
-}) {
+function HighlightedText({ text, query }: { text: string; query: string }) {
   if (!query) return <>{text}</>;
 
-  const parts = text.split(
-    new RegExp(`(${escapeRegExp(query)})`, "gi"),
-  );
+  const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'));
 
   return (
     <>
@@ -58,7 +50,7 @@ function HighlightedText({
           </mark>
         ) : (
           part
-        ),
+        )
       )}
     </>
   );
@@ -67,26 +59,30 @@ function HighlightedText({
 export default function ChatSearchbar<T extends ChatSearchConversation>({
   conversations,
   onSelectConversation,
-  placeholder = "Search chats...",
-  className = "",
+  placeholder = 'Search chats...',
+  className = '',
 }: ChatSearchbarProps<T>) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLocaleLowerCase();
 
   const matchingConversations = useMemo(() => {
     if (!normalizedQuery) return [];
 
     return conversations.flatMap((conversation) => {
-      const { otherParticipant, lastMessage, searchableMessages = [] } =
-        conversation;
-      const accountMatches = [otherParticipant.name, otherParticipant.email].some(
-        (value) => value?.toLocaleLowerCase().includes(normalizedQuery),
-      );
+      const {
+        otherParticipant,
+        lastMessage,
+        searchableMessages = [],
+      } = conversation;
+      const accountMatches = [
+        otherParticipant.name,
+        otherParticipant.email,
+      ].some((value) => value?.toLocaleLowerCase().includes(normalizedQuery));
       const lastMessageMatches = lastMessage
         ?.toLocaleLowerCase()
         .includes(normalizedQuery);
       const matchingHistoryMessage = searchableMessages.find((message) =>
-        message.toLocaleLowerCase().includes(normalizedQuery),
+        message.toLocaleLowerCase().includes(normalizedQuery)
       );
 
       if (!accountMatches && !lastMessageMatches && !matchingHistoryMessage) {
@@ -100,7 +96,7 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
             matchingHistoryMessage ??
             lastMessage ??
             otherParticipant.email ??
-            "No messages yet",
+            'No messages yet',
         },
       ];
     });
@@ -108,7 +104,7 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
 
   const handleSelect = (conversation: T) => {
     onSelectConversation(conversation);
-    setQuery("");
+    setQuery('');
   };
 
   return (
@@ -118,7 +114,7 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Escape") setQuery("");
+          if (event.key === 'Escape') setQuery('');
         }}
       />
 
@@ -136,7 +132,7 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
                   .filter(Boolean)
                   .slice(0, 2)
                   .map((part) => part[0]?.toUpperCase())
-                  .join("");
+                  .join('');
 
                 return (
                   <li key={conversation.id}>
@@ -156,7 +152,7 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
                           aria-hidden="true"
                           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600"
                         >
-                          {initials || "?"}
+                          {initials || '?'}
                         </span>
                       )}
 
@@ -182,7 +178,7 @@ export default function ChatSearchbar<T extends ChatSearchConversation>({
                               query={normalizedQuery}
                             />
                           ) : (
-                            "No messages yet"
+                            'No messages yet'
                           )}
                         </span>
                       </span>

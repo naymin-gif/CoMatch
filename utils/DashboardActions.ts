@@ -118,8 +118,12 @@ export async function updateApplicationStatus(
   }
 
   const postData = appData.posts as any;
-  const ownerId = Array.isArray(postData) ? postData[0]?.owner_id : postData?.owner_id;
-  const spaceId = Array.isArray(postData) ? postData[0]?.space_id : postData?.space_id;
+  const ownerId = Array.isArray(postData)
+    ? postData[0]?.owner_id
+    : postData?.owner_id;
+  const spaceId = Array.isArray(postData)
+    ? postData[0]?.space_id
+    : postData?.space_id;
 
   if (ownerId !== currentUserId) {
     throw new Error(
