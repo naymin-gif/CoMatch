@@ -354,6 +354,8 @@ export default function PostPage({
                         ownerAvatarUrl={post.ownerAvatarUrl}
                         isOwner={post.isOwner}
                         initialHasApplied={post.initialHasApplied}
+                        currentUserName={currentUserName}
+                        currentUserAvatar={currentUserAvatar}
                         postDate={post.postDate}
                         initialLikeCount={post.initialLikeCount}
                         postTitle={post.postTitle}

@@ -43,6 +43,8 @@ export default function HomePosts({
             ownerAvatarUrl={post.ownerAvatarUrl}
             isOwner={post.isOwner}
             initialHasApplied={post.initialHasApplied}
+            currentUserName={post.currentUserName}
+            currentUserAvatar={post.currentUserAvatar}
             postDate={post.postDate}
             initialLikeCount={post.initialLikeCount}
             postTitle={post.postTitle}

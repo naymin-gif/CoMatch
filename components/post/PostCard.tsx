@@ -51,6 +51,8 @@ export interface PostCardProps {
     ownerAvatarUrl?: string;
     isOwner?: boolean;
     initialHasApplied?: boolean;
+    currentUserName?: string;
+    currentUserAvatar?: string;
     postDate: string;
     initialLikeCount: number;
     postTitle: string;
@@ -72,6 +74,8 @@ export default function PostCard({
     ownerAvatarUrl,
     isOwner = false,
     initialHasApplied = false,
+    currentUserName,
+    currentUserAvatar,
     postDate,
     initialLikeCount,
     postTitle,
@@ -97,6 +101,7 @@ export default function PostCard({
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
     const [applied, setApplied] = useState<boolean>(initialHasApplied);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [currentUserProfile, setCurrentUserProfile] = useState<{ name?: string; avatarUrl?: string }>({});
 
     // Initializing state with props
     const [likeCount, setLikeCount] = useState<number>(initialLikeCount);
@@ -110,16 +115,29 @@ export default function PostCard({
                 const uid = data.user.id;
                 setCurrentUserId(uid);
 
-                // Direct DB check: Has current user applied to this post?
-                const { data: appData } = await supabase
-                    .from('applications')
-                    .select('id')
-                    .eq('post_id', postid)
-                    .eq('applicant_id', uid)
-                    .maybeSingle();
+                const [appResult, profileResult] = await Promise.all([
+                    supabase
+                        .from('applications')
+                        .select('id')
+                        .eq('post_id', postid)
+                        .eq('applicant_id', uid)
+                        .maybeSingle(),
+                    supabase
+                        .from('profiles')
+                        .select('name, profile_pic_url')
+                        .eq('id', uid)
+                        .maybeSingle()
+                ]);
 
-                if (appData) {
+                if (appResult.data) {
                     setApplied(true);
+                }
+
+                if (profileResult.data) {
+                    setCurrentUserProfile({
+                        name: profileResult.data.name || "Anonymous User",
+                        avatarUrl: profileResult.data.profile_pic_url || undefined
+                    });
                 }
             }
         });
@@ -324,8 +342,8 @@ export default function PostCard({
                                 </DrawerHeader>
                                 <div className="flex-1 p-4 overflow-y-auto">
                                     <CommentPage 
-                                        profile_pic_url={ownerAvatarUrl || ""}
-                                        name={ownerName}
+                                        profile_pic_url={currentUserAvatar || currentUserProfile.avatarUrl || ""}
+                                        name={currentUserName || currentUserProfile.name || "Anonymous User"}
                                         comments={comments}
                                         postid={postid}
                                         onAddComment={handleNewComment}
