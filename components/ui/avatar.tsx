@@ -6,11 +6,13 @@ import { Avatar as AvatarPrimitive } from 'radix-ui';
 import { cn } from '@/lib/utils';
 
 function getInitials(name?: string) {
-  if (!name) return '';
-  const parts = name.trim().split(/\s+/);
+  if (!name || !name.trim()) return '';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '';
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  const first = parts[0] || '';
+  const last = parts[parts.length - 1] || '';
+  if (parts.length === 1) return first.substring(0, 2).toUpperCase();
+  return ((first[0] || '') + (last[0] || '')).toUpperCase();
 }
 
 const AvatarContext = React.createContext<{ name?: string }>({});
