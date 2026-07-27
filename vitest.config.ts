@@ -11,8 +11,9 @@ function loadEnvLocal() {
     const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
     lines.forEach((line) => {
       const parts = line.split('=');
-      if (parts.length >= 2) {
-        env[parts[0].trim()] = parts.slice(1).join('=').trim();
+      const key = parts[0]?.trim();
+      if (key && parts.length >= 2) {
+        env[key] = parts.slice(1).join('=').trim();
       }
     });
   }
