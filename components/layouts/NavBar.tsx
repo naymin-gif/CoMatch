@@ -20,6 +20,8 @@ export default function NavBar() {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [hasNotifications, setHasNotifications] = useState<boolean>(false);
   const pageTitles: Record<string, string> = {
+    '/login': 'Sign In',
+    '/register': 'Register',
     '/profile': 'My Profile',
     '/dashboard': 'Dashboard',
     '/chat': 'Chats',
