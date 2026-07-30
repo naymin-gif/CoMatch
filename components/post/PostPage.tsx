@@ -302,7 +302,7 @@ export default function PostPage({
                 commitmentLevel: postData.commitmentLevel,
                 rolesAndPositions: validRoles.map(r => ({
                     role: r.role,
-                    position: r.quantity
+                    position: r.quantity ?? 1
                 })),
                 initialComments: [],
                 onLike: handleLike,

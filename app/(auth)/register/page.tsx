@@ -57,6 +57,13 @@ export default function RegisterPage() {
                 throw error;
             }
 
+            if (data.user) {
+                await supabase.from('profiles').upsert({
+                    id: data.user.id,
+                    name: name.trim(),
+                });
+            }
+
             // A session means Supabase has logged the new user in.
             if (!data.session) {
                 setErrorMsg(

@@ -25,6 +25,8 @@ export default function NavBar() {
     '/profile': 'My Profile',
     '/dashboard': 'Dashboard',
     '/chat': 'Chats',
+    '/login': 'Sign In',
+    '/register': 'Sign Up',
   };
   const pathname = usePathname();
   const currentTitle = pageTitles[pathname] || 'Spaces';
