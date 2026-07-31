@@ -17,6 +17,11 @@ import PostPage from '@/components/post/PostPage';
 import SpaceSettings from '@/components/space/SpaceSettings';
 import SpaceEdit from '@/components/space/SpaceEdit';
 import Loading from '@/app/loading';
+import { Button } from '@/components/ui/button'; 
+import { FaPenToSquare } from "react-icons/fa6";
+import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
+import CreatePostModal from '@/components/post/CreatePostModal';
+import { type NewPostData } from '@/components/post/PostPage';
 
 // Static Assets
 import { createClient } from '@/utils/clients';
@@ -69,6 +74,79 @@ export default function SpacePage({ params }: SpacePageProps) {
   const [ownedSpaces, setOwnedSpaces] = useState<HomeSidebarSpace[]>([]);
   const [joinedSpaces, setJoinedSpaces] = useState<HomeSidebarSpace[]>([]);
   const [otherSpaces, setOtherSpaces] = useState<HomeSidebarSpace[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  // Cancel create post
+  const onCancelCreatePost = () => {
+    setIsModalOpen(false);
+  };
+
+  // Handle Post Creation
+  const handlePost = async (postData: NewPostData) => {
+      try {
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+          if (authError || !user) {
+              throw new Error("User not authenticated");
+          }
+
+          let imageUrl: string | undefined = undefined;
+
+          if (postData.imageFile) {
+              const fileExt = postData.imageFile.name.split('.').pop();
+              const fileName = `${crypto.randomUUID()}.${fileExt}`;
+              const filePath = `${user.id}/${fileName}`;
+
+              const { error: uploadError } = await supabase.storage
+                  .from('post_images')
+                  .upload(filePath, postData.imageFile);
+
+              if (uploadError) throw uploadError;
+
+              const { data: publicUrlData } = supabase.storage
+                  .from('post_images')
+                  .getPublicUrl(filePath);
+
+              imageUrl = publicUrlData.publicUrl;
+          }
+
+          const { data: postResult, error: postError } = await supabase
+              .from('posts')
+              .insert({
+                  owner_id: user.id,
+                  space_id: spaceId,
+                  title: postData.title,
+                  description: postData.description,
+                  commitment_level: postData.commitmentLevel,
+                  image_url: imageUrl,
+              })
+              .select()
+              .single();
+
+          if (postError) throw postError;
+
+          const validRoles = postData.roles
+              .map((role, index) => ({ role: role.trim(), quantity: postData.quantities[index] }))
+              .filter(r => r.role !== "");
+
+          if (validRoles.length > 0) {
+              const rolesToInsert = validRoles.map(r => ({
+                  post_id: postResult.id,
+                  role: r.role,
+                  quantity: r.quantity
+              }));
+
+              const { error: rolesError } = await supabase
+                  .from('roles')
+                  .insert(rolesToInsert);
+
+              if (rolesError) throw rolesError;
+          }
+      } catch (error) {
+          console.error("Failed to create post:", JSON.stringify(error, null, 2));
+      }
+  }
 
   // Load Space Data
   useEffect(() => {
@@ -466,7 +544,32 @@ export default function SpacePage({ params }: SpacePageProps) {
           currentUserName={currentUser?.name ?? 'Anonymous User'}
           currentUserProfilePic={currentUser?.profile_pic_url}
         />
-        <main className="min-w-0 flex-1">{spacePageContent}</main>
+        <main className="min-w-0 flex-1">
+          {spacePageContent}
+          <Button 
+            className="fixed bottom-15 right-20 z-50 shadow-lg rounded-2xl p-5 text-blue-500" 
+            variant="outline"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <FaPenToSquare /> New Post
+          </Button>
+
+          <AlertDialog
+            open={isModalOpen}
+            onOpenChange={setIsModalOpen}
+          >
+            <AlertDialogContent className='p-0'>
+              <CreatePostModal
+                onCancel={onCancelCreatePost}
+                onPost={async (data: NewPostData) => {
+                  await handlePost(data);
+                  setIsModalOpen(false);
+                }}
+                initialImage={selectedImage}
+              />
+            </AlertDialogContent>
+          </AlertDialog>
+        </main>
       </div>
     </SidebarProvider>
   );
