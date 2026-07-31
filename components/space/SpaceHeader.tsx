@@ -94,6 +94,7 @@ export default function SpaceHeader({
             <TabsTrigger value="about">About</TabsTrigger>
             <TabsTrigger value="posts">Posts</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="myposts">My Posts</TabsTrigger>
             {currentUserIsOwner && (
               <TabsTrigger value="settings">Settings</TabsTrigger>
             )}

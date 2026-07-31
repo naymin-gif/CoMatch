@@ -380,6 +380,8 @@ export default function SpacePage({ params }: SpacePageProps) {
           currentUserIsOwner={currentUser?.id === ownerProfile.id}
           onJoinToggle={handleJoinToggle}
         />
+
+        {/* About Space Tab */}
         <TabsContent value="about">
           <AboutSpace
             name={spaceName}
@@ -391,6 +393,8 @@ export default function SpacePage({ params }: SpacePageProps) {
             spaceDescription={spaceDesc}
           />
         </TabsContent>
+
+        {/* Members Tab */}
         <TabsContent value="members">
           <SpaceMembers
             members={members}
@@ -400,14 +404,30 @@ export default function SpacePage({ params }: SpacePageProps) {
             space_id={spaceId}
           />
         </TabsContent>
+
+        {/* Posts Tab */}
         <TabsContent value="posts">
           <PostPage
             currentUserName={currentUser?.name || 'Anonymous User'}
             postIds={postIds}
             spaceId={spaceId}
             currentUserAvatar={currentUser?.profile_pic_url}
+            showOwnPostsOnly={false}
           />
         </TabsContent>
+
+        {/* My Posts Tab */}
+        <TabsContent value="myposts">
+          <PostPage
+            currentUserName={currentUser?.name || 'Anonymous User'}
+            postIds={postIds}
+            spaceId={spaceId}
+            currentUserAvatar={currentUser?.profile_pic_url}
+            showOwnPostsOnly={true}
+          />
+        </TabsContent>
+
+        {/* Settings Tab: Only visible for owner */}
         {currentUser?.id === ownerProfile.id && (
           <TabsContent value="settings">
             {isEditing ? (

@@ -13,6 +13,7 @@ interface PostPageProps {
     postIds: string[]
     spaceId: string;
     currentUserAvatar?: string;
+    showOwnPostsOnly: boolean;
 }
 
 export interface Comment {
@@ -41,6 +42,7 @@ export interface NewPostData {
 
 export default function PostPage({
     currentUserName,
+    showOwnPostsOnly,
     postIds,
     spaceId,
     currentUserAvatar,
@@ -87,42 +89,47 @@ export default function PostPage({
 
                 if (error) throw error;
 
-                const formattedPosts: PostCardProps[] = data.map((post: any) => ({
-                    postid: post.id,
-                    ownerId: post.owner_id,
-                    ownerName: post.profiles?.name || "Unknown User",
-                    ownerAvatarUrl: post.profiles?.profile_pic_url,
-                    isOwner: Boolean(currentUserId && post.owner_id === currentUserId),
-                    initialHasApplied: Boolean(
-                        currentUserId && 
-                        post.applications?.some((app: any) => app.applicant_id === currentUserId)
-                    ),
-                    postDate: timeAgo(post.created_at),
+                const formattedPosts: PostCardProps[] = data
+                        .filter(
+                            (post: any) =>
+                                !showOwnPostsOnly || post.owner_id === currentUserId
+                        )
+                    .map((post: any) => ({
+                        postid: post.id,
+                        ownerId: post.owner_id,
+                        ownerName: post.profiles?.name || "Unknown User",
+                        ownerAvatarUrl: post.profiles?.profile_pic_url,
+                        isOwner: Boolean(currentUserId && post.owner_id === currentUserId),
+                        initialHasApplied: Boolean(
+                            currentUserId && 
+                            post.applications?.some((app: any) => app.applicant_id === currentUserId)
+                        ),
+                        postDate: timeAgo(post.created_at),
 
-                    initialLikeCount: post.post_likes ? post.post_likes.length : 0,
-                    initialIsLiked: post.post_likes 
-                        ? post.post_likes.some((like: any) => like.profile_id === currentUserId) 
-                        : false,
-                    postTitle: post.title,
-                    postDescription: post.description,
-                    postImageUrl: post.image_url,
-                    commitmentLevel: post.commitment_level,
+                        initialLikeCount: post.post_likes ? post.post_likes.length : 0,
+                        initialIsLiked: post.post_likes 
+                            ? post.post_likes.some((like: any) => like.profile_id === currentUserId) 
+                            : false,
+                        postTitle: post.title,
+                        postDescription: post.description,
+                        postImageUrl: post.image_url,
+                        commitmentLevel: post.commitment_level,
 
-                    rolesAndPositions: post.roles ? post.roles.map((r: any) => ({
-                        role: r.role,
-                        position: r.quantity
-                    })) : [],
+                        rolesAndPositions: post.roles ? post.roles.map((r: any) => ({
+                            role: r.role,
+                            position: r.quantity
+                        })) : [],
 
-                    initialComments: post.post_comments ? post.post_comments.map((comment: any) => ({
-                        id: comment.id,
-                        content: comment.content,
-                        created_at: comment.created_at,
-                        profiles: {
-                            name: comment.profiles?.name || "Unknown User",
-                            profile_pic_url: comment.profiles?.profile_pic_url
-                        }
-                    })) : []
-                }));
+                        initialComments: post.post_comments ? post.post_comments.map((comment: any) => ({
+                            id: comment.id,
+                            content: comment.content,
+                            created_at: comment.created_at,
+                            profiles: {
+                                name: comment.profiles?.name || "Unknown User",
+                                profile_pic_url: comment.profiles?.profile_pic_url
+                            }
+                        })) : []
+                    }));
 
                 setFetchedPosts(formattedPosts);
             } catch (err) {
@@ -317,7 +324,7 @@ export default function PostPage({
         }
     }
 
-    if (postIds.length === 0) {
+    if (fetchedPosts.length === 0) {
         return (
             <div className="flex flex-col gap-4">
                 <PostPageHeader
@@ -325,9 +332,13 @@ export default function PostPage({
                     onPost={handlePost}
                     profile_pic_url={currentUserAvatar}
                 />
-                <div className="flex flex-row gap-3 items-center mt-3">
+                <div className="flex flex-row gap-3 items-center justify-center mt-3">
                     <TbFileSad />
-                    <span> Posts will appear here when members post teammate calls. </span>
+                    {showOwnPostsOnly ? (
+                        <span> Your posts will appear here you post teammate calls. </span>
+                    ) : (
+                        <span> Posts will appear here when members post teammate calls. </span>
+                    )}
                 </div>
             </div>
         );

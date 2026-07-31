@@ -21,11 +21,9 @@ export default function NavBar() {
   const [hasNotifications, setHasNotifications] = useState<boolean>(false);
   const pageTitles: Record<string, string> = {
     '/login': 'Sign In',
-    '/register': 'Register',
     '/profile': 'My Profile',
     '/dashboard': 'Dashboard',
     '/chat': 'Chats',
-    '/login': 'Sign In',
     '/register': 'Sign Up',
   };
   const pathname = usePathname();
