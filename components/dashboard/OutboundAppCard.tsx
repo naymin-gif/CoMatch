@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AiOutlineCheckCircle, AiOutlineClockCircle } from "react-icons/ai";
 import { FaRegCircleXmark } from "react-icons/fa6";
+import Link from "next/link";
 
 export type OutboundApplicationStatus = "Pending" | "Approved" | "Rejected";
 
@@ -23,7 +24,7 @@ export interface OutboundAppCardProps {
   postId: string;
   status: OutboundApplicationStatus;
   timeAgo: string;
-  isUpdated?: boolean;
+  isUpdated?: boolean; 
 }
 
 export default function OutboundAppCard({
@@ -70,7 +71,9 @@ export default function OutboundAppCard({
                 />
                 <AvatarFallback />
               </Avatar>
-              <span>{ownerName}</span>
+              <Link href={`/profile/${ownerId}`} className="hover:underline">
+                {ownerName}
+              </Link>
             </div>
           </div>
 

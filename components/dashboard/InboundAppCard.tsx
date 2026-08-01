@@ -33,6 +33,7 @@ import { AiOutlineCheckCircle } from "react-icons/ai";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { Badge } from "@/components/ui/badge";
 import { AiOutlineClockCircle } from "react-icons/ai";
+import Link from "next/link";
 
 export interface InboundAppCardProps {
     postTitle: string;
@@ -105,7 +106,9 @@ export default function InboundAppCard({
                                 />
                                 <AvatarFallback />
                             </Avatar>
-                            <span>{applicantName}</span>
+                            <Link href={`/profile/${applicantId}`} className="hover:underline">
+                                {applicantName}
+                            </Link>
                         </div>
                     </div>
 
