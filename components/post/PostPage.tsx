@@ -7,6 +7,7 @@ import { TbFileSad } from "react-icons/tb";
 import PostPageHeader from "./PostPageHeader";
 import { createClient } from "@/utils/clients";
 import timeAgo from "@/lib/TimeAgo";
+import { useSearchParams } from "next/navigation";
 
 interface PostPageProps {
     currentUserName: string;
@@ -47,9 +48,13 @@ export default function PostPage({
     spaceId,
     currentUserAvatar,
 }: PostPageProps) {
+    const searchParams = useSearchParams();
+    const sharedPostId = searchParams.get("post");
+    const supabase = createClient();
+
     const [fetchedPosts, setFetchedPosts] = useState<PostCardProps[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const supabase = createClient();
+    const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
 
     // Fetch Post data
     useEffect(() => {
@@ -96,6 +101,7 @@ export default function PostPage({
                         )
                     .map((post: any) => ({
                         postid: post.id,
+                        spaceId,
                         ownerId: post.owner_id,
                         ownerName: post.profiles?.name || "Unknown User",
                         ownerAvatarUrl: post.profiles?.profile_pic_url,
@@ -142,8 +148,31 @@ export default function PostPage({
         fetchPostData();
     }, [postIds]);
 
-    // Functions
+    // scroll effect 
+    useEffect(() => {
+        if (isLoading || !sharedPostId) return;
 
+        const targetPost = document.getElementById(`post-${sharedPostId}`);
+
+        if (!targetPost) return;
+
+        setHighlightedPostId(sharedPostId);
+
+        requestAnimationFrame(() => {
+            targetPost.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            });
+        });
+
+        const timer = window.setTimeout(() => {
+            setHighlightedPostId(null);
+        }, 1000);
+
+        return () => window.clearTimeout(timer);
+    }, [isLoading, sharedPostId, fetchedPosts]);
+
+    // Functions
     // Handle like 
     const handleLike = async (postId: string, previousLiked: boolean) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -298,6 +327,7 @@ export default function PostPage({
 
             const newPostCardData: PostCardProps = {
                 postid: postResult.id,
+                spaceId,
                 ownerName: currentUserName,
                 ownerAvatarUrl: undefined,
                 postDate: timeAgo(postResult.created_at || new Date().toISOString()),
@@ -358,6 +388,7 @@ export default function PostPage({
             <div className="flex flex-col gap-4">
                 {fetchedPosts.map((post) => (
                     <PostCard
+                        spaceId={spaceId}
                         key={post.postid}
                         postid={post.postid}
                         ownerId={post.ownerId}
@@ -379,6 +410,7 @@ export default function PostPage({
                         onLike={handleLike}
                         onNewComment={handleNewComment}
                         onApply={handleApply}
+                        isHighlighted={highlightedPostId === post.postid}
                     />
                 ))}
             </div>

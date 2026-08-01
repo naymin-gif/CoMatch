@@ -175,6 +175,7 @@ export default function HomePage() {
           .select(
             `
             id,
+            space_id,
             owner_id,
             title,
             description,
@@ -201,6 +202,7 @@ export default function HomePage() {
 
         const formattedPosts: PostCardProps[] = data.map((post: any) => ({
           postid: post.id,
+          spaceId: post.space_id,
           ownerId: post.owner_id,
           ownerName: post.profiles?.name || "Unknown User",
           ownerAvatarUrl: post.profiles?.profile_pic_url,

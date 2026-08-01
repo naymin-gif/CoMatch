@@ -32,6 +32,7 @@ export default function HomePosts({
       <div className="flex w-full max-w-2xl flex-col items-center gap-6">
         {posts.map((post) => (
           <PostCard
+            spaceId={post.spaceId}
             key={post.postid}
             postid={post.postid}
             ownerId={post.ownerId}

@@ -35,12 +35,6 @@ import {
     TableBody,
     TableCell,
 } from "@/components/ui/table"; 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 
 import { createClient } from "@/utils/clients";
 
@@ -62,6 +56,8 @@ export interface PostCardProps {
     rolesAndPositions: RoleAndPosition[];
     initialComments: Comment[];
     initialIsLiked?: boolean;
+    spaceId: string;
+    isHighlighted?: boolean;
     onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
     onNewComment?: (postId: string, newComment: Comment) => Promise<void>;
     onApply?: (postId: string, roles: string[], message: string) => Promise<void>;
@@ -85,6 +81,8 @@ export default function PostCard({
     rolesAndPositions,
     initialComments,
     initialIsLiked = false,
+    spaceId,
+    isHighlighted = false,
     onLike,
     onNewComment,
     onApply,
@@ -147,7 +145,7 @@ export default function PostCard({
     
     const displayedRoles = rolesSeeMore ? rolesAndPositions : rolesAndPositions.slice(0, 3);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-    const postLink = `${baseUrl}/posts/${postid}`;
+    const postLink = `${baseUrl}/spaces/${spaceId}?post=${postid}`;
 
     // handleLike function
     const handleLike = async () => {
@@ -200,9 +198,13 @@ export default function PostCard({
     }
 
     return (
-        <Card 
-            className="w-2xl bg-comatch-background relative overflow-hidden" 
-            ref={containerRef}
+        <Card
+            id={`post-${postid}`}
+            className={`w-2xl relative overflow-hidden scroll-mt-6 transition-colors duration-500 ${
+                isHighlighted
+                ? "bg-muted"
+                : "bg-comatch-background"
+            }`}
         >
             {/* Header: Name and Date */}
             <CardHeader className="flex flex-row gap-4 items-center">
