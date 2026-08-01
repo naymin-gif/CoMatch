@@ -22,6 +22,7 @@ import { FaPenToSquare } from "react-icons/fa6";
 import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
 import CreatePostModal from '@/components/post/CreatePostModal';
 import { type NewPostData } from '@/components/post/PostPage';
+import { type CreateSpaceData } from '@/components/space/CreateSpaceModal';
 
 // Static Assets
 import { createClient } from '@/utils/clients';
@@ -147,6 +148,103 @@ export default function SpacePage({ params }: SpacePageProps) {
           console.error("Failed to create post:", JSON.stringify(error, null, 2));
       }
   }
+
+  // handle create space
+  const handleCreateSpace = async (
+    spaceData: CreateSpaceData
+  ): Promise<string> => {
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error('You must be logged in to create a space.');
+      }
+
+      const trimmedName = spaceData.name.trim();
+
+      if (!trimmedName) {
+        throw new Error('Space name is required.');
+      }
+
+      const newSpaceId = crypto.randomUUID();
+      let imageUrl: string | null = null;
+
+      if (spaceData.image) {
+        const imageResponse = await fetch(spaceData.image);
+        const imageBlob = await imageResponse.blob();
+
+        const rawExtension = imageBlob.type.split('/')[1] || 'png';
+        const extension = rawExtension === 'jpeg' ? 'jpg' : rawExtension;
+        const imagePath = `public/${newSpaceId}.${extension}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('space-images')
+          .upload(imagePath, imageBlob, {
+            contentType: imageBlob.type,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('space-images')
+          .getPublicUrl(imagePath);
+
+        imageUrl = publicUrlData.publicUrl;
+      }
+
+      const now = new Date().toISOString();
+
+      const { data: createdSpace, error: createError } = await supabase
+        .from('spaces')
+        .insert({
+          id: newSpaceId,
+          name: trimmedName,
+          description: spaceData.description.trim(),
+          external_links: spaceData.externalLinks
+            .map((link) => link.trim())
+            .filter(Boolean),
+          owner_id: user.id,
+          image: imageUrl,
+          created_at: now,
+          last_edited_at: now,
+        })
+        .select('id, name, image')
+        .single();
+
+      if (createError) throw createError;
+
+      setOwnedSpaces((previousSpaces) => [
+        ...previousSpaces,
+        {
+          spaceId: createdSpace.id,
+          spaceName: createdSpace.name,
+          spaceImage: createdSpace.image,
+        },
+      ]);
+
+      toast('Space created successfully!');
+
+      return createdSpace.id;
+    } catch (error) {
+      console.error('Failed to create space:', error);
+
+      toast(
+        <div className="flex items-center gap-2">
+          <LuTriangleAlert className="text-comatch-danger" />
+          <span>
+            {error instanceof Error
+              ? error.message
+              : 'Failed to create space.'}
+          </span>
+        </div>
+      );
+
+      throw error;
+    }
+  };
 
   // Load Space Data
   useEffect(() => {
@@ -303,7 +401,7 @@ export default function SpacePage({ params }: SpacePageProps) {
     loadSpaceData();
   }, [spaceId, supabase]);
 
-  // Save Function
+  // Save Function - Edit space
   const handleSave = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -375,7 +473,7 @@ export default function SpacePage({ params }: SpacePageProps) {
     }
   };
 
-  // Cancel Function
+  // Cancel Function - edit space
   const onCancel = () => {
     if (space) {
       setSpaceName(space.name);
@@ -543,6 +641,7 @@ export default function SpacePage({ params }: SpacePageProps) {
           currentUserId={currentUser?.id ?? ''}
           currentUserName={currentUser?.name ?? 'Anonymous User'}
           currentUserProfilePic={currentUser?.profile_pic_url}
+          onCreate={handleCreateSpace}
         />
         <main className="min-w-0 flex-1">
           {spacePageContent}

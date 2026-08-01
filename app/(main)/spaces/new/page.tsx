@@ -11,6 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AlertDialog, 
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
 
 export default function CreateSpacePage() {
   const router = useRouter();
@@ -24,6 +33,8 @@ export default function CreateSpacePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState<boolean>(false); 
+
 
   useEffect(() => {
     const checkUser = async () => {
@@ -56,7 +67,7 @@ export default function CreateSpacePage() {
     setErrorMsg('');
 
     try {
-      // 1. Verify space name uniqueness
+      // 1. Check existing spaces with the same name
       const { data: existingSpace, error: checkError } = await supabase
         .from('spaces')
         .select('id, name')
@@ -68,11 +79,7 @@ export default function CreateSpacePage() {
       }
 
       if (existingSpace) {
-        setErrorMsg(
-          `A space named "${name.trim()}" already exists. Please join the existing space.`
-        );
-        setIsLoading(false);
-        return;
+        setIsAlertModalOpen(true); 
       }
 
       // 2. Upload Icon if present

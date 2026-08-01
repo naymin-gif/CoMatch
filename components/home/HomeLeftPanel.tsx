@@ -43,7 +43,7 @@ interface HomeLeftPanelProps {
   currentUserName: string;
   currentUserProfilePic?: string;
   onExploreSpaces?: () => void;
-  onCreate?: (spaceData: CreateSpaceData) => Promise<string>;
+  onCreate: (spaceData: CreateSpaceData) => Promise<string>;
 }
 
 const spacesBaseUrl = '/spaces/';
@@ -65,11 +65,14 @@ export default function HomeLeftPanel({
     setIsModalOpen(false);
   };
 
-  const handleCreate = async (spaceData: CreateSpaceData) => {
-    if (!onCreate) return "";
+  const handleCreate = async (
+    spaceData: CreateSpaceData
+  ): Promise<string> => {
     const createdSpaceId = await onCreate(spaceData);
+
     setIsModalOpen(false);
     router.push(`${spacesBaseUrl}${createdSpaceId}`);
+
     return createdSpaceId;
   };
 
