@@ -22,6 +22,8 @@ export interface OutboundAppCardProps {
   appliedRole: string[]; 
   message?: string;
   postId: string;
+  spaceId: string;
+  spaceName: string;
   status: OutboundApplicationStatus;
   timeAgo: string;
   isUpdated?: boolean; 
@@ -35,16 +37,26 @@ export default function OutboundAppCard({
   appliedRole,
   message,
   postId,
+  spaceId,
+  spaceName, 
   status,
   timeAgo, 
   isUpdated = false,
 }: OutboundAppCardProps) {
+  const postLink = `/spaces/${spaceId}?post=${postId}`;
+  const displaySpaceName = spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName; 
+
   return (
     <Card className="bg-comatch-background w-[500px] p-3">
       <CardHeader>
         <div className="flex flex-row justify-between items-center">
-          <CardTitle>
-            {postTitle}
+          <CardTitle className="hover:underline hover:text-blue-500 flex flex-row gap-3 items-center">
+            <Link href={postLink}>
+              {postTitle}
+            </Link>
+            <Badge variant="blue">
+                {displaySpaceName}
+            </Badge>
           </CardTitle>
           {isUpdated && (
             <Badge className="bg-blue-600 hover:bg-blue-700 text-white animate-pulse font-bold text-[10px]">

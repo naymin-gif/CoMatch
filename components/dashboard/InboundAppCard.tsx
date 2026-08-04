@@ -43,7 +43,9 @@ export interface InboundAppCardProps {
     appliedRole: string[]; 
     message?: string;
     postId: string;
+    spaceId: string;
     timeAgo: string;
+    spaceName: string;
     status: "Pending" | "Approved" | "Rejected";
     isNew?: boolean;
     onApprove: () => Promise<void>;
@@ -59,7 +61,10 @@ export default function InboundAppCard({
     applicantName,
     appliedRole,
     message,
+    postId,
+    spaceId,
     timeAgo,
+    spaceName, 
     status,
     isNew = false,
     onApprove,
@@ -73,13 +78,20 @@ export default function InboundAppCard({
                 : null;
 
     const hasDecision = decision !== null;
+    const postLink = `/spaces/${spaceId}?post=${postId}`;
+    const displaySpaceName = spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName; 
 
     return (
         <Card className="bg-comatch-background p-3 w-[500px]">
             <CardHeader>
                 <div className="flex flex-row justify-between items-center">
-                    <CardTitle>
-                        {postTitle}
+                    <CardTitle className="hover:underline hover:text-blue-500 flex flex-row gap-3 items-center">
+                        <Link href={postLink}>
+                            {postTitle}
+                        </Link>
+                        <Badge variant="blue">
+                            {displaySpaceName}
+                        </Badge>
                     </CardTitle>
                     {isNew && (
                         <Badge variant="destructive" className="animate-pulse font-bold text-[10px]">

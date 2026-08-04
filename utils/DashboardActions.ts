@@ -15,6 +15,7 @@ export interface Dashboard {
     id: string;
     title: string;
     owner_id?: string;
+    space_id: string;
     spaces?: {
       name: string;
     } | null;
@@ -81,7 +82,8 @@ export async function getRequestsReceived(
       posts!inner (
         id,
         title,
-        owner_id
+        owner_id,
+        space_id
       )
     `
     )

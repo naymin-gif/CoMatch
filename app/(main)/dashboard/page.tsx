@@ -11,6 +11,7 @@ import OutboundPage from "@/components/dashboard/OutboundPage";
 import type { InboundAppCardProps } from "@/components/dashboard/InboundAppCard";
 import type { OutboundAppCardProps } from "@/components/dashboard/OutboundAppCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { PiAirplaneLandingBold } from "react-icons/pi";
 import { PiAirplaneTakeoffFill } from "react-icons/pi";
@@ -28,6 +29,7 @@ const supabase = createBrowserClient(
 
 type TabState = "inbound" | "outbound";
 type OwnerNames = Record<string, string>;
+type SpaceNames = Record<string, string>;
 
 async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
   const { data, error } = await supabase
@@ -44,7 +46,8 @@ async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
         posts!inner (
           id,
           title,
-          owner_id
+          owner_id,
+          space_id
         )
       `,
     )
@@ -95,12 +98,43 @@ async function getOwnerNames(applications: Dashboard[]): Promise<OwnerNames> {
   );
 }
 
+async function getSpaceNames(
+  applications: Dashboard[],
+): Promise<SpaceNames> {
+  const spaceIds = Array.from(
+    new Set(
+      applications
+        .map((application) => application.posts?.space_id)
+        .filter((spaceId): spaceId is string => Boolean(spaceId)),
+    ),
+  );
+
+  if (spaceIds.length === 0) {
+    return {};
+  }
+
+  const { data, error } = await supabase
+    .from("spaces")
+    .select("id, name")
+    .in("id", spaceIds);
+
+  if (error) {
+    console.error("Error fetching space names:", error);
+    throw new Error("Could not load space names.");
+  }
+
+  return Object.fromEntries(
+    (data ?? []).map((space) => [space.id, space.name]),
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [inbound, setInbound] = useState<Dashboard[]>([]);
   const [outbound, setOutbound] = useState<Dashboard[]>([]);
   const [ownerNames, setOwnerNames] = useState<OwnerNames>({});
+  const [spaceNames, setSpaceNames] = useState<SpaceNames>({});
   const [activeTab, setActiveTab] = useState<TabState>("inbound");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -123,11 +157,15 @@ export default function DashboardPage() {
           getRequestsReceived(supabase, user.id),
           getOutboundApplications(user.id),
         ]);
-        const fetchedOwnerNames = await getOwnerNames(outboundData);
+        const [fetchedOwnerNames, fetchedSpaceNames] = await Promise.all([
+          getOwnerNames(outboundData),
+          getSpaceNames([...inboundData, ...outboundData]),
+        ]);
 
         setInbound(inboundData);
         setOutbound(outboundData);
         setOwnerNames(fetchedOwnerNames);
+        setSpaceNames(fetchedSpaceNames);
       } catch (error) {
         console.error("Failed to load dashboard:", error);
         setLoadError("Failed to load applications. Please try again.");
@@ -265,6 +303,8 @@ export default function DashboardPage() {
           {
             postTitle: post.title,
             applicantId: applicant.id,
+            spaceId: post.space_id,
+            spaceName: spaceNames[post.space_id] ?? "Unknown space",
             applicantName: applicant.name,
             appliedRole: application.selected_roles ?? [],
             message: application.intro_message,
@@ -281,7 +321,7 @@ export default function DashboardPage() {
           },
         ];
       }),
-    [handleInboundAction, inbound],
+    [handleInboundAction, inbound, spaceNames],
   );
 
   const outboundApplications = useMemo<OutboundAppCardProps[]>(
@@ -302,6 +342,8 @@ export default function DashboardPage() {
             appliedRole: application.selected_roles ?? [],
             message: application.intro_message,
             postId: post.id,
+            spaceId: post.space_id,
+            spaceName: spaceNames[post.space_id] ?? "Unknown space",
             status: application.status,
             isUpdated: !application.applicant_seen && application.status !== "Pending",
             timeAgo: formatTimeAgo(
@@ -310,7 +352,7 @@ export default function DashboardPage() {
           },
         ];
       }),
-    [outbound, ownerNames],
+    [outbound, ownerNames, spaceNames],
   );
 
   const hasUnseenInbound = unseenInboundIds.length > 0;

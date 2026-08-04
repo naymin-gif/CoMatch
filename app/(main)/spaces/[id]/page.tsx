@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, use, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { LuTriangleAlert } from 'react-icons/lu';
 
@@ -23,16 +23,13 @@ import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
 import CreatePostModal from '@/components/post/CreatePostModal';
 import { type NewPostData } from '@/components/post/PostPage';
 import { type CreateSpaceData } from '@/components/space/CreateSpaceModal';
+import { useParams } from 'next/navigation';
 
 // Static Assets
 import { createClient } from '@/utils/clients';
 
 // Interfaces
-interface SpacePageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
+
 
 interface Profile {
   id: string;
@@ -52,9 +49,9 @@ interface Space {
   last_edited_at: string;
 }
 
-export default function SpacePage({ params }: SpacePageProps) {
-  const resolvedParams = use(params);
-  const spaceId = resolvedParams.id;
+export default function SpacePage() {
+  const params = useParams<{ id: string }>();
+  const spaceId = params.id;
   const supabase = useMemo(() => createClient(), []);
 
   // States for edit space
@@ -159,6 +156,14 @@ export default function SpacePage({ params }: SpacePageProps) {
         error: authError,
       } = await supabase.auth.getUser();
 
+      if (authError) {
+        throw new Error(`Authentication query failed: ${authError.message}`);
+      }
+
+      if (!user) {
+        throw new Error("You must be logged in.");
+      }
+
       if (authError || !user) {
         throw new Error('You must be logged in to create a space.');
       }
@@ -253,37 +258,53 @@ export default function SpacePage({ params }: SpacePageProps) {
         setIsLoading(true);
         setErrorMsg('');
 
-        // Current user
         const {
           data: { user },
+          error: authError,
         } = await supabase.auth.getUser();
 
-        // Profile deatils of current user
-        if (user) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('id, name, profile_pic_url, bio')
-            .eq('id', user.id)
-            .single();
-
-          if (profileData) {
-            setCurrentUser(profileData);
-          }
+        if (authError) {
+          throw new Error(`Authentication query failed: ${authError.message}`);
         }
+
+        if (!user) {
+          throw new Error('You must be logged in.');
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, name, profile_pic_url, bio')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          throw new Error(`Current profile query failed: ${profileError.message}`);
+        }
+
+        if (!profileData) {
+          throw new Error('Current user profile not found.');
+        }
+
+        setCurrentUser(profileData);
 
         const [{ data: sidebarSpaces, error: spacesError }, membershipResult] =
           await Promise.all([
             supabase.from('spaces').select('id, name, image, owner_id'),
-            user
-              ? supabase
-                  .from('space_members')
-                  .select('space_id')
-                  .eq('profile_id', user.id)
-              : Promise.resolve({ data: [], error: null }),
+            supabase
+              .from('space_members')
+              .select('space_id')
+              .eq('profile_id', user.id),
           ]);
 
-        if (spacesError) throw spacesError;
-        if (membershipResult.error) throw membershipResult.error;
+        if (spacesError) {
+          throw new Error(`Sidebar spaces query failed: ${spacesError.message}`);
+        }
+
+        if (membershipResult.error) {
+          throw new Error(
+            `Space memberships query failed: ${membershipResult.error.message}`
+          );
+        }
 
         const joinedSpaceIds = new Set(
           membershipResult.data?.map((membership) => membership.space_id) ?? []
@@ -299,7 +320,7 @@ export default function SpacePage({ params }: SpacePageProps) {
             spaceImage: sidebarSpace.image,
           };
 
-          if (sidebarSpace.owner_id === user?.id) {
+          if (sidebarSpace.owner_id === user.id) {
             nextOwnedSpaces.push(spaceItem);
           } else if (joinedSpaceIds.has(sidebarSpace.id)) {
             nextJoinedSpaces.push(spaceItem);
@@ -312,22 +333,18 @@ export default function SpacePage({ params }: SpacePageProps) {
         setJoinedSpaces(nextJoinedSpaces);
         setOtherSpaces(nextOtherSpaces);
 
-        console.log('1. Current Space ID from URL:', spaceId);
-        console.log('2. Is User Logged In?:', user !== null);
-        console.log('3. User Details:', user);
-
-        // Space Details
         const { data: spaceData, error: spaceError } = await supabase
           .from('spaces')
           .select('*')
           .eq('id', spaceId)
           .maybeSingle();
 
-        if (spaceError) throw spaceError;
+        if (spaceError) {
+          throw new Error(`Current space query failed: ${spaceError.message}`);
+        }
+
         if (!spaceData) {
-          setErrorMsg('Space not found.');
-          setIsLoading(false);
-          return;
+          throw new Error('Space not found.');
         }
 
         setSpace(spaceData);
@@ -338,62 +355,72 @@ export default function SpacePage({ params }: SpacePageProps) {
         );
         setSpaceImage(spaceData.image || '');
 
-        // Owner Profile
-        const { data: ownerData } = await supabase
+        const { data: ownerData, error: ownerError } = await supabase
           .from('profiles')
-          .select('id, name, email, profile_pic_url, roles')
+          .select('id, name, profile_pic_url, bio')
           .eq('id', spaceData.owner_id)
           .maybeSingle();
 
-        if (ownerData) setOwnerProfile(ownerData);
+        if (ownerError) {
+          throw new Error(`Space owner query failed: ${ownerError.message}`);
+        }
 
-        // Posts
-        const { data: postsData } = await supabase
+        if (!ownerData) {
+          throw new Error('Space owner not found.');
+        }
+
+        setOwnerProfile(ownerData);
+
+        const { data: postsData, error: postsError } = await supabase
           .from('posts')
-          .select(`id`)
+          .select('id')
           .eq('space_id', spaceId)
           .order('created_at', { ascending: false });
 
-        if (postsData && postsData.length > 0) {
-          setPostIds(postsData.map((p) => p.id));
+        if (postsError) {
+          throw new Error(`Space posts query failed: ${postsError.message}`);
         }
 
-        // Space Members
+        setPostIds(postsData?.map((post) => post.id) ?? []);
+
         const { data: membersData, error: membersError } = await supabase
           .from('space_members')
           .select('profile_id')
           .eq('space_id', spaceId);
 
-        if (membersError) throw membersError;
+        if (membersError) {
+          throw new Error(`Space members query failed: ${membersError.message}`);
+        }
 
-        const memberList: Profile[] = [];
+        const profileIds = membersData?.map((member) => member.profile_id) ?? [];
+        setHasJoined(
+          spaceData.owner_id === user.id || profileIds.includes(user.id)
+        );
 
-        if (membersData && membersData.length > 0) {
-          const profileIds = membersData.map((m) => m.profile_id);
-          if (user) {
-            setHasJoined(profileIds.includes(user.id));
-          }
-
-          const { data: profileList } = await supabase
+        if (profileIds.length === 0) {
+          setMembers([ownerData]);
+        } else {
+          const { data: profileList, error: memberProfilesError } = await supabase
             .from('profiles')
             .select('id, name, profile_pic_url, bio')
             .in('id', profileIds);
 
-          if (profileList) {
-            memberList.push(...profileList);
+          if (memberProfilesError) {
+            throw new Error(
+              `Member profiles query failed: ${memberProfilesError.message}`
+            );
           }
-        } else {
-          if (ownerData) {
-            memberList.push(ownerData);
-          }
-          if (user && spaceData.owner_id === user.id) {
-            setHasJoined(true);
-          }
+
+          setMembers(profileList ?? []);
         }
-        setMembers(memberList);
-      } catch (err: any) {
-        console.error(err);
-        setErrorMsg(err.message || 'Error loading space data.');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Unknown error loading space data.';
+
+        console.error('loadSpaceData failed:', message, err);
+        setErrorMsg(message);
       } finally {
         setIsLoading(false);
       }
