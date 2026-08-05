@@ -34,6 +34,9 @@ export default function HomePosts({
           <PostCard
             spaceId={post.spaceId}
             key={post.postid}
+            spaceName={post.spaceName}
+            onSpaceJoin={post.onSpaceJoin}
+            isMember={post.isMember}
             postid={post.postid}
             ownerId={post.ownerId}
             ownerName={post.ownerName}

@@ -36,6 +36,10 @@ interface ProfilePost {
   commitment_level: string | null;
   image_url: string | null;
   created_at: string;
+  spaces: {
+    name: string;
+    owner_id: string;
+  } | null;
   roles: {
     role: string;
     quantity: number;
@@ -60,6 +64,39 @@ export default function PublicProfile({
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [memberSpaceIds, setMemberSpaceIds] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleSpaceJoin = async (spaceId: string) => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      console.error('You must be signed in to join a space.');
+      return;
+    }
+
+    const { error: joinError } = await supabase
+      .from('space_members')
+      .insert({
+        space_id: spaceId,
+        profile_id: user.id,
+      });
+
+    if (joinError) {
+      console.error('Failed to join space:', joinError.message);
+      return;
+    }
+
+    setMemberSpaceIds((currentIds) => {
+      const updatedIds = new Set(currentIds);
+      updatedIds.add(spaceId);
+      return updatedIds;
+    });
+  };
 
   useEffect(() => {
     const fetchProfileAndPosts = async () => {
@@ -67,64 +104,71 @@ export default function PublicProfile({
       setError(null);
       setIsOwner(false);
 
-      const [profileResult, postsResult, authResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select(`
-            id,
-            name,
-            bio,
-            pronouns,
-            organization,
-            city,
-            country,
-            github,
-            linkedin,
-            email,
-            skills,
-            roles,
-            profile_pic_url,
-            bg_pic_url,
-            show_email
-          `)
-          .eq('id', profileId)
-          .maybeSingle(),
+      const authResult = await supabase.auth.getUser();
+      const signedInUser = authResult.data.user;
+      const signedInUserId = signedInUser?.id ?? null;
 
-        supabase
-          .from('posts')
-          .select(`
-            id,
-            space_id,
-            owner_id,
-            title,
-            description,
-            commitment_level,
-            image_url,
-            created_at,
-            roles (
-              role,
-              quantity
-            ),
-            post_likes (
-              profile_id
-            )
-          `)
-          .eq('owner_id', profileId)
-          .order('created_at', { ascending: false }),
+      const [profileResult, postsResult, membershipsResult] =
+        await Promise.all([
+          supabase
+            .from('profiles')
+            .select(`
+              id,
+              name,
+              bio,
+              pronouns,
+              organization,
+              city,
+              country,
+              github,
+              linkedin,
+              email,
+              skills,
+              roles,
+              profile_pic_url,
+              bg_pic_url,
+              show_email
+            `)
+            .eq('id', profileId)
+            .maybeSingle(),
 
-        supabase.auth.getUser(),
-      ]);
+          supabase
+            .from('posts')
+            .select(`
+              id,
+              space_id,
+              owner_id,
+              title,
+              description,
+              commitment_level,
+              image_url,
+              created_at,
+              spaces (
+                name,
+                owner_id
+              ),
+              roles (
+                role,
+                quantity
+              ),
+              post_likes (
+                profile_id
+              )
+            `)
+            .eq('owner_id', profileId)
+            .order('created_at', { ascending: false }),
 
-      console.log('PROFILE POSTS DEBUG', {
-        profileId,
-        authenticatedUserId: authResult.data.user?.id ?? null,
-        authError: authResult.error?.message ?? null,
-        profile: profileResult.data,
-        profileError: profileResult.error?.message ?? null,
-        posts: postsResult.data,
-        postsError: postsResult.error?.message ?? null,
-      });
-      
+          signedInUserId
+            ? supabase
+                .from('space_members')
+                .select('space_id')
+                .eq('profile_id', signedInUserId)
+            : Promise.resolve({
+                data: [] as { space_id: string }[],
+                error: null,
+              }),
+        ]);
+
       if (profileResult.error) {
         console.error(
           'Profile fetch error:',
@@ -151,22 +195,47 @@ export default function PublicProfile({
         return;
       }
 
-      setProfileData(profileResult.data as ProfileData);
-      setPosts((postsResult.data ?? []) as ProfilePost[]);
-
-      const signedInUser = authResult.data.user;
-
-      if (signedInUser) {
-        setCurrentUserId(signedInUser.id);
-        setIsOwner(signedInUser.id === profileId);
-      } else {
-        setCurrentUserId(null);
+      if (membershipsResult.error) {
+        console.error(
+          'Membership fetch error:',
+          membershipsResult.error.message
+        );
+        setError('Failed to load space memberships.');
+        setIsLoading(false);
+        return;
       }
 
+      setProfileData(profileResult.data as ProfileData);
+      setPosts(
+        (postsResult.data ?? []).map((post) => {
+          const rawSpaces = post.spaces as unknown;
+
+          const space =
+            Array.isArray(rawSpaces)
+              ? rawSpaces[0] ?? null
+              : rawSpaces ?? null;
+
+          return {
+            ...post,
+            spaces: space,
+          } as ProfilePost;
+        })
+      );
+
+      setMemberSpaceIds(
+        new Set(
+          (membershipsResult.data ?? []).map(
+            (membership) => membership.space_id
+          )
+        )
+      );
+
+      setCurrentUserId(signedInUserId);
+      setIsOwner(signedInUserId === profileId);
       setIsLoading(false);
     };
 
-    fetchProfileAndPosts();
+    void fetchProfileAndPosts();
   }, [profileId]);
 
   // Error Handling
@@ -249,6 +318,14 @@ export default function PublicProfile({
                 }))}
                 initialComments={[]}
                 spaceId={post.space_id}
+                spaceName={post.spaces?.name ?? 'Unknown Space'}
+                isMember={
+                  memberSpaceIds.has(post.space_id) ||
+                  post.spaces?.owner_id === currentUserId
+                }
+                onSpaceJoin={() => {
+                  void handleSpaceJoin(post.space_id);
+                }}
               />
             ))
           )}

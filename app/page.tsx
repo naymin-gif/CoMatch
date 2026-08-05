@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Comment } from "@/components/post/PostPage";
 import type { PostCardProps } from "@/components/post/PostCard";
 import timeAgo from "@/lib/TimeAgo";
@@ -162,54 +162,139 @@ export default function HomePage() {
     void fetchAndGroupSpaces();
   }, [supabase]);
 
-  useEffect(() => {
-    async function fetchAllPosts() {
+  const handleSpaceJoin = useCallback(
+    async (spaceId: string) => {
       try {
         const {
           data: { user },
+          error: authError,
         } = await supabase.auth.getUser();
-        const currentUserId = user?.id;
 
-        const { data, error } = await supabase
-          .from("posts")
-          .select(
-            `
-            id,
-            space_id,
-            owner_id,
-            title,
-            description,
-            commitment_level,
-            image_url,
-            created_at,
-            profiles!posts_owner_id_fkey (name, profile_pic_url),
-            roles (role, quantity),
-            post_likes (profile_id),
-            applications (applicant_id),
-            post_comments (
-              id,
-              content,
-              created_at,
-              profiles (name, profile_pic_url)
-            )
-          `,
-          )
-          .order("created_at", { ascending: false });
+        if (authError || !user) {
+          throw new Error("User not authenticated");
+        }
+
+        const { error } = await supabase.from("space_members").insert({
+          space_id: spaceId,
+          profile_id: user.id,
+        });
 
         if (error) {
           throw error;
         }
 
-        const formattedPosts: PostCardProps[] = data.map((post: any) => ({
+        setPosts((currentPosts) =>
+          currentPosts.map((post) =>
+            post.spaceId === spaceId
+              ? {
+                  ...post,
+                  isMember: true,
+                }
+              : post,
+          ),
+        );
+      } catch (error) {
+        console.error(
+          "Failed to join space:",
+          JSON.stringify(error, null, 2),
+        );
+      }
+    },
+    [supabase],
+  );
+
+  // Fetch all posts
+  useEffect(() => {
+    async function fetchAllPosts() {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) {
+          throw authError;
+        }
+
+        const currentUserId = user?.id ?? "";
+
+        const [postsResult, membershipResult] = await Promise.all([
+          supabase
+            .from("posts")
+            .select(
+              `
+              id,
+              space_id,
+              owner_id,
+              title,
+              description,
+              commitment_level,
+              image_url,
+              created_at,
+              spaces (name, owner_id),
+              profiles!posts_owner_id_fkey (name, profile_pic_url),
+              roles (role, quantity),
+              post_likes (profile_id),
+              applications (applicant_id),
+              post_comments (
+                id,
+                content,
+                created_at,
+                profiles (name, profile_pic_url)
+              )
+            `,
+            )
+            .order("created_at", { ascending: false }),
+
+          currentUserId
+            ? supabase
+                .from("space_members")
+                .select("space_id")
+                .eq("profile_id", currentUserId)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
+
+        if (postsResult.error) {
+          throw postsResult.error;
+        }
+
+        if (membershipResult.error) {
+          throw membershipResult.error;
+        }
+
+        const memberSpaceIds = new Set(
+          membershipResult.data?.map(
+            (membership) => membership.space_id,
+          ) ?? [],
+        );
+
+        const formattedPosts: PostCardProps[] = (
+          postsResult.data ?? []
+        ).map((post: any) => ({
           postid: post.id,
           spaceId: post.space_id,
+
+          spaceName: post.spaces?.name ?? "Unknown Space",
+
+          isMember:
+            memberSpaceIds.has(post.space_id) ||
+            post.spaces?.owner_id === currentUserId,
+
+          onSpaceJoin: () => {
+            void handleSpaceJoin(post.space_id);
+          },
+
           ownerId: post.owner_id,
           ownerName: post.profiles?.name || "Unknown User",
           ownerAvatarUrl: post.profiles?.profile_pic_url,
-          isOwner: Boolean(currentUserId && post.owner_id === currentUserId),
+          isOwner: Boolean(
+            currentUserId && post.owner_id === currentUserId,
+          ),
           initialHasApplied: Boolean(
             currentUserId &&
-              post.applications?.some((app: any) => app.applicant_id === currentUserId)
+              post.applications?.some(
+                (app: any) => app.applicant_id === currentUserId,
+              ),
           ),
           postDate: timeAgo(post.created_at),
           initialLikeCount: post.post_likes?.length ?? 0,
@@ -233,21 +318,25 @@ export default function HomePage() {
               created_at: comment.created_at,
               profiles: {
                 name: comment.profiles?.name || "Unknown User",
-                profile_pic_url: comment.profiles?.profile_pic_url,
+                profile_pic_url:
+                  comment.profiles?.profile_pic_url,
               },
             })) ?? [],
         }));
 
         setPosts(formattedPosts);
       } catch (error) {
-        console.error("Failed to fetch posts:", JSON.stringify(error, null, 2));
+        console.error(
+          "Failed to fetch posts:",
+          JSON.stringify(error, null, 2),
+        );
       } finally {
         setIsLoading(false);
       }
     }
 
     void fetchAllPosts();
-  }, [supabase]);
+  }, [supabase, handleSpaceJoin]);
 
   const handleLike = async (postId: string, previousLiked: boolean) => {
     const {
@@ -453,6 +542,8 @@ export default function HomePage() {
       throw error;
     }
   };
+
+  
 
   return (
     <SidebarProvider>

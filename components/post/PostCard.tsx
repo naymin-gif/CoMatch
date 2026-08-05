@@ -18,6 +18,8 @@ import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 import ApplyModal from "./ApplyModal";
 import { MdOutlineDownloadDone } from "react-icons/md";
 import { RoleAndPosition } from "./PostPage";
+import { FaPlus } from "react-icons/fa";
+import Link from "next/link";
 
 import { 
     Card,
@@ -57,7 +59,10 @@ export interface PostCardProps {
     initialComments: Comment[];
     initialIsLiked?: boolean;
     spaceId: string;
+    spaceName?: string;
+    isMember?: boolean;
     isHighlighted?: boolean;
+    onSpaceJoin?: () => void;
     onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
     onNewComment?: (postId: string, newComment: Comment) => Promise<void>;
     onApply?: (postId: string, roles: string[], message: string) => Promise<void>;
@@ -82,7 +87,10 @@ export default function PostCard({
     initialComments,
     initialIsLiked = false,
     spaceId,
+    spaceName,
+    isMember,
     isHighlighted = false,
+    onSpaceJoin, 
     onLike,
     onNewComment,
     onApply,
@@ -222,6 +230,28 @@ export default function PostCard({
                     <CardDescription>
                         {postDate}
                     </CardDescription>
+                </div>
+                <div className="ml-auto shrink-0">
+                    {spaceName && (
+                        isMember ? (
+                            <Link href={`/spaces/${spaceId}`}>
+                                <Badge variant="blue">
+                                    {spaceName}
+                                </Badge>
+                            </Link>
+                        ) : (
+                            <div className="flex flex-row items-center">
+                                <Button onClick={onSpaceJoin} variant="green">
+                                    <FaPlus />
+                                </Button>
+                                <Link href={`/spaces/${spaceId}`}>
+                                    <Button variant="green">
+                                        {spaceName}
+                                    </Button>
+                                </Link>
+                            </div>
+                        )
+                    )}
                 </div>
             </CardHeader>
 
