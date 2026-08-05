@@ -69,7 +69,7 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
           await Promise.all([
             supabase
               .from('posts')
-              .select('id, title, description, space_id')
+              .select('id, title, description, space_id, is_deleted')
               .or(
                 `title.ilike.${safeSearchTerm},description.ilike.${safeSearchTerm}`
               )
@@ -92,7 +92,9 @@ export default function GlobalSearch({ isOpen }: GlobalSearchProps) {
 
         // Format Posts
         if (postsResponse.data) {
-          postsResponse.data.forEach((post) => {
+          postsResponse.data
+            .filter((post) => !post.is_deleted)
+            .forEach((post) => {
             combinedResults.push({
               id: post.id,
               type: 'post',

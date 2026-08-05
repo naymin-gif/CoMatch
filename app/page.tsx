@@ -232,6 +232,7 @@ export default function HomePage() {
               commitment_level,
               image_url,
               created_at,
+              is_deleted,
               spaces (name, owner_id),
               profiles!posts_owner_id_fkey (name, profile_pic_url),
               roles (role, quantity),
@@ -271,7 +272,9 @@ export default function HomePage() {
 
         const formattedPosts: PostCardProps[] = (
           postsResult.data ?? []
-        ).map((post: any) => ({
+        )
+          .filter((post: any) => !post.is_deleted)
+          .map((post: any) => ({
           postid: post.id,
           spaceId: post.space_id,
 
@@ -444,24 +447,16 @@ export default function HomePage() {
     }
 
     try {
-      const { data: existingRoles } = await supabase.from('roles').select('id').eq('post_id', postId);
-      if (existingRoles && existingRoles.length > 0) {
-        await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
-      }
-      await supabase.from('roles').delete().eq('post_id', postId);
-      await supabase.from('applications').update({ post_id: null }).eq('post_id', postId);
-      await supabase.from('post_comments').delete().eq('post_id', postId);
-      await supabase.from('post_likes').delete().eq('post_id', postId);
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('posts')
-        .delete()
-        .match({ id: postId, owner_id: user.id });
+        .update({ is_deleted: true })
+        .match({ id: postId, owner_id: user.id })
+        .select();
 
-      if (error) {
-        console.error("Error deleting post:", error);
-        toast.error("Failed to delete post.");
-        throw error;
+      if (error || !data || data.length === 0) {
+        console.error("Error deleting post (0 rows updated or RLS blocked):", error, data);
+        toast.error("Failed to delete post: Database policy (RLS) prevented the update.");
+        return;
       }
 
       setPosts(prev => prev.filter(p => p.postid !== postId));

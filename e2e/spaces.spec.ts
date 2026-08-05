@@ -3,14 +3,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Spaces & Search E2E', () => {
 
   test('renders SearchBar and handles search input on home page', async ({ page }) => {
-    // 1. Navigate to home page
+    // Navigate to home page
     await page.goto('/');
 
-    // 2. Locate SearchBar input
+    // Locate SearchBar input
     const searchInput = page.locator('input[placeholder*="Search"]');
     await expect(searchInput).toBeVisible();
 
-    // 3. Type search query
+    // Type search query
     await searchInput.fill('Orbital');
     await expect(searchInput).toHaveValue('Orbital');
   });

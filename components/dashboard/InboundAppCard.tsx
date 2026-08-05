@@ -39,18 +39,19 @@ import { toast } from "sonner";
 export interface InboundAppCardProps {
     postTitle: string;
     applicantId: string;
-    applicantPic?: string;
     applicantName: string;
-    appliedRole: string[]; 
-    message?: string;
+    applicantPic?: string;
     postId: string;
+    appliedRole: string[];
     spaceId: string;
-    timeAgo: string;
     spaceName: string;
+    message?: string;
     status: "Pending" | "Approved" | "Rejected";
+    timeAgo: string;
     isNew?: boolean;
-    onApprove: () => Promise<void>;
-    onReject: () => Promise<void>;
+    isDeletedPost?: boolean;
+    onApprove: () => void;
+    onReject: () => void;
 }
 
 type ApplicationDecision = "approved" | "rejected" | null;
@@ -58,16 +59,17 @@ type ApplicationDecision = "approved" | "rejected" | null;
 export default function InboundAppCard({
     postTitle,
     applicantId,
-    applicantPic,
     applicantName,
-    appliedRole,
-    message,
+    applicantPic,
     postId,
+    appliedRole,
     spaceId,
-    timeAgo,
-    spaceName, 
+    spaceName,
+    message,
     status,
+    timeAgo,
     isNew = false,
+    isDeletedPost = false,
     onApprove,
     onReject,
 } : InboundAppCardProps) {
@@ -78,7 +80,7 @@ export default function InboundAppCard({
                 ? "rejected"
                 : null;
 
-    const isDeleted = !postId || !postTitle || postTitle === "Post Deleted";
+    const isDeleted = !postId || !postTitle || postTitle === "Post Deleted" || isDeletedPost;
     const hasDecision = decision !== null || isDeleted;
     const postLink = `/spaces/${spaceId}?post=${postId}`;
     const displaySpaceName = spaceName ? (spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName) : "Unavailable"; 
@@ -217,7 +219,7 @@ export default function InboundAppCard({
                 {/* Applied Role */}
                 <div className="flex flex-row gap-2">
                     <span>Applied Role: </span>
-                    {appliedRole.map((role, index) => (
+                    {(appliedRole || []).map((role, index) => (
                         <Badge variant="secondary" key={index}>{role}</Badge>
                     ))}
                 </div>

@@ -16,6 +16,7 @@ export interface Dashboard {
     title: string;
     owner_id?: string;
     space_id: string;
+    is_deleted?: boolean;
     spaces?: {
       name: string;
     } | null;
@@ -42,6 +43,7 @@ export async function getMyApplications(
       posts (
         id,
         title,
+        is_deleted,
         spaces (
           name
         )
@@ -83,7 +85,8 @@ export async function getRequestsReceived(
         id,
         title,
         owner_id,
-        space_id
+        space_id,
+        is_deleted
       )
     `
     )

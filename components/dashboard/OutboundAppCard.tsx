@@ -30,6 +30,7 @@ export interface OutboundAppCardProps {
   status: OutboundApplicationStatus;
   timeAgo: string;
   isUpdated?: boolean; 
+  isDeletedPost?: boolean;
 }
 
 export default function OutboundAppCard({
@@ -45,8 +46,9 @@ export default function OutboundAppCard({
   status,
   timeAgo, 
   isUpdated = false,
+  isDeletedPost = false,
 }: OutboundAppCardProps) {
-  const isDeleted = !postId || !postTitle || postTitle === "Post Deleted";
+  const isDeleted = !postId || !postTitle || postTitle === "Post Deleted" || isDeletedPost;
   const postLink = `/spaces/${spaceId}?post=${postId}`;
   const displaySpaceName = spaceName ? (spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName) : "Unavailable"; 
 

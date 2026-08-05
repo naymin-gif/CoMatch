@@ -120,6 +120,7 @@ export default function PostPage({
                 const profileMap = new Map(ownerProfiles?.map(p => [p.id, p]));
 
                 const formattedPosts: PostCardProps[] = postsData
+                    .filter(post => !post.is_deleted)
                     .filter(post => !showOwnPostsOnly || (user && post.owner_id === user.id))
                     .map((post) => ({
                         postid: post.id,
@@ -278,7 +279,7 @@ export default function PostPage({
         toast.success("Application submitted successfully!");
     }
 
-    // Handle Delete Post
+    // Handle Delete Post (Soft Delete)
     const handleDeletePost = async (postId: string) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
@@ -287,26 +288,16 @@ export default function PostPage({
         }
 
         try {
-            // Delete post comments and likes, but preserve applications records for history
-            const { data: existingRoles } = await supabase.from('roles').select('id').eq('post_id', postId);
-            if (existingRoles && existingRoles.length > 0) {
-                await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
-            }
-            await supabase.from('roles').delete().eq('post_id', postId);
-            // Detach applications from post (set post_id = null) so history cards are preserved
-            await supabase.from('applications').update({ post_id: null }).eq('post_id', postId);
-            await supabase.from('post_comments').delete().eq('post_id', postId);
-            await supabase.from('post_likes').delete().eq('post_id', postId);
-
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('posts')
-                .delete()
-                .match({ id: postId, owner_id: user.id });
+                .update({ is_deleted: true })
+                .match({ id: postId, owner_id: user.id })
+                .select();
 
-            if (error) {
-                console.error("Error deleting post:", error);
-                toast.error("Failed to delete post.");
-                throw error;
+            if (error || !data || data.length === 0) {
+                console.error("Error deleting post (0 rows updated or RLS blocked):", error, data);
+                toast.error("Failed to delete post: Database policy (RLS) prevented the update.");
+                return;
             }
 
             setFetchedPosts(prev => prev.filter(p => p.postid !== postId));

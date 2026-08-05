@@ -47,7 +47,8 @@ async function getOutboundApplications(userId: string): Promise<Dashboard[]> {
           id,
           title,
           owner_id,
-          space_id
+          space_id,
+          is_deleted
         )
       `,
     )
@@ -311,6 +312,7 @@ export default function DashboardPage() {
             postId: post.id,
             status: application.status,
             isNew: !application.owner_seen && application.status === "Pending",
+            isDeletedPost: Boolean(post?.is_deleted),
             timeAgo: formatTimeAgo(
               application.last_edited_at ?? application.created_at,
             ),
@@ -346,6 +348,7 @@ export default function DashboardPage() {
             spaceName: spaceNames[post.space_id] ?? "Unknown space",
             status: application.status,
             isUpdated: !application.applicant_seen && application.status !== "Pending",
+            isDeletedPost: Boolean(post?.is_deleted),
             timeAgo: formatTimeAgo(
               application.last_edited_at ?? application.created_at,
             ),
