@@ -85,7 +85,7 @@ export default function InboundAppCard({
         <Card className="bg-comatch-background p-3 w-[500px]">
             <CardHeader>
                 <div className="flex flex-row justify-between items-center">
-                    <CardTitle className="hover:underline hover:text-blue-500 flex flex-row gap-3 items-center">
+                    <CardTitle className="hover:text-comatch-primary flex flex-row gap-3 items-center">
                         <Link href={postLink}>
                             {postTitle}
                         </Link>
