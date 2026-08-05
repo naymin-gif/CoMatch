@@ -42,7 +42,7 @@ import { createClient } from "@/utils/clients";
 
 export interface PostCardProps {
     postid: string;
-    ownerId?: string;
+    ownerId: string;
     ownerName: string;
     ownerAvatarUrl?: string;
     isOwner?: boolean;
@@ -224,8 +224,10 @@ export default function PostCard({
                     <AvatarFallback />
                 </Avatar>
                 <div className="flex flex-col">
-                    <CardTitle>
-                        {ownerName}
+                    <CardTitle className="hover:text-comatch-primary">
+                        <Link href={`/profile/${ownerId}`}>
+                            {ownerName}
+                        </Link>
                     </CardTitle>
                     <CardDescription>
                         {postDate}
