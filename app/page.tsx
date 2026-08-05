@@ -449,6 +449,7 @@ export default function HomePage() {
         await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
       }
       await supabase.from('roles').delete().eq('post_id', postId);
+      await supabase.from('applications').update({ post_id: null }).eq('post_id', postId);
       await supabase.from('post_comments').delete().eq('post_id', postId);
       await supabase.from('post_likes').delete().eq('post_id', postId);
 
