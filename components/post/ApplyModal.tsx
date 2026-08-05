@@ -82,7 +82,16 @@ export default function ApplyModal({
           <Button onClick={onCancel} variant="secondary">
             Cancel
           </Button>
-          <Button onClick={() => onApply(selectedRoles, message)}>Apply</Button>
+          <Button
+            disabled={selectedRoles.length === 0}
+            onClick={() => {
+              if (selectedRoles.length > 0) {
+                onApply(selectedRoles, message);
+              }
+            }}
+          >
+            Apply
+          </Button>
         </div>
       </CardContent>
     </Card>

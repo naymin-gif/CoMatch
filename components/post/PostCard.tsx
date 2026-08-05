@@ -192,6 +192,7 @@ export default function PostCard({
     }
 
     const handleApply = async (selectedRoles: string[], message: string) => {
+        if (!selectedRoles || selectedRoles.length === 0) return;
         setIsApplyModalOpen(false); 
         setApplied(true);
 
