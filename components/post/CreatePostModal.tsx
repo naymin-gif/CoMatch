@@ -97,8 +97,17 @@ export default function CreatePostModal({
         setQuantity(newQuantity);
     }
 
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault(); 
+        setErrorMsg("");
+
+        const validRoles = roles.map((r) => r.trim()).filter(Boolean);
+        if (validRoles.length === 0) {
+            setErrorMsg("Please specify at least one open role for your post.");
+            return;
+        }
 
         onPost({
             title,
@@ -207,6 +216,12 @@ export default function CreatePostModal({
                                 </div>
                             ))}
                         </Field>
+
+                        {errorMsg && (
+                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 mb-2">
+                                {errorMsg}
+                            </div>
+                        )}
 
                         {/* Buttons  */}
                         <div className="flex flex-row gap-3 justify-end">
