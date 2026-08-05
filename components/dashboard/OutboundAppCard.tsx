@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { AiOutlineCheckCircle, AiOutlineClockCircle } from "react-icons/ai";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export type OutboundApplicationStatus = "Pending" | "Approved" | "Rejected";
 
@@ -43,22 +46,33 @@ export default function OutboundAppCard({
   timeAgo, 
   isUpdated = false,
 }: OutboundAppCardProps) {
+  const isDeleted = !postId || !postTitle || postTitle === "Post Deleted";
   const postLink = `/spaces/${spaceId}?post=${postId}`;
-  const displaySpaceName = spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName; 
+  const displaySpaceName = spaceName ? (spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName) : "Unavailable"; 
 
   return (
     <Card className="bg-comatch-background w-[500px] p-3">
       <CardHeader>
         <div className="flex flex-row justify-between items-center">
           <CardTitle className="hover:text-comatch-primary flex flex-row gap-3 items-center">
-            <Link href={postLink}>
-              {postTitle}
-            </Link>
+            {isDeleted ? (
+              <button
+                type="button"
+                onClick={() => toast.info("This recruitment post has been deleted by the owner.")}
+                className="text-muted-foreground hover:underline italic font-medium cursor-pointer"
+              >
+                Post Deleted
+              </button>
+            ) : (
+              <Link href={postLink}>
+                {postTitle}
+              </Link>
+            )}
             <Badge variant="blue">
                 {displaySpaceName}
             </Badge>
           </CardTitle>
-          {isUpdated && (
+          {isUpdated && !isDeleted && (
             <Badge className="bg-blue-600 hover:bg-blue-700 text-white animate-pulse font-bold text-[10px]">
               UPDATED
             </Badge>

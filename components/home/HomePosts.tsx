@@ -10,6 +10,8 @@ type HomePostsProps = {
   onLike: (postId: string, previousLiked: boolean) => Promise<void>;
   onNewComment: (postId: string, newComment: Comment) => Promise<void>;
   onApply: (postId: string, roles: string[], message: string) => Promise<void>;
+  onDelete?: (postId: string) => Promise<void>;
+  onEdit?: (postId: string, updatedData: any) => Promise<void>;
 };
 
 export default function HomePosts({
@@ -18,6 +20,8 @@ export default function HomePosts({
   onLike,
   onNewComment,
   onApply,
+  onDelete,
+  onEdit,
 }: HomePostsProps) {
   if (isLoading) {
     return (
@@ -57,6 +61,8 @@ export default function HomePosts({
             onLike={onLike}
             onNewComment={onNewComment}
             onApply={onApply}
+            onDelete={onDelete || post.onDelete}
+            onEdit={onEdit || post.onEdit}
           />
         ))}
       </div>

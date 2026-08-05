@@ -34,6 +34,7 @@ import { FaRegCircleXmark } from "react-icons/fa6";
 import { Badge } from "@/components/ui/badge";
 import { AiOutlineClockCircle } from "react-icons/ai";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export interface InboundAppCardProps {
     postTitle: string;
@@ -77,23 +78,34 @@ export default function InboundAppCard({
                 ? "rejected"
                 : null;
 
-    const hasDecision = decision !== null;
+    const isDeleted = !postId || !postTitle || postTitle === "Post Deleted";
+    const hasDecision = decision !== null || isDeleted;
     const postLink = `/spaces/${spaceId}?post=${postId}`;
-    const displaySpaceName = spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName; 
+    const displaySpaceName = spaceName ? (spaceName.length > 20 ? spaceName.slice(0, 20) + "..." : spaceName) : "Unavailable"; 
 
     return (
         <Card className="bg-comatch-background p-3 w-[500px]">
             <CardHeader>
                 <div className="flex flex-row justify-between items-center">
                     <CardTitle className="hover:text-comatch-primary flex flex-row gap-3 items-center">
-                        <Link href={postLink}>
-                            {postTitle}
-                        </Link>
+                        {isDeleted ? (
+                            <button
+                                type="button"
+                                onClick={() => toast.info("This recruitment post has been deleted by the owner.")}
+                                className="text-muted-foreground hover:underline italic font-medium cursor-pointer"
+                            >
+                                Post Deleted
+                            </button>
+                        ) : (
+                            <Link href={postLink}>
+                                {postTitle}
+                            </Link>
+                        )}
                         <Badge variant="blue">
                             {displaySpaceName}
                         </Badge>
                     </CardTitle>
-                    {isNew && (
+                    {isNew && !isDeleted && (
                         <Badge variant="destructive" className="animate-pulse font-bold text-[10px]">
                             NEW REQUEST
                         </Badge>

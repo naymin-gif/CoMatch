@@ -14,7 +14,19 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import ShareLink from "@/components/ui/ShareLink";
 import CommentPage from "./CommentPage";
 import { Comment } from "./PostPage";
-import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
+import EditPostModal, { EditPostData } from "./EditPostModal";
+import { FiMoreVertical } from "react-icons/fi";
+import { Pencil, Trash2 } from "lucide-react";
+import { 
+    AlertDialog, 
+    AlertDialogContent, 
+    AlertDialogHeader, 
+    AlertDialogTitle, 
+    AlertDialogDescription, 
+    AlertDialogFooter, 
+    AlertDialogCancel, 
+    AlertDialogAction 
+} from "@/components/ui/alert-dialog";
 import ApplyModal from "./ApplyModal";
 import { MdOutlineDownloadDone } from "react-icons/md";
 import { RoleAndPosition } from "./PostPage";
@@ -66,6 +78,8 @@ export interface PostCardProps {
     onLike?: (postId: string, previousLiked: boolean) => Promise<void>;
     onNewComment?: (postId: string, newComment: Comment) => Promise<void>;
     onApply?: (postId: string, roles: string[], message: string) => Promise<void>;
+    onDelete?: (postId: string) => Promise<void>;
+    onEdit?: (postId: string, updatedData: EditPostData) => Promise<void>;
 }
 
 export default function PostCard({
@@ -94,6 +108,8 @@ export default function PostCard({
     onLike,
     onNewComment,
     onApply,
+    onDelete,
+    onEdit,
 } : PostCardProps) {
     // container reference
     const containerRef = useRef<HTMLDivElement>(null); 
@@ -105,6 +121,8 @@ export default function PostCard({
     const [isMounted, setIsMounted] = useState<boolean>(false); 
     const [isCommentsOpen, setIsCommentsOpen] = useState<boolean>(false);
     const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
     const [applied, setApplied] = useState<boolean>(initialHasApplied);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [currentUserProfile, setCurrentUserProfile] = useState<{ name?: string; avatarUrl?: string }>({});
@@ -234,7 +252,7 @@ export default function PostCard({
                         {postDate}
                     </CardDescription>
                 </div>
-                <div className="ml-auto shrink-0">
+                <div className="ml-auto shrink-0 flex items-center gap-2">
                     {spaceName && (
                         isMember ? (
                             <Link href={`/spaces/${spaceId}`}>
@@ -254,6 +272,34 @@ export default function PostCard({
                                 </Link>
                             </div>
                         )
+                    )}
+
+                    {effectiveIsOwner && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-gray-900">
+                                    <FiMoreVertical size={18} />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-36 p-1 bg-white border border-gray-200 shadow-md rounded-lg">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(true)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition"
+                                >
+                                    <Pencil size={14} />
+                                    <span>Edit Post</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsDeleteConfirmOpen(true)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition"
+                                >
+                                    <Trash2 size={14} />
+                                    <span>Delete Post</span>
+                                </button>
+                            </PopoverContent>
+                        </Popover>
                     )}
                 </div>
             </CardHeader>
@@ -402,6 +448,51 @@ export default function PostCard({
                         onCancel={onCancel} 
                         onApply={handleApply}
                         rolesAndPositions={rolesAndPositions}
+                    />
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this recruitment post?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this recruitment post? This action is permanent and cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setIsDeleteConfirmOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            onClick={async () => {
+                                setIsDeleteConfirmOpen(false);
+                                if (onDelete) {
+                                    await onDelete(postid);
+                                }
+                            }}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <AlertDialogContent className="p-0 border-none bg-transparent max-w-2xl">
+                    <EditPostModal
+                        initialTitle={postTitle}
+                        initialDescription={postDescription || ""}
+                        initialCommitmentLevel={commitmentLevel || ""}
+                        initialImageUrl={postImageUrl}
+                        initialRoles={rolesAndPositions.map(r => r.role)}
+                        initialQuantities={rolesAndPositions.map(r => r.position)}
+                        onCancel={() => setIsEditModalOpen(false)}
+                        onSave={async (updatedData) => {
+                            if (onEdit) {
+                                await onEdit(postid, updatedData);
+                            }
+                            setIsEditModalOpen(false);
+                        }}
                     />
                 </AlertDialogContent>
             </AlertDialog>

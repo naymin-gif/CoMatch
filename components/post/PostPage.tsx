@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import PostCard, { PostCardProps } from "./PostCard";
+import { type EditPostData } from "./EditPostModal";
 import { TbFileSad } from "react-icons/tb";
 import PostPageHeader from "./PostPageHeader";
 import { createClient } from "@/utils/clients";
@@ -265,6 +266,102 @@ export default function PostPage({
         toast.success("Application submitted successfully!");
     }
 
+    // Handle Delete Post
+    const handleDeletePost = async (postId: string) => {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            toast.error("You must be logged in.");
+            return;
+        }
+
+        const { error } = await supabase
+            .from('posts')
+            .delete()
+            .match({ id: postId, owner_id: user.id });
+
+        if (error) {
+            console.error("Error deleting post:", error);
+            toast.error("Failed to delete post.");
+            throw error;
+        }
+
+        setFetchedPosts(prev => prev.filter(p => p.postid !== postId));
+        toast.success("Post deleted successfully.");
+    }
+
+    // Handle Edit Post
+    const handleEditPost = async (postId: string, updatedData: EditPostData) => {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            toast.error("You must be logged in.");
+            return;
+        }
+
+        let imageUrl = updatedData.existingImageUrl;
+
+        if (updatedData.imageFile) {
+            const fileExt = updatedData.imageFile.name.split('.').pop();
+            const fileName = `${crypto.randomUUID()}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('post_images')
+                .upload(filePath, updatedData.imageFile);
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = supabase.storage
+                .from('post_images')
+                .getPublicUrl(filePath);
+
+            imageUrl = publicUrlData.publicUrl;
+        }
+
+        const { error: updateError } = await supabase
+            .from('posts')
+            .update({
+                title: updatedData.title.trim(),
+                description: updatedData.description.trim(),
+                commitment_level: updatedData.commitmentLevel,
+                image_url: imageUrl || null,
+            })
+            .match({ id: postId, owner_id: user.id });
+
+        if (updateError) throw updateError;
+
+        // Replace roles
+        await supabase.from('roles').delete().eq('post_id', postId);
+
+        const validRoles = updatedData.roles
+            .map((role, index) => ({ role: role.trim(), quantity: updatedData.quantities[index] }))
+            .filter(r => r.role !== "");
+
+        if (validRoles.length > 0) {
+            const rolesToInsert = validRoles.map(r => ({
+                post_id: postId,
+                role: r.role,
+                quantity: r.quantity ?? 1
+            }));
+            await supabase.from('roles').insert(rolesToInsert);
+        }
+
+        setFetchedPosts(prev => prev.map(p => {
+            if (p.postid === postId) {
+                return {
+                    ...p,
+                    postTitle: updatedData.title,
+                    postDescription: updatedData.description,
+                    commitmentLevel: updatedData.commitmentLevel,
+                    postImageUrl: imageUrl,
+                    rolesAndPositions: validRoles.map(r => ({ role: r.role, position: r.quantity ?? 1 })),
+                };
+            }
+            return p;
+        }));
+
+        toast.success("Post updated successfully.");
+    }
+
     // Handle Post Creation
     const handlePost = async (postData: NewPostData) => {
         try {
@@ -347,7 +444,9 @@ export default function PostPage({
                 initialComments: [],
                 onLike: handleLike,
                 onNewComment: handleNewComment,
-                onApply: handleApply
+                onApply: handleApply,
+                onDelete: handleDeletePost,
+                onEdit: handleEditPost,
             };
 
             setFetchedPosts(prevPosts => [newPostCardData, ...prevPosts]);
@@ -413,6 +512,8 @@ export default function PostPage({
                         onLike={handleLike}
                         onNewComment={handleNewComment}
                         onApply={handleApply}
+                        onDelete={handleDeletePost}
+                        onEdit={handleEditPost}
                         isHighlighted={highlightedPostId === post.postid}
                     />
                 ))}
