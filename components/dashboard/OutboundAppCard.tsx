@@ -58,10 +58,11 @@ export default function OutboundAppCard({
             {isDeleted ? (
               <button
                 type="button"
-                onClick={() => toast.info("This recruitment post has been deleted by the owner.")}
-                className="text-muted-foreground hover:underline italic font-medium cursor-pointer"
+                onClick={() => toast.info("The project owner has deleted this recruitment post. Existing application records and decision statuses are preserved for your records.")}
+                className="text-muted-foreground hover:underline italic font-medium cursor-pointer flex items-center gap-1"
               >
-                Post Deleted
+                <span>Post Deleted</span>
+                <span className="text-xs">ℹ️</span>
               </button>
             ) : (
               <Link href={postLink}>
