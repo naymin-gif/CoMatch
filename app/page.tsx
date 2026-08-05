@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import type { Comment } from "@/components/post/PostPage";
 import type { PostCardProps } from "@/components/post/PostCard";
 import timeAgo from "@/lib/TimeAgo";
@@ -430,6 +431,117 @@ export default function HomePage() {
     }
   };
 
+  const handleDeletePost = async (postId: string) => {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      toast.error("You must be logged in.");
+      return;
+    }
+
+    try {
+      const { data: existingRoles } = await supabase.from('roles').select('id').eq('post_id', postId);
+      if (existingRoles && existingRoles.length > 0) {
+        await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
+      }
+      await supabase.from('roles').delete().eq('post_id', postId);
+      await supabase.from('post_comments').delete().eq('post_id', postId);
+      await supabase.from('post_likes').delete().eq('post_id', postId);
+      await supabase.from('applications').delete().eq('post_id', postId);
+
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .match({ id: postId, owner_id: user.id });
+
+      if (error) {
+        console.error("Error deleting post:", error);
+        toast.error("Failed to delete post.");
+        throw error;
+      }
+
+      setPosts(prev => prev.filter(p => p.postid !== postId));
+      toast.success("Post deleted successfully.");
+    } catch (err: any) {
+      console.error("Delete post error:", err);
+      toast.error("Failed to delete post: " + (err.message || "Unknown error"));
+    }
+  };
+
+  const handleEditPost = async (postId: string, updatedData: any) => {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      toast.error("You must be logged in.");
+      return;
+    }
+
+    let imageUrl = updatedData.existingImageUrl;
+
+    if (updatedData.imageFile) {
+      const fileExt = updatedData.imageFile.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post_images')
+        .upload(filePath, updatedData.imageFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('post_images')
+        .getPublicUrl(filePath);
+
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({
+        title: updatedData.title.trim(),
+        description: updatedData.description.trim(),
+        commitment_level: updatedData.commitmentLevel,
+        image_url: imageUrl || null,
+      })
+      .match({ id: postId, owner_id: user.id });
+
+    if (updateError) throw updateError;
+
+    const { data: existingRoles } = await supabase.from('roles').select('id').eq('post_id', postId);
+    if (existingRoles && existingRoles.length > 0) {
+      await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
+    }
+    await supabase.from('roles').delete().eq('post_id', postId);
+
+    const validRoles = updatedData.roles
+      .map((role: string, index: number) => ({ role: role.trim(), quantity: updatedData.quantities[index] }))
+      .filter((r: { role: string }) => r.role !== "");
+
+    if (validRoles.length > 0) {
+      const rolesToInsert = validRoles.map((r: { role: string; quantity?: number }) => ({
+        post_id: postId,
+        role: r.role,
+        quantity: r.quantity ?? 1
+      }));
+      await supabase.from('roles').insert(rolesToInsert);
+    }
+
+    setPosts(prev => prev.map(p => {
+      if (p.postid === postId) {
+        return {
+          ...p,
+          postTitle: updatedData.title,
+          postDescription: updatedData.description,
+          commitmentLevel: updatedData.commitmentLevel,
+          postImageUrl: imageUrl,
+          rolesAndPositions: validRoles.map((r: { role: string; quantity?: number }) => ({ role: r.role, position: r.quantity ?? 1 })),
+        };
+      }
+      return p;
+    }));
+
+    toast.success("Post updated successfully.");
+  };
+
   const onCreate = async (spaceData: CreateSpaceData): Promise<string> => {
     const {
       data: { user },
@@ -573,6 +685,8 @@ export default function HomePage() {
             onLike={handleLike}
             onNewComment={handleNewComment}
             onApply={handleApply}
+            onDelete={handleDeletePost}
+            onEdit={handleEditPost}
           />
         )}
       </div>

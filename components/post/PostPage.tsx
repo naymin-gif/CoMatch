@@ -274,19 +274,34 @@ export default function PostPage({
             return;
         }
 
-        const { error } = await supabase
-            .from('posts')
-            .delete()
-            .match({ id: postId, owner_id: user.id });
+        try {
+            // Delete dependent records first to prevent foreign key errors
+            const { data: existingRoles } = await supabase.from('roles').select('id').eq('post_id', postId);
+            if (existingRoles && existingRoles.length > 0) {
+                await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
+            }
+            await supabase.from('roles').delete().eq('post_id', postId);
+            await supabase.from('post_comments').delete().eq('post_id', postId);
+            await supabase.from('post_likes').delete().eq('post_id', postId);
+            await supabase.from('applications').delete().eq('post_id', postId);
 
-        if (error) {
-            console.error("Error deleting post:", error);
-            toast.error("Failed to delete post.");
-            throw error;
+            const { error } = await supabase
+                .from('posts')
+                .delete()
+                .match({ id: postId, owner_id: user.id });
+
+            if (error) {
+                console.error("Error deleting post:", error);
+                toast.error("Failed to delete post.");
+                throw error;
+            }
+
+            setFetchedPosts(prev => prev.filter(p => p.postid !== postId));
+            toast.success("Post deleted successfully.");
+        } catch (err: any) {
+            console.error("Delete post error:", err);
+            toast.error("Failed to delete post: " + (err.message || "Unknown error"));
         }
-
-        setFetchedPosts(prev => prev.filter(p => p.postid !== postId));
-        toast.success("Post deleted successfully.");
     }
 
     // Handle Edit Post
@@ -329,7 +344,11 @@ export default function PostPage({
 
         if (updateError) throw updateError;
 
-        // Replace roles
+        // Clean up old roles by explicit ID and by post_id
+        const { data: existingRoles } = await supabase.from('roles').select('id').eq('post_id', postId);
+        if (existingRoles && existingRoles.length > 0) {
+            await supabase.from('roles').delete().in('id', existingRoles.map(r => r.id));
+        }
         await supabase.from('roles').delete().eq('post_id', postId);
 
         const validRoles = updatedData.roles
@@ -342,7 +361,10 @@ export default function PostPage({
                 role: r.role,
                 quantity: r.quantity ?? 1
             }));
-            await supabase.from('roles').insert(rolesToInsert);
+            const { error: insertRolesErr } = await supabase.from('roles').insert(rolesToInsert);
+            if (insertRolesErr) {
+                console.error("Error inserting updated roles:", insertRolesErr);
+            }
         }
 
         setFetchedPosts(prev => prev.map(p => {
