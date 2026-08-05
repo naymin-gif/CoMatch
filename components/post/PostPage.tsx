@@ -250,14 +250,16 @@ export default function PostPage({
             throw new Error("You cannot apply to your own recruitment post.");
         }
 
+        const applicationInserts = roles.map((role) => ({
+            post_id: postId,
+            applicant_id: user.id,
+            selected_roles: [role],
+            intro_message: message
+        }));
+
         const { error } = await supabase
             .from('applications')
-            .insert({
-                post_id: postId,
-                applicant_id: user.id,
-                selected_roles: roles,
-                intro_message: message
-            });
+            .insert(applicationInserts);
 
         if (error) throw error;
         toast.success("Application submitted successfully!");
@@ -328,6 +330,7 @@ export default function PostPage({
             const newPostCardData: PostCardProps = {
                 postid: postResult.id,
                 spaceId,
+                ownerId: user.id,
                 ownerName: currentUserName,
                 ownerAvatarUrl: undefined,
                 postDate: timeAgo(postResult.created_at || new Date().toISOString()),

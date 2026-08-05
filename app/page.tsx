@@ -416,12 +416,14 @@ export default function HomePage() {
       throw new Error("User not authenticated");
     }
 
-    const { error } = await supabase.from("applications").insert({
+    const applicationInserts = roles.map((role) => ({
       post_id: postId,
       applicant_id: user.id,
-      selected_roles: roles,
+      selected_roles: [role],
       intro_message: message,
-    });
+    }));
+
+    const { error } = await supabase.from("applications").insert(applicationInserts);
 
     if (error) {
       throw error;
