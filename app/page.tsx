@@ -307,11 +307,16 @@ export default function HomePage() {
           postDescription: post.description,
           postImageUrl: post.image_url,
           commitmentLevel: post.commitment_level,
-          rolesAndPositions:
-            post.roles?.map((role: any) => ({
-              role: role.role,
-              position: role.quantity,
-            })) ?? [],
+          rolesAndPositions: (() => {
+            const seen = new Map<string, number>();
+            (post.roles || []).forEach((r: any) => {
+              const name = r.role?.trim();
+              if (name && !seen.has(name)) {
+                seen.set(name, r.quantity || 1);
+              }
+            });
+            return Array.from(seen.entries()).map(([role, position]) => ({ role, position }));
+          })(),
           initialComments:
             post.post_comments?.map((comment: any) => ({
               id: comment.id,

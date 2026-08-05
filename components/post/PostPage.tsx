@@ -42,52 +42,58 @@ export interface NewPostData {
     quantities: number[];
 }
 
+const deduplicateRoles = (roles: any[]): RoleAndPosition[] => {
+    const seen = new Map<string, number>();
+    (roles || []).forEach((r) => {
+        const name = r.role?.trim();
+        if (name && !seen.has(name)) {
+            seen.set(name, r.quantity || 1);
+        }
+    });
+    return Array.from(seen.entries()).map(([role, position]) => ({ role, position }));
+};
+
 export default function PostPage({
     currentUserName,
-    showOwnPostsOnly,
     postIds,
     spaceId,
     currentUserAvatar,
+    showOwnPostsOnly
 }: PostPageProps) {
     const searchParams = useSearchParams();
     const sharedPostId = searchParams.get("post");
     const supabase = createClient();
-
     const [fetchedPosts, setFetchedPosts] = useState<PostCardProps[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
 
-    // Fetch Post data
     useEffect(() => {
-        async function fetchPostData() {
-            if (postIds.length === 0) {
+        const fetchPostData = async () => {
+            if (!postIds || postIds.length === 0) {
+                setFetchedPosts([]);
                 setIsLoading(false);
                 return;
             }
 
             try {
-                // Inside fetchPostData
                 const { data: { user } } = await supabase.auth.getUser();
-                const currentUserId = user?.id;
-                const { data, error } = await supabase
+
+                const { data: postsData, error } = await supabase
                     .from('posts')
                     .select(`
-                        id,
-                        owner_id,
-                        title,
-                        description,
-                        commitment_level,
-                        image_url,
-                        created_at,
-                        profiles!posts_owner_id_fkey (name, profile_pic_url), 
-                        roles (role, quantity),
-                        post_likes (profile_id),
-                        applications (applicant_id),
+                        *,
+                        roles (*),
                         post_comments (
                             id,
                             content,
                             created_at,
-                            profiles (name, profile_pic_url)
+                            profiles (
+                                name,
+                                profile_pic_url
+                            )
+                        ),
+                        post_likes (
+                            profile_id
                         )
                     `)
                     .in('id', postIds)
@@ -95,37 +101,43 @@ export default function PostPage({
 
                 if (error) throw error;
 
-                const formattedPosts: PostCardProps[] = data
-                        .filter(
-                            (post: any) =>
-                                !showOwnPostsOnly || post.owner_id === currentUserId
-                        )
-                    .map((post: any) => ({
-                        postid: post.id,
-                        spaceId,
-                        ownerId: post.owner_id,
-                        ownerName: post.profiles?.name || "Unknown User",
-                        ownerAvatarUrl: post.profiles?.profile_pic_url,
-                        isOwner: Boolean(currentUserId && post.owner_id === currentUserId),
-                        initialHasApplied: Boolean(
-                            currentUserId && 
-                            post.applications?.some((app: any) => app.applicant_id === currentUserId)
-                        ),
-                        postDate: timeAgo(post.created_at),
+                let userAppliedPostIds = new Set<string>();
+                if (user) {
+                    const { data: userApps } = await supabase
+                        .from('applications')
+                        .select('post_id')
+                        .eq('applicant_id', user.id);
+                    if (userApps) {
+                        userApps.forEach(app => userAppliedPostIds.add(app.post_id));
+                    }
+                }
 
+                const { data: ownerProfiles } = await supabase
+                    .from('profiles')
+                    .select('id, name, profile_pic_url')
+                    .in('id', postsData.map(p => p.owner_id));
+
+                const profileMap = new Map(ownerProfiles?.map(p => [p.id, p]));
+
+                const formattedPosts: PostCardProps[] = postsData
+                    .filter(post => !showOwnPostsOnly || (user && post.owner_id === user.id))
+                    .map((post) => ({
+                        postid: post.id,
+                        spaceId: spaceId,
+                        ownerId: post.owner_id,
+                        ownerName: profileMap.get(post.owner_id)?.name || "Unknown User",
+                        ownerAvatarUrl: profileMap.get(post.owner_id)?.profile_pic_url,
+                        isOwner: user ? post.owner_id === user.id : false,
+                        initialHasApplied: userAppliedPostIds.has(post.id),
+                        postDate: timeAgo(post.created_at),
                         initialLikeCount: post.post_likes ? post.post_likes.length : 0,
-                        initialIsLiked: post.post_likes 
-                            ? post.post_likes.some((like: any) => like.profile_id === currentUserId) 
-                            : false,
+                        initialIsLiked: user ? post.post_likes?.some((like: any) => like.profile_id === user.id) : false,
                         postTitle: post.title,
                         postDescription: post.description,
                         postImageUrl: post.image_url,
                         commitmentLevel: post.commitment_level,
 
-                        rolesAndPositions: post.roles ? post.roles.map((r: any) => ({
-                            role: r.role,
-                            position: r.quantity
-                        })) : [],
+                        rolesAndPositions: deduplicateRoles(post.roles),
 
                         initialComments: post.post_comments ? post.post_comments.map((comment: any) => ({
                             id: comment.id,
