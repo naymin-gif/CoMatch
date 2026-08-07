@@ -10,6 +10,18 @@ import { FaGithub } from 'react-icons/fa';
 import { IoLogoLinkedin } from 'react-icons/io';
 import { IoMail } from 'react-icons/io5';
 import { IoChatbubbleEllipsesSharp } from 'react-icons/io5';
+import { MdOutlineLogout } from 'react-icons/md';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface PictureCardProps {
   name: string;
@@ -23,6 +35,7 @@ interface PictureCardProps {
   linkedin?: string;
   github?: string;
   onEdit?: () => void;
+  onLogout?: () => void;
   email?: string;
   isOwner?: boolean;
   onChat?: () => void;
@@ -40,6 +53,7 @@ export default function PictureCard({
   github,
   linkedin,
   onEdit,
+  onLogout,
   email,
   isOwner,
   onChat,
@@ -73,9 +87,34 @@ export default function PictureCard({
           </div>
 
           {isOwner ? (
-            <Button variant="secondary" onClick={onEdit}>
-              <FaUserEdit className="mr-2" /> Edit
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={onEdit}>
+                <FaUserEdit className="mr-2" /> Edit
+              </Button>
+              {onLogout && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/30">
+                      <MdOutlineLogout className="mr-1.5 h-4 w-4" /> Log Out
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Log Out</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to log out of your account?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={onLogout}>
+                        Log Out
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           ) : (
             <Button onClick={onChat}>
               <IoChatbubbleEllipsesSharp /> Chat

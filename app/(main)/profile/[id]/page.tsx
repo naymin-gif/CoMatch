@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import PictureCard from '@/components/profile/PictureCard';
 import BadgeCard from '@/components/profile/BadgeCard';
@@ -8,6 +8,8 @@ import { MdErrorOutline } from 'react-icons/md';
 import { createClient } from '@/utils/clients';
 import { useRouter } from 'next/navigation';
 import PostCard from '@/components/post/PostCard';
+import EditProfile from '../EditProfile';
+import { toast } from 'sonner';
 
 export interface ProfileData {
   id?: string;
@@ -61,6 +63,7 @@ export default function PublicProfile({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -98,145 +101,158 @@ export default function PublicProfile({
     });
   };
 
-  useEffect(() => {
-    const fetchProfileAndPosts = async () => {
-      setIsLoading(true);
-      setError(null);
-      setIsOwner(false);
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success('Logged out successfully');
+      router.push('/login');
+    } catch (err: any) {
+      toast.error('Log out failed', {
+        description: err.message || 'There was a problem logging you out.',
+      });
+    }
+  };
 
-      const authResult = await supabase.auth.getUser();
-      const signedInUser = authResult.data.user;
-      const signedInUserId = signedInUser?.id ?? null;
+  const fetchProfileAndPosts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setIsOwner(false);
 
-      const [profileResult, postsResult, membershipsResult] =
-        await Promise.all([
-          supabase
-            .from('profiles')
-            .select(`
-              id,
+    const authResult = await supabase.auth.getUser();
+    const signedInUser = authResult.data.user;
+    const signedInUserId = signedInUser?.id ?? null;
+
+    const [profileResult, postsResult, membershipsResult] =
+      await Promise.all([
+        supabase
+          .from('profiles')
+          .select(`
+            id,
+            name,
+            bio,
+            pronouns,
+            organization,
+            city,
+            country,
+            github,
+            linkedin,
+            email,
+            skills,
+            roles,
+            profile_pic_url,
+            bg_pic_url,
+            show_email
+          `)
+          .eq('id', profileId)
+          .maybeSingle(),
+
+        supabase
+          .from('posts')
+          .select(`
+            id,
+            space_id,
+            owner_id,
+            title,
+            description,
+            commitment_level,
+            image_url,
+            created_at,
+            spaces (
               name,
-              bio,
-              pronouns,
-              organization,
-              city,
-              country,
-              github,
-              linkedin,
-              email,
-              skills,
-              roles,
-              profile_pic_url,
-              bg_pic_url,
-              show_email
-            `)
-            .eq('id', profileId)
-            .maybeSingle(),
+              owner_id
+            ),
+            roles (
+              role,
+              quantity
+            ),
+            post_likes (
+              profile_id
+            )
+          `)
+          .eq('owner_id', profileId)
+          .order('created_at', { ascending: false }),
 
-          supabase
-            .from('posts')
-            .select(`
-              id,
-              space_id,
-              owner_id,
-              title,
-              description,
-              commitment_level,
-              image_url,
-              created_at,
-              spaces (
-                name,
-                owner_id
-              ),
-              roles (
-                role,
-                quantity
-              ),
-              post_likes (
-                profile_id
-              )
-            `)
-            .eq('owner_id', profileId)
-            .order('created_at', { ascending: false }),
+        signedInUserId
+          ? supabase
+              .from('space_members')
+              .select('space_id')
+              .eq('profile_id', signedInUserId)
+          : Promise.resolve({
+              data: [] as { space_id: string }[],
+              error: null,
+            }),
+      ]);
 
-          signedInUserId
-            ? supabase
-                .from('space_members')
-                .select('space_id')
-                .eq('profile_id', signedInUserId)
-            : Promise.resolve({
-                data: [] as { space_id: string }[],
-                error: null,
-              }),
-        ]);
-
-      if (profileResult.error) {
-        console.error(
-          'Profile fetch error:',
-          profileResult.error.message
-        );
-        setError('Failed to load profile data.');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!profileResult.data) {
-        setError('User not found.');
-        setIsLoading(false);
-        return;
-      }
-
-      if (postsResult.error) {
-        console.error(
-          'Posts fetch error:',
-          postsResult.error.message
-        );
-        setError('Failed to load profile posts.');
-        setIsLoading(false);
-        return;
-      }
-
-      if (membershipsResult.error) {
-        console.error(
-          'Membership fetch error:',
-          membershipsResult.error.message
-        );
-        setError('Failed to load space memberships.');
-        setIsLoading(false);
-        return;
-      }
-
-      setProfileData(profileResult.data as ProfileData);
-      setPosts(
-        (postsResult.data ?? []).map((post) => {
-          const rawSpaces = post.spaces as unknown;
-
-          const space =
-            Array.isArray(rawSpaces)
-              ? rawSpaces[0] ?? null
-              : rawSpaces ?? null;
-
-          return {
-            ...post,
-            spaces: space,
-          } as ProfilePost;
-        })
+    if (profileResult.error) {
+      console.error(
+        'Profile fetch error:',
+        profileResult.error.message
       );
-
-      setMemberSpaceIds(
-        new Set(
-          (membershipsResult.data ?? []).map(
-            (membership) => membership.space_id
-          )
-        )
-      );
-
-      setCurrentUserId(signedInUserId);
-      setIsOwner(signedInUserId === profileId);
+      setError('Failed to load profile data.');
       setIsLoading(false);
-    };
+      return;
+    }
 
+    if (!profileResult.data) {
+      setError('User not found.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (postsResult.error) {
+      console.error(
+        'Posts fetch error:',
+        postsResult.error.message
+      );
+      setError('Failed to load profile posts.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (membershipsResult.error) {
+      console.error(
+        'Membership fetch error:',
+        membershipsResult.error.message
+      );
+      setError('Failed to load space memberships.');
+      setIsLoading(false);
+      return;
+    }
+
+    setProfileData(profileResult.data as ProfileData);
+    setPosts(
+      (postsResult.data ?? []).map((post) => {
+        const rawSpaces = post.spaces as unknown;
+
+        const space =
+          Array.isArray(rawSpaces)
+            ? rawSpaces[0] ?? null
+            : rawSpaces ?? null;
+
+        return {
+          ...post,
+          spaces: space,
+        } as ProfilePost;
+      })
+    );
+
+    setMemberSpaceIds(
+      new Set(
+        (membershipsResult.data ?? []).map(
+          (membership) => membership.space_id
+        )
+      )
+    );
+
+    setCurrentUserId(signedInUserId);
+    setIsOwner(signedInUserId === profileId);
+    setIsLoading(false);
+  }, [profileId, supabase]);
+
+  useEffect(() => {
     void fetchProfileAndPosts();
-  }, [profileId]);
+  }, [fetchProfileAndPosts]);
 
   // Error Handling
   if (error) {
@@ -260,6 +276,35 @@ export default function PublicProfile({
     );
   }
 
+  // Edit Mode View
+  if (isEditing && profileData) {
+    return (
+      <div className="w-full mt-4 px-4 lg:px-0">
+        <EditProfile
+          name={profileData.name}
+          bio={profileData.bio}
+          pronouns={profileData.pronouns}
+          organization={profileData.organization}
+          city={profileData.city}
+          country={profileData.country}
+          github={profileData.github}
+          linkedin={profileData.linkedin}
+          initialSkills={profileData.skills}
+          initialRoles={profileData.roles}
+          profile_pic_url={profileData.profile_pic_url}
+          bg_pic_url={profileData.bg_pic_url}
+          email={profileData.email}
+          show_email={profileData.show_email}
+          onCancel={() => setIsEditing(false)}
+          onSuccess={() => {
+            setIsEditing(false);
+            void fetchProfileAndPosts();
+          }}
+        />
+      </div>
+    );
+  }
+
   // Render the Profile Layout
   return (
     <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 w-full mt-4 px-4 lg:px-0">
@@ -267,7 +312,8 @@ export default function PublicProfile({
         <PictureCard
           {...profileData}
           email={profileData.show_email ? profileData.email : ''}
-          onEdit={() => {}}
+          onEdit={() => setIsEditing(true)}
+          onLogout={handleLogout}
           isOwner={isOwner}
           onChat={() => router.push(`/chat?user=${profileId}`)}
         />
