@@ -9,6 +9,10 @@ so users can connect around complementary skills and shared goals.
 
 Developed for **Orbital 2026**.
 
+- **Proposed Level of Achievement:** Project Gemini
+- **Advisor:** Eugene Oh Yun Zheng
+
+
 [Visit CoMatch](https://co-match-two.vercel.app/) ·
 [GitHub Repository](https://github.com/naymin-gif/CoMatch)
 
@@ -58,9 +62,8 @@ To keep recruitment consistent:
 - Users cannot apply to their own recruitment posts.
 - Duplicate active applications to the same post are blocked.
 - Approval and rejection require confirmation; confirmed decisions are locked.
-- Spaces have unique names. Their names cannot be changed after creation, and
-  Spaces cannot be deleted.
-- Space owners can update their Space's description and external resources.
+- Spaces have unique names. Spaces cannot be deleted once created.
+- Space owners can update their Space's name, cover image, description, and external resources.
 
 ## Technology Stack
 
@@ -104,7 +107,7 @@ The project combines component tests, database integration checks, browser tests
 and exploratory testing. ESLint and Prettier support consistent code quality and
 formatting.
 
-| Test layer | Main areas covered in the proposal |
+| Test Layer | Key Focus Areas |
 | --- | --- |
 | Unit | Shared UI components, rendering, variants, and user interactions. |
 | Integration | Space memberships, database constraints, conversations, messages, application states, and notification fields. |
